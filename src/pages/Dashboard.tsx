@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/main-layout";
 import { CardMetric } from "@/components/ui/card-metric";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, AlertCircle, Archive, BarChart3, ChevronRight, Clock, GitMerge, Heart, Layers, MessageSquare, Plus, Search, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDashboardState } from "@/hooks/useDashboardState";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export default function Dashboard() {
+  const { metrics, handleCreateProcess, handleSearchRepository, handleInviteTeam } = useDashboardState();
+  const { notifications, markAsRead } = useNotifications();
+
   return (
     <MainLayout pageTitle="Dashboard">
       <div className="grid gap-6">
@@ -22,15 +26,26 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button className="flex items-center gap-2">
+                <Button 
+                  className="flex items-center gap-2"
+                  onClick={handleCreateProcess}
+                >
                   <Plus className="h-4 w-4" />
                   New Process Model
                 </Button>
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={handleSearchRepository}
+                >
                   <Search className="h-4 w-4" />
                   Search Repository
                 </Button>
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={handleInviteTeam}
+                >
                   <Users className="h-4 w-4" />
                   Invite Team Member
                 </Button>
@@ -47,21 +62,15 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y">
-                <NotificationItem 
-                  icon={<MessageSquare className="h-4 w-4 text-enterprise-blue-600" />}
-                  title="New comments on 'Customer Onboarding'"
-                  time="10 mins ago"
-                />
-                <NotificationItem 
-                  icon={<GitMerge className="h-4 w-4 text-enterprise-blue-600" />}
-                  title="Process 'Order to Cash' updated"
-                  time="2 hours ago"
-                />
-                <NotificationItem 
-                  icon={<AlertCircle className="h-4 w-4 text-status-warning" />}
-                  title="Bottleneck detected in 'Invoice Approval'"
-                  time="Yesterday"
-                />
+                {notifications.map((notification) => (
+                  <NotificationItem 
+                    key={notification.id}
+                    icon={<MessageSquare className="h-4 w-4 text-enterprise-blue-600" />}
+                    title={notification.title}
+                    time={notification.time}
+                    onClick={() => markAsRead(notification.id)}
+                  />
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -71,26 +80,26 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <CardMetric
             title="Total Processes"
-            value="184"
+            value={metrics.totalProcesses.toString()}
             icon={<GitMerge className="h-5 w-5" />}
             trend={{ value: 12, isUpward: true, isPositive: true }}
           />
           <CardMetric
             title="Process Compliance"
-            value="92%"
+            value={`${metrics.compliance}%`}
             icon={<Activity className="h-5 w-5" />}
             trend={{ value: 3, isUpward: true, isPositive: true }}
           />
           <CardMetric
             title="Avg. Processing Time"
-            value="4.2 days"
+            value={`${metrics.processingTime} days`}
             icon={<Clock className="h-5 w-5" />}
             trend={{ value: 8, isUpward: false, isPositive: true }}
             variant="success"
           />
           <CardMetric
             title="Process Deviations"
-            value="24"
+            value={metrics.deviations.toString()}
             icon={<AlertCircle className="h-5 w-5" />}
             trend={{ value: 15, isUpward: true, isPositive: false }}
             variant="danger"
@@ -207,18 +216,21 @@ export default function Dashboard() {
                   <TabsTrigger value="bottlenecks">Bottlenecks</TabsTrigger>
                 </TabsList>
                 <TabsContent value="performance">
-                  <div className="bg-muted h-80 rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">[Performance Analytics Chart]</p>
+                  <div className="space-y-4">
+                    <PerformanceChart />
+                    <PerformanceMetrics />
                   </div>
                 </TabsContent>
                 <TabsContent value="compliance">
-                  <div className="bg-muted h-80 rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">[Compliance Metrics Visualization]</p>
+                  <div className="space-y-4">
+                    <ComplianceChart />
+                    <ComplianceMetrics />
                   </div>
                 </TabsContent>
                 <TabsContent value="bottlenecks">
-                  <div className="bg-muted h-80 rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">[Bottleneck Analysis Heat Map]</p>
+                  <div className="space-y-4">
+                    <BottleneckChart />
+                    <BottleneckMetrics />
                   </div>
                 </TabsContent>
               </Tabs>
@@ -300,6 +312,81 @@ function ActivityItem({ icon, title, description, user, time }: ActivityItemProp
           <span className="font-medium">{user}</span>
           <span className="text-muted-foreground">{time}</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PerformanceChart() {
+  return (
+    <div className="bg-muted rounded-lg p-4">
+      <h3 className="text-sm font-medium mb-4">Process Performance Trend</h3>
+      <div className="h-64 flex items-center justify-center">
+        [Performance Chart Placeholder]
+      </div>
+    </div>
+  );
+}
+
+function PerformanceMetrics() {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <MetricCard title="Avg. Completion Time" value="3.2 days" trend="+5%" />
+      <MetricCard title="Success Rate" value="94%" trend="+2%" />
+      <MetricCard title="User Satisfaction" value="4.5/5" trend="+0.3" />
+    </div>
+  );
+}
+
+function ComplianceChart() {
+  return (
+    <div className="bg-muted rounded-lg p-4">
+      <h3 className="text-sm font-medium mb-4">Compliance Overview</h3>
+      <div className="h-64 flex items-center justify-center">
+        [Compliance Chart Placeholder]
+      </div>
+    </div>
+  );
+}
+
+function ComplianceMetrics() {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <MetricCard title="Compliance Rate" value="96%" trend="+1%" />
+      <MetricCard title="Risk Score" value="Low" trend="Stable" />
+      <MetricCard title="Audit Status" value="Passed" trend="↑" />
+    </div>
+  );
+}
+
+function BottleneckChart() {
+  return (
+    <div className="bg-muted rounded-lg p-4">
+      <h3 className="text-sm font-medium mb-4">Process Bottlenecks</h3>
+      <div className="h-64 flex items-center justify-center">
+        [Bottleneck Chart Placeholder]
+      </div>
+    </div>
+  );
+}
+
+function BottleneckMetrics() {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <MetricCard title="Critical Points" value="3" trend="-2" />
+      <MetricCard title="Avg. Delay" value="4.5h" trend="-1h" />
+      <MetricCard title="Impact Score" value="Medium" trend="↓" />
+    </div>
+  );
+}
+
+function MetricCard({ title, value, trend }: { title: string; value: string; trend: string }) {
+  return (
+    <div className="bg-muted/50 rounded-lg p-4">
+      <h4 className="text-sm text-muted-foreground">{title}</h4>
+      <div className="mt-2 flex items-end justify-between">
+        <span className="text-2xl font-semibold">{value}</span>
+        <span className="text-sm text-muted-foreground">{trend}</span>
       </div>
     </div>
   );
