@@ -1,5 +1,6 @@
 
 import { useState, useCallback } from 'react';
+import { useToast } from "@/hooks/use-toast";
 
 export interface Notification {
   id: string;
@@ -12,6 +13,7 @@ export interface Notification {
 }
 
 export const useNotifications = () => {
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -41,15 +43,46 @@ export const useNotifications = () => {
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === id ? { ...notif, read: true } : notif
-      )
+      prev.map(notif => {
+        if (notif.id === id) {
+          toast({
+            title: "Notification marked as read",
+            description: notif.title,
+          });
+          return { ...notif, read: true };
+        }
+        return notif;
+      })
     );
-  }, []);
+  }, [toast]);
 
   const clearAll = useCallback(() => {
     setNotifications([]);
-  }, []);
+    toast({
+      title: "Notifications cleared",
+      description: "All notifications have been removed",
+    });
+  }, [toast]);
 
-  return { notifications, markAsRead, clearAll };
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'read'>) => {
+    const newNotification = {
+      ...notification,
+      id: Date.now().toString(),
+      read: false,
+    };
+    
+    setNotifications(prev => [newNotification, ...prev]);
+    
+    toast({
+      title: "New notification",
+      description: notification.title,
+    });
+  }, [toast]);
+
+  return { 
+    notifications, 
+    markAsRead, 
+    clearAll,
+    addNotification
+  };
 };

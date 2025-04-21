@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/main-layout";
 import { CardMetric } from "@/components/ui/card-metric";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 
 export default function Dashboard() {
   const { metrics, handleCreateProcess, handleSearchRepository, handleInviteTeam } = useDashboardState();
-  const { notifications, markAsRead } = useNotifications();
+  const { notifications, markAsRead, clearAll } = useNotifications();
 
   return (
     <MainLayout pageTitle="Dashboard">
@@ -57,7 +58,7 @@ export default function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between">
                 <span>Recent Notifications</span>
-                <Button variant="link" className="text-xs p-0 h-auto">View All</Button>
+                <Button variant="link" className="text-xs p-0 h-auto" onClick={clearAll}>Clear All</Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -65,7 +66,11 @@ export default function Dashboard() {
                 {notifications.map((notification) => (
                   <NotificationItem 
                     key={notification.id}
-                    icon={<MessageSquare className="h-4 w-4 text-enterprise-blue-600" />}
+                    icon={
+                      notification.type === 'message' ? <MessageSquare className="h-4 w-4 text-enterprise-blue-600" /> :
+                      notification.type === 'update' ? <GitMerge className="h-4 w-4 text-enterprise-blue-600" /> :
+                      <AlertCircle className="h-4 w-4 text-enterprise-blue-600" />
+                    }
                     title={notification.title}
                     time={notification.time}
                     onClick={() => markAsRead(notification.id)}
@@ -246,11 +251,12 @@ interface NotificationItemProps {
   icon: React.ReactNode;
   title: string;
   time: string;
+  onClick: () => void;
 }
 
-function NotificationItem({ icon, title, time }: NotificationItemProps) {
+function NotificationItem({ icon, title, time, onClick }: NotificationItemProps) {
   return (
-    <div className="flex items-start gap-3 p-3 hover:bg-muted/50 cursor-pointer">
+    <div className="flex items-start gap-3 p-3 hover:bg-muted/50 cursor-pointer" onClick={onClick}>
       <div className="mt-0.5">{icon}</div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{title}</p>
