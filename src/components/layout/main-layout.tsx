@@ -10,6 +10,7 @@ interface MainLayoutProps {
   className?: string;
 }
 
+// We only pass pageTitle to the Header component since onToggleSidebar isn't defined in its props
 export function MainLayout({ children, pageTitle, className }: MainLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
@@ -25,7 +26,7 @@ export function MainLayout({ children, pageTitle, className }: MainLayoutProps) 
         style={{ 
           paddingLeft: sidebarCollapsed ? "var(--sidebar-width-icon)" : "var(--sidebar-width)"
         }}>
-        <Header pageTitle={pageTitle} onToggleSidebar={toggleSidebar} />
+        <Header pageTitle={pageTitle} />
         
         <main className={cn("flex-1 p-6", className)}>
           {children}
