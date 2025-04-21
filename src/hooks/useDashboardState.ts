@@ -28,6 +28,7 @@ export const useDashboardState = () => {
   });
 
   const [activeTab, setActiveTab] = useState<string>("performance");
+  const [showTeamInviteModal, setShowTeamInviteModal] = useState<boolean>(false);
 
   const handleCreateProcess = useCallback(() => {
     toast({
@@ -51,12 +52,16 @@ export const useDashboardState = () => {
   }, [toast]);
 
   const handleInviteTeam = useCallback(() => {
+    setShowTeamInviteModal(true);
     toast({
       title: "Team invitation",
       description: "Opening team invitation dialog",
     });
-    // In a real app, this would open a modal dialog
   }, [toast]);
+
+  const closeTeamInviteModal = useCallback(() => {
+    setShowTeamInviteModal(false);
+  }, []);
 
   const updateMetrics = useCallback((newMetrics: Partial<DashboardMetrics>) => {
     setMetrics(prev => ({
@@ -89,6 +94,8 @@ export const useDashboardState = () => {
     handleCreateProcess,
     handleSearchRepository,
     handleInviteTeam,
+    showTeamInviteModal,
+    closeTeamInviteModal,
     refreshData,
     updateMetrics
   };
