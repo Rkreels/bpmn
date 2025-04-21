@@ -1,3 +1,5 @@
+
+import React from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,24 +9,23 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   AtSign,
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Clipboard,
-  Clock,
-  File,
-  FileText,
   Filter,
   GitMerge,
   MessageSquare,
-  MoreHorizontal,
   Paperclip,
   Search,
   Send,
   User,
   Users
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+// Import the refactored components
+import { ModelItem } from "@/components/collaboration/ModelItem";
+import { Comment } from "@/components/collaboration/Comment";
+import { TaskItem } from "@/components/collaboration/TaskItem";
+import { VersionItem } from "@/components/collaboration/VersionItem";
+import { ApprovalItem } from "@/components/collaboration/ApprovalItem";
+import { ModelViewer } from "@/components/collaboration/ModelViewer";
 
 export default function CollaborationHub() {
   return (
@@ -180,12 +181,7 @@ export default function CollaborationHub() {
               </div>
             </CardHeader>
             <CardContent className="flex-1 p-0">
-              <div className="border-t border-b h-[300px] flex items-center justify-center bg-muted/50">
-                <div className="text-muted-foreground flex flex-col items-center">
-                  <GitMerge className="h-10 w-10 mb-2 opacity-70" />
-                  <p>[Process Model Viewer]</p>
-                </div>
-              </div>
+              <ModelViewer />
               
               <div className="flex-1 flex flex-col">
                 <Tabs defaultValue="comments" className="px-6 pt-4">
@@ -276,11 +272,6 @@ export default function CollaborationHub() {
                           status="Not Started"
                         />
                       </div>
-                      
-                      <Button variant="outline" size="sm" className="gap-1 mt-2">
-                        <Clipboard className="h-4 w-4" />
-                        Create New Task
-                      </Button>
                     </TabsContent>
                     
                     <TabsContent value="versions" className="mt-0 space-y-4">
@@ -383,256 +374,5 @@ export default function CollaborationHub() {
         </div>
       </div>
     </MainLayout>
-  );
-}
-
-interface ModelItemProps {
-  title: string;
-  type: "BPMN" | "DMN" | "Journey";
-  author: string;
-  time: string;
-  comments: number;
-  isActive?: boolean;
-}
-
-function ModelItem({ title, type, author, time, comments, isActive = false }: ModelItemProps) {
-  const icon = type === "BPMN" ? (
-    <GitMerge className="h-4 w-4 text-enterprise-blue-600" />
-  ) : type === "Journey" ? (
-    <Users className="h-4 w-4 text-enterprise-blue-600" />
-  ) : (
-    <FileText className="h-4 w-4 text-enterprise-blue-600" />
-  );
-  
-  return (
-    <div className={cn(
-      "flex items-center gap-3 p-3 cursor-pointer",
-      isActive ? "bg-enterprise-blue-50" : "hover:bg-muted/50"
-    )}>
-      <div className="bg-muted rounded-md p-1.5">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className={cn(
-          "truncate",
-          isActive ? "font-medium" : ""
-        )}>
-          {title}
-        </p>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{author}</span>
-          <span>•</span>
-          <span>{time}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        <MessageSquare className="h-3.5 w-3.5" />
-        {comments}
-      </div>
-    </div>
-  );
-}
-
-interface CommentProps {
-  author: string;
-  avatar: string;
-  time: string;
-  text: string;
-  replies?: {
-    author: string;
-    avatar: string;
-    time: string;
-    text: string;
-  }[];
-}
-
-function Comment({ author, avatar, time, text, replies = [] }: CommentProps) {
-  return (
-    <div className="space-y-4">
-      <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-primary-foreground font-medium">
-          {avatar}
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{author}</span>
-            <span className="text-xs text-muted-foreground">{time}</span>
-          </div>
-          <p className="mt-1 text-sm">{text}</p>
-          <div className="flex items-center gap-4 mt-2">
-            <button className="text-xs text-muted-foreground hover:text-foreground">Reply</button>
-            <button className="text-xs text-muted-foreground hover:text-foreground">Like</button>
-          </div>
-        </div>
-      </div>
-      
-      {replies.length > 0 && (
-        <div className="ml-10 pl-6 border-l space-y-4">
-          {replies.map((reply, index) => (
-            <div className="flex gap-3" key={index}>
-              <div className="w-7 h-7 rounded-full bg-muted flex-shrink-0 flex items-center justify-center text-muted-foreground font-medium text-sm">
-                {reply.avatar}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{reply.author}</span>
-                  <span className="text-xs text-muted-foreground">{reply.time}</span>
-                </div>
-                <p className="mt-1 text-sm">{reply.text}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <button className="text-xs text-muted-foreground hover:text-foreground">Reply</button>
-                  <button className="text-xs text-muted-foreground hover:text-foreground">Like</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface TaskItemProps {
-  title: string;
-  assigned: string;
-  dueDate: string;
-  status: "Not Started" | "In Progress" | "Completed";
-}
-
-function TaskItem({ title, assigned, dueDate, status }: TaskItemProps) {
-  const statusColors = {
-    "Not Started": "bg-muted text-muted-foreground",
-    "In Progress": "bg-enterprise-blue-100 text-enterprise-blue-800",
-    "Completed": "bg-status-success/10 text-status-success",
-  };
-  
-  return (
-    <div className="border rounded-md p-3 hover:border-primary">
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-2">
-          {status === "Completed" ? (
-            <CheckCircle2 className="h-5 w-5 text-status-success" />
-          ) : (
-            <File className="h-5 w-5 text-muted-foreground" />
-          )}
-          <h3 className="font-medium">{title}</h3>
-        </div>
-        <Badge className={cn(statusColors[status], "font-normal")}>
-          {status}
-        </Badge>
-      </div>
-      <div className="ml-7 mt-2 flex items-center justify-between text-sm">
-        <div className="text-muted-foreground">
-          Assigned to: <span className="text-foreground">{assigned}</span>
-        </div>
-        <div className="flex items-center text-muted-foreground gap-2">
-          <Calendar className="h-3.5 w-3.5" />
-          {dueDate}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface VersionItemProps {
-  version: string;
-  date: string;
-  author: string;
-  changes: string[];
-  isCurrent?: boolean;
-}
-
-function VersionItem({ version, date, author, changes, isCurrent = false }: VersionItemProps) {
-  return (
-    <div className={cn(
-      "border rounded-md p-3",
-      isCurrent ? "border-enterprise-blue-300 bg-enterprise-blue-50/30" : ""
-    )}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="font-medium flex items-center gap-1.5">
-            Version {version}
-            {isCurrent && <Badge variant="outline" className="font-normal text-xs">Current</Badge>}
-          </div>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {date}
-        </div>
-      </div>
-      
-      <div className="mt-2 text-sm">
-        <div>
-          Created by <span className="font-medium">{author}</span>
-        </div>
-        
-        {changes.length > 0 && (
-          <div className="mt-1.5">
-            <div className="text-muted-foreground">Changes:</div>
-            <ul className="list-disc list-inside pl-1 mt-1 space-y-0.5">
-              {changes.map((change, index) => (
-                <li key={index} className="text-sm">{change}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-      
-      <div className="flex items-center gap-2 mt-3">
-        <Button size="sm" variant="outline" className="text-xs h-7">
-          View
-        </Button>
-        {!isCurrent && (
-          <Button size="sm" variant="outline" className="text-xs h-7">
-            Compare
-          </Button>
-        )}
-        <Button size="sm" variant="outline" className="text-xs h-7">
-          Download
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-interface ApprovalItemProps {
-  stage: string;
-  approver: string;
-  status: "Pending" | "Approved" | "Rejected";
-  date?: string;
-  comment?: string;
-}
-
-function ApprovalItem({ stage, approver, status, date, comment }: ApprovalItemProps) {
-  return (
-    <div className="border rounded-md p-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-medium">{stage}</h3>
-        <Badge
-          className={cn(
-            status === "Approved" ? "bg-status-success/10 text-status-success" :
-            status === "Rejected" ? "bg-status-danger/10 text-status-danger" :
-            "bg-status-warning/10 text-status-warning"
-          )}
-        >
-          {status}
-        </Badge>
-      </div>
-      
-      <div className="mt-2 flex items-center justify-between text-sm">
-        <div>Approver: <span className="font-medium">{approver}</span></div>
-        {date && (
-          <div className="flex items-center text-muted-foreground gap-2">
-            <Clock className="h-3.5 w-3.5" />
-            {date}
-          </div>
-        )}
-      </div>
-      
-      {comment && (
-        <div className="mt-2 text-sm bg-muted/50 p-2 rounded-md">
-          {comment}
-        </div>
-      )}
-    </div>
   );
 }

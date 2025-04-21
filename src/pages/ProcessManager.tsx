@@ -27,16 +27,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { BpmnEditor } from "@/components/process-manager/BpmnEditor";
+import { ProcessModelItem } from "@/components/process-manager/ProcessModelItem";
 
-// Import BpmnJS component (this is a mock representation)
-// In a real implementation, you would import and configure the actual BPMN.js library
-const BpmnEditor = () => {
-  return (
-    <div className="w-full h-full min-h-[600px] bg-white border rounded-md flex items-center justify-center">
-      <p className="text-muted-foreground">[BPMN Editor Canvas - Would integrate with actual BPMN.js library]</p>
-    </div>
-  );
-};
+export interface ProcessModel {
+  name: string;
+  type: "folder" | "bpmn" | "dmn";
+  lastModified: string;
+  owner: string;
+  version?: string;
+}
+
+const processModels: ProcessModel[] = [
+  { name: "Order Management", type: "folder", lastModified: "2 days ago", owner: "System Admin" },
+  { name: "Customer Processes", type: "folder", lastModified: "1 week ago", owner: "System Admin" },
+  { name: "Order to Cash", type: "bpmn", lastModified: "Yesterday", owner: "John Doe", version: "2.3" },
+  { name: "Quote to Order", type: "bpmn", lastModified: "3 days ago", owner: "Lisa Johnson", version: "1.0" },
+  { name: "Invoice Processing", type: "bpmn", lastModified: "1 week ago", owner: "Michael Chen", version: "3.1" },
+  { name: "Shipping Rules", type: "dmn", lastModified: "2 weeks ago", owner: "Sarah Miller", version: "1.2" },
+  { name: "Return Process", type: "bpmn", lastModified: "1 month ago", owner: "Robert Taylor", version: "2.0" },
+  { name: "Pricing Rules", type: "dmn", lastModified: "1 month ago", owner: "Jennifer Adams", version: "2.5" },
+];
 
 export default function ProcessManager() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -225,87 +236,4 @@ export default function ProcessManager() {
       </Tabs>
     </MainLayout>
   );
-}
-
-interface ProcessModel {
-  name: string;
-  type: "folder" | "bpmn" | "dmn";
-  lastModified: string;
-  owner: string;
-  version?: string;
-}
-
-const processModels: ProcessModel[] = [
-  { name: "Order Management", type: "folder", lastModified: "2 days ago", owner: "System Admin" },
-  { name: "Customer Processes", type: "folder", lastModified: "1 week ago", owner: "System Admin" },
-  { name: "Order to Cash", type: "bpmn", lastModified: "Yesterday", owner: "John Doe", version: "2.3" },
-  { name: "Quote to Order", type: "bpmn", lastModified: "3 days ago", owner: "Lisa Johnson", version: "1.0" },
-  { name: "Invoice Processing", type: "bpmn", lastModified: "1 week ago", owner: "Michael Chen", version: "3.1" },
-  { name: "Shipping Rules", type: "dmn", lastModified: "2 weeks ago", owner: "Sarah Miller", version: "1.2" },
-  { name: "Return Process", type: "bpmn", lastModified: "1 month ago", owner: "Robert Taylor", version: "2.0" },
-  { name: "Pricing Rules", type: "dmn", lastModified: "1 month ago", owner: "Jennifer Adams", version: "2.5" },
-];
-
-interface ProcessModelItemProps {
-  model: ProcessModel;
-  viewMode: "grid" | "list";
-}
-
-function ProcessModelItem({ model, viewMode }: ProcessModelItemProps) {
-  if (viewMode === "grid") {
-    return (
-      <div className="border rounded-md p-4 hover:border-primary hover:shadow-sm cursor-pointer">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <ModelTypeIcon type={model.type} />
-            <span className="font-medium truncate">{model.name}</span>
-          </div>
-          {model.version && (
-            <span className="text-xs bg-muted rounded px-2 py-0.5">v{model.version}</span>
-          )}
-        </div>
-        <div className="mt-4 text-xs text-muted-foreground">
-          <div>Modified: {model.lastModified}</div>
-          <div>Owner: {model.owner}</div>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="flex items-center justify-between border-b py-2 px-2 hover:bg-muted/50">
-      <div className="flex items-center gap-3">
-        <ModelTypeIcon type={model.type} />
-        <span className="font-medium">{model.name}</span>
-        {model.version && (
-          <span className="text-xs bg-muted rounded px-2 py-0.5">v{model.version}</span>
-        )}
-      </div>
-      <div className="flex items-center gap-10 text-sm text-muted-foreground">
-        <span>{model.lastModified}</span>
-        <span>{model.owner}</span>
-      </div>
-    </div>
-  );
-}
-
-function ModelTypeIcon({ type }: { type: ProcessModel["type"] }) {
-  switch (type) {
-    case "folder":
-      return <Folder className="h-5 w-5 text-enterprise-blue-600" />;
-    case "bpmn":
-      return (
-        <div className="h-5 w-5 text-enterprise-blue-600 flex items-center justify-center font-bold text-xs">
-          BP
-        </div>
-      );
-    case "dmn":
-      return (
-        <div className="h-5 w-5 text-status-warning flex items-center justify-center font-bold text-xs">
-          DM
-        </div>
-      );
-    default:
-      return null;
-  }
 }

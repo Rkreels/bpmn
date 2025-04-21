@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Page imports
 import Dashboard from "./pages/Dashboard";
 import ProcessManager from "./pages/ProcessManager";
 import JourneyModeler from "./pages/JourneyModeler";
@@ -15,7 +17,15 @@ import TransformationCockpit from "./pages/TransformationCockpit";
 import ReportsDashboards from "./pages/ReportsDashboards";
 import UserManagement from "./pages/UserManagement";
 
-const queryClient = new QueryClient();
+// Set up QueryClient for data fetching
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -33,6 +43,13 @@ const App = () => (
           <Route path="/transformation-cockpit" element={<TransformationCockpit />} />
           <Route path="/reports-dashboards" element={<ReportsDashboards />} />
           <Route path="/user-management" element={<UserManagement />} />
+          
+          {/* Additional paths for improved navigation */}
+          <Route path="/reports" element={<ReportsDashboards />} />
+          <Route path="/users" element={<UserManagement />} />
+          <Route path="/settings" element={<UserManagement />} />
+          
+          {/* Catch all not found routes */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

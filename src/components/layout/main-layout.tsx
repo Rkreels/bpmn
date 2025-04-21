@@ -13,12 +13,19 @@ interface MainLayoutProps {
 export function MainLayout({ children, pageTitle, className }: MainLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+  
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
       
-      <div className="pl-[var(--sidebar-width)] flex-1 flex flex-col">
-        <Header pageTitle={pageTitle} />
+      <div className="flex-1 flex flex-col" 
+        style={{ 
+          paddingLeft: sidebarCollapsed ? "var(--sidebar-width-icon)" : "var(--sidebar-width)"
+        }}>
+        <Header pageTitle={pageTitle} onToggleSidebar={toggleSidebar} />
         
         <main className={cn("flex-1 p-6", className)}>
           {children}
