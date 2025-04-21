@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -20,11 +19,11 @@ import {
 
 interface SidebarProps {
   className?: string;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export function Sidebar({ className }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(false);
-
+export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps) {
   return (
     <div
       className={cn(
@@ -38,12 +37,14 @@ export function Sidebar({ className }: SidebarProps) {
           <GitMerge className="h-6 w-6 text-primary" />
           {!collapsed && <span className="font-semibold text-sidebar-foreground">ProcessFlow</span>}
         </div>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-sidebar-accent text-sidebar-foreground"
-        >
-          {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-        </button>
+        {onToggle && (
+          <button
+            onClick={onToggle}
+            className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-sidebar-accent text-sidebar-foreground"
+          >
+            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto py-4 px-3">

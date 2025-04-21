@@ -1,4 +1,3 @@
-
 import { Bell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,15 +14,23 @@ import { cn } from "@/lib/utils";
 interface HeaderProps {
   className?: string;
   pageTitle: string;
+  onToggleSidebar?: () => void;
 }
 
-export function Header({ className, pageTitle }: HeaderProps) {
+export function Header({ className, pageTitle, onToggleSidebar }: HeaderProps) {
   return (
     <header className={cn(
       "h-14 border-b flex items-center justify-between px-4 bg-background",
       className
     )}>
-      <h1 className="text-xl font-semibold truncate">{pageTitle}</h1>
+      <div className="flex items-center gap-4">
+        {onToggleSidebar && (
+          <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
+            <Search className="h-5 w-5" />
+          </Button>
+        )}
+        <h1 className="text-xl font-semibold truncate">{pageTitle}</h1>
+      </div>
       
       <div className="flex items-center gap-4">
         <div className="relative max-w-md w-72 hidden md:block">
