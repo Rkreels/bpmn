@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -55,53 +54,101 @@ export default function CollaborationHub() {
                   <TabsTrigger value="mine">Mine</TabsTrigger>
                   <TabsTrigger value="shared">Shared</TabsTrigger>
                 </TabsList>
+                
+                <TabsContent value="recent">
+                  <div className="divide-y max-h-[calc(100vh-300px)] overflow-auto">
+                    <ModelItem
+                      title="Order to Cash Process"
+                      type="BPMN"
+                      author="John Doe"
+                      time="10 min ago"
+                      comments={5}
+                      isActive
+                    />
+                    <ModelItem
+                      title="Customer Onboarding Journey"
+                      type="Journey"
+                      author="Lisa Johnson"
+                      time="Yesterday"
+                      comments={12}
+                    />
+                    <ModelItem
+                      title="Invoice Approval"
+                      type="BPMN"
+                      author="Michael Chen"
+                      time="2 days ago"
+                      comments={3}
+                    />
+                    <ModelItem
+                      title="Procurement Process"
+                      type="BPMN"
+                      author="Sarah Miller"
+                      time="1 week ago"
+                      comments={8}
+                    />
+                    <ModelItem
+                      title="Client Support Experience"
+                      type="Journey"
+                      author="Robert Taylor"
+                      time="2 weeks ago"
+                      comments={15}
+                    />
+                    <ModelItem
+                      title="Employee Hire to Retire"
+                      type="BPMN"
+                      author="Jennifer Adams"
+                      time="3 weeks ago"
+                      comments={7}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="mine">
+                  <div className="divide-y max-h-[calc(100vh-300px)] overflow-auto">
+                    <ModelItem
+                      title="Order to Cash Process"
+                      type="BPMN"
+                      author="John Doe"
+                      time="10 min ago"
+                      comments={5}
+                      isActive
+                    />
+                    <ModelItem
+                      title="Return Process"
+                      type="BPMN"
+                      author="John Doe"
+                      time="3 days ago"
+                      comments={2}
+                    />
+                    <ModelItem
+                      title="Customer Acquisition"
+                      type="Journey"
+                      author="John Doe"
+                      time="1 week ago"
+                      comments={9}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="shared">
+                  <div className="divide-y max-h-[calc(100vh-300px)] overflow-auto">
+                    <ModelItem
+                      title="Customer Onboarding Journey"
+                      type="Journey"
+                      author="Lisa Johnson"
+                      time="Yesterday"
+                      comments={12}
+                    />
+                    <ModelItem
+                      title="Invoice Approval"
+                      type="BPMN"
+                      author="Michael Chen"
+                      time="2 days ago"
+                      comments={3}
+                    />
+                  </div>
+                </TabsContent>
               </Tabs>
-              
-              <div className="divide-y max-h-[calc(100vh-300px)] overflow-auto">
-                <ModelItem
-                  title="Order to Cash Process"
-                  type="BPMN"
-                  author="John Doe"
-                  time="10 min ago"
-                  comments={5}
-                  isActive
-                />
-                <ModelItem
-                  title="Customer Onboarding Journey"
-                  type="Journey"
-                  author="Lisa Johnson"
-                  time="Yesterday"
-                  comments={12}
-                />
-                <ModelItem
-                  title="Invoice Approval"
-                  type="BPMN"
-                  author="Michael Chen"
-                  time="2 days ago"
-                  comments={3}
-                />
-                <ModelItem
-                  title="Procurement Process"
-                  type="BPMN"
-                  author="Sarah Miller"
-                  time="1 week ago"
-                  comments={8}
-                />
-                <ModelItem
-                  title="Client Support Experience"
-                  type="Journey"
-                  author="Robert Taylor"
-                  time="2 weeks ago"
-                  comments={15}
-                />
-                <ModelItem
-                  title="Employee Hire to Retire"
-                  type="BPMN"
-                  author="Jennifer Adams"
-                  time="3 weeks ago"
-                  comments={7}
-                />
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -148,162 +195,162 @@ export default function CollaborationHub() {
                     <TabsTrigger value="versions">Versions</TabsTrigger>
                     <TabsTrigger value="approvals">Approvals</TabsTrigger>
                   </TabsList>
-                </Tabs>
-                
-                <div className="px-6 py-4 flex-1 overflow-auto max-h-[calc(100vh-600px)]">
-                  <TabsContent value="comments" className="mt-0 space-y-4">
-                    <Comment
-                      author="Lisa Johnson"
-                      avatar="LJ"
-                      time="10 min ago"
-                      text="I think we should add a verification step after the order is submitted but before it gets processed. This would help reduce errors that occur in the later stages."
-                      replies={[
-                        {
-                          author: "Michael Chen",
-                          avatar: "MC",
-                          time: "5 min ago",
-                          text: "Good point, Lisa. We've seen several cases where errors in the order led to delivery issues. A verification step could save us a lot of trouble."
-                        }
-                      ]}
-                    />
-                    
-                    <Comment
-                      author="Sarah Miller"
-                      avatar="SM"
-                      time="1 hour ago"
-                      text="The payment processing step needs to account for international transactions. Right now it seems to only handle domestic payments."
-                    />
-                    
-                    <Comment
-                      author="Robert Taylor"
-                      avatar="RT"
-                      time="2 hours ago"
-                      text="Can we add more details to the fulfillment step? For instance, we should specify which inventory system we're checking against."
-                      replies={[
-                        {
-                          author: "John Doe",
-                          avatar: "JD",
-                          time: "1 hour ago",
-                          text: "Good catch! I'll add integration points with both our primary and backup inventory systems."
-                        }
-                      ]}
-                    />
-                    
-                    <Comment
-                      author="Jennifer Adams"
-                      avatar="JA"
-                      time="Yesterday"
-                      text="We should also consider adding a customer satisfaction survey at the end of the process. This would give us valuable feedback on how our order fulfillment is performing."
-                    />
-                  </TabsContent>
                   
-                  <TabsContent value="tasks" className="mt-0 space-y-4">
-                    <div className="space-y-3">
-                      <TaskItem
-                        title="Verify order submission flow"
-                        assigned="Lisa Johnson"
-                        dueDate="Oct 25, 2023"
-                        status="In Progress"
-                      />
-                      <TaskItem
-                        title="Update payment processing for international"
-                        assigned="Sarah Miller"
-                        dueDate="Oct 28, 2023"
-                        status="Not Started"
-                      />
-                      <TaskItem
-                        title="Define inventory system integration"
-                        assigned="John Doe"
-                        dueDate="Oct 22, 2023"
-                        status="Completed"
-                      />
-                      <TaskItem
-                        title="Create post-fulfillment satisfaction survey"
-                        assigned="Jennifer Adams"
-                        dueDate="Nov 5, 2023"
-                        status="Not Started"
-                      />
-                      <TaskItem
-                        title="Review entire process with stakeholders"
-                        assigned="Robert Taylor"
-                        dueDate="Nov 10, 2023"
-                        status="Not Started"
-                      />
-                    </div>
-                    
-                    <Button variant="outline" size="sm" className="gap-1 mt-2">
-                      <Clipboard className="h-4 w-4" />
-                      Create New Task
-                    </Button>
-                  </TabsContent>
-                  
-                  <TabsContent value="versions" className="mt-0 space-y-4">
-                    <div className="space-y-3">
-                      <VersionItem 
-                        version="2.3"
-                        date="Oct 15, 2023"
-                        author="John Doe"
-                        changes={["Added verification step", "Updated payment processing"]}
-                        isCurrent
-                      />
-                      <VersionItem 
-                        version="2.2"
-                        date="Oct 8, 2023"
-                        author="Sarah Miller"
-                        changes={["Fixed shipping flow", "Added international options"]}
-                      />
-                      <VersionItem 
-                        version="2.1"
-                        date="Sep 25, 2023"
-                        author="Michael Chen"
-                        changes={["Updated inventory check", "Optimized fulfillment process"]}
-                      />
-                      <VersionItem 
-                        version="2.0"
-                        date="Sep 15, 2023"
-                        author="John Doe"
-                        changes={["Major redesign", "Added digital delivery option"]}
-                      />
-                      <VersionItem 
-                        version="1.2"
-                        date="Aug 30, 2023"
+                  <div className="px-0 py-4 flex-1 overflow-auto max-h-[calc(100vh-600px)]">
+                    <TabsContent value="comments" className="mt-0 space-y-4">
+                      <Comment
                         author="Lisa Johnson"
-                        changes={["Bug fixes in approval flow", "Documentation updates"]}
+                        avatar="LJ"
+                        time="10 min ago"
+                        text="I think we should add a verification step after the order is submitted but before it gets processed. This would help reduce errors that occur in the later stages."
+                        replies={[
+                          {
+                            author: "Michael Chen",
+                            avatar: "MC",
+                            time: "5 min ago",
+                            text: "Good point, Lisa. We've seen several cases where errors in the order led to delivery issues. A verification step could save us a lot of trouble."
+                          }
+                        ]}
                       />
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="approvals" className="mt-0 space-y-4">
-                    <div className="space-y-3">
-                      <ApprovalItem
-                        stage="Process Owner Review"
-                        approver="John Doe"
-                        status="Approved"
-                        date="Oct 15, 2023"
-                        comment="Looks good, all critical changes implemented."
+                      
+                      <Comment
+                        author="Sarah Miller"
+                        avatar="SM"
+                        time="1 hour ago"
+                        text="The payment processing step needs to account for international transactions. Right now it seems to only handle domestic payments."
                       />
-                      <ApprovalItem
-                        stage="Department Head Review"
-                        approver="Lisa Johnson"
-                        status="Approved"
-                        date="Oct 14, 2023"
-                        comment="Approved with minor suggestions for future versions."
+                      
+                      <Comment
+                        author="Robert Taylor"
+                        avatar="RT"
+                        time="2 hours ago"
+                        text="Can we add more details to the fulfillment step? For instance, we should specify which inventory system we're checking against."
+                        replies={[
+                          {
+                            author: "John Doe",
+                            avatar: "JD",
+                            time: "1 hour ago",
+                            text: "Good catch! I'll add integration points with both our primary and backup inventory systems."
+                          }
+                        ]}
                       />
-                      <ApprovalItem
-                        stage="Compliance Check"
-                        approver="Michael Chen"
-                        status="Approved"
-                        date="Oct 12, 2023"
-                        comment="All compliance requirements met."
+                      
+                      <Comment
+                        author="Jennifer Adams"
+                        avatar="JA"
+                        time="Yesterday"
+                        text="We should also consider adding a customer satisfaction survey at the end of the process. This would give us valuable feedback on how our order fulfillment is performing."
                       />
-                      <ApprovalItem
-                        stage="Final Publication"
-                        approver="Robert Taylor"
-                        status="Pending"
-                      />
-                    </div>
-                  </TabsContent>
-                </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="tasks" className="mt-0 space-y-4">
+                      <div className="space-y-3">
+                        <TaskItem
+                          title="Verify order submission flow"
+                          assigned="Lisa Johnson"
+                          dueDate="Oct 25, 2023"
+                          status="In Progress"
+                        />
+                        <TaskItem
+                          title="Update payment processing for international"
+                          assigned="Sarah Miller"
+                          dueDate="Oct 28, 2023"
+                          status="Not Started"
+                        />
+                        <TaskItem
+                          title="Define inventory system integration"
+                          assigned="John Doe"
+                          dueDate="Oct 22, 2023"
+                          status="Completed"
+                        />
+                        <TaskItem
+                          title="Create post-fulfillment satisfaction survey"
+                          assigned="Jennifer Adams"
+                          dueDate="Nov 5, 2023"
+                          status="Not Started"
+                        />
+                        <TaskItem
+                          title="Review entire process with stakeholders"
+                          assigned="Robert Taylor"
+                          dueDate="Nov 10, 2023"
+                          status="Not Started"
+                        />
+                      </div>
+                      
+                      <Button variant="outline" size="sm" className="gap-1 mt-2">
+                        <Clipboard className="h-4 w-4" />
+                        Create New Task
+                      </Button>
+                    </TabsContent>
+                    
+                    <TabsContent value="versions" className="mt-0 space-y-4">
+                      <div className="space-y-3">
+                        <VersionItem 
+                          version="2.3"
+                          date="Oct 15, 2023"
+                          author="John Doe"
+                          changes={["Added verification step", "Updated payment processing"]}
+                          isCurrent
+                        />
+                        <VersionItem 
+                          version="2.2"
+                          date="Oct 8, 2023"
+                          author="Sarah Miller"
+                          changes={["Fixed shipping flow", "Added international options"]}
+                        />
+                        <VersionItem 
+                          version="2.1"
+                          date="Sep 25, 2023"
+                          author="Michael Chen"
+                          changes={["Updated inventory check", "Optimized fulfillment process"]}
+                        />
+                        <VersionItem 
+                          version="2.0"
+                          date="Sep 15, 2023"
+                          author="John Doe"
+                          changes={["Major redesign", "Added digital delivery option"]}
+                        />
+                        <VersionItem 
+                          version="1.2"
+                          date="Aug 30, 2023"
+                          author="Lisa Johnson"
+                          changes={["Bug fixes in approval flow", "Documentation updates"]}
+                        />
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="approvals" className="mt-0 space-y-4">
+                      <div className="space-y-3">
+                        <ApprovalItem
+                          stage="Process Owner Review"
+                          approver="John Doe"
+                          status="Approved"
+                          date="Oct 15, 2023"
+                          comment="Looks good, all critical changes implemented."
+                        />
+                        <ApprovalItem
+                          stage="Department Head Review"
+                          approver="Lisa Johnson"
+                          status="Approved"
+                          date="Oct 14, 2023"
+                          comment="Approved with minor suggestions for future versions."
+                        />
+                        <ApprovalItem
+                          stage="Compliance Check"
+                          approver="Michael Chen"
+                          status="Approved"
+                          date="Oct 12, 2023"
+                          comment="All compliance requirements met."
+                        />
+                        <ApprovalItem
+                          stage="Final Publication"
+                          approver="Robert Taylor"
+                          status="Pending"
+                        />
+                      </div>
+                    </TabsContent>
+                  </div>
+                </Tabs>
                 
                 <div className="px-6 pb-4">
                   <Separator className="mb-4" />
