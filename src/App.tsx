@@ -3,7 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import ProcessManager from "./pages/ProcessManager";
+import JourneyModeler from "./pages/JourneyModeler";
+import CollaborationHub from "./pages/CollaborationHub";
+import ProcessIntelligence from "./pages/ProcessIntelligence";
+import Repository from "./pages/Repository";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +20,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/process-manager" element={<ProcessManager />} />
+          <Route path="/journey-modeler" element={<JourneyModeler />} />
+          <Route path="/collaboration-hub" element={<CollaborationHub />} />
+          <Route path="/repository" element={<Repository />} />
+          <Route path="/process-intelligence" element={<ProcessIntelligence />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
