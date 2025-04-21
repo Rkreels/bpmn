@@ -14,17 +14,19 @@ export const BpmnEditor: React.FC = () => {
           </TabsList>
         </div>
         
-        <TabsContent value="editor" className="flex-1 flex items-center justify-center p-4">
-          <p className="text-muted-foreground">[BPMN Editor Canvas - Would integrate with actual BPMN.js library]</p>
-        </TabsContent>
-        
-        <TabsContent value="preview" className="flex-1 flex items-center justify-center p-4">
-          <p className="text-muted-foreground">[BPMN Preview Mode]</p>
-        </TabsContent>
-        
-        <TabsContent value="xml" className="flex-1 flex items-center justify-center p-4">
-          <p className="text-muted-foreground">[BPMN XML Source View]</p>
-        </TabsContent>
+        <div className="flex-1">
+          <TabsContent value="editor" className="flex-1 flex items-center justify-center p-4 h-full">
+            <p className="text-muted-foreground">[BPMN Editor Canvas - Would integrate with actual BPMN.js library]</p>
+          </TabsContent>
+          
+          <TabsContent value="preview" className="flex-1 flex items-center justify-center p-4 h-full">
+            <p className="text-muted-foreground">[BPMN Preview Mode]</p>
+          </TabsContent>
+          
+          <TabsContent value="xml" className="flex-1 flex items-center justify-center p-4 h-full">
+            <p className="text-muted-foreground">[BPMN XML Source View]</p>
+          </TabsContent>
+        </div>
       </div>
     </Tabs>
   );
