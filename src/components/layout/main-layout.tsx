@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,8 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children, pageTitle, className }: MainLayoutProps) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
