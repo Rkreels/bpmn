@@ -213,6 +213,7 @@ export default function ProcessIntelligence() {
                   Automatically discover process models from event logs
                 </CardDescription>
               </div>
+              
               <Tabs defaultValue="activity">
                 <TabsList>
                   <TabsTrigger value="activity">Activity View</TabsTrigger>
@@ -253,44 +254,46 @@ export default function ProcessIntelligence() {
               </div>
             </div>
 
-            <TabsContent value="activity" className="m-0">
-              <div className="h-[500px] bg-muted/50 rounded-lg border flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <LineChart className="h-16 w-16 text-muted-foreground/60" />
-                  <div>
-                    <h3 className="text-lg font-medium">Process Activities View</h3>
-                    <p className="text-sm text-muted-foreground">Discover and analyze process activities and their relationships</p>
+            <Tabs defaultValue="activity">
+              <TabsContent value="activity" className="m-0">
+                <div className="h-[500px] bg-muted/50 rounded-lg border flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <LineChart className="h-16 w-16 text-muted-foreground/60" />
+                    <div>
+                      <h3 className="text-lg font-medium">Process Activities View</h3>
+                      <p className="text-sm text-muted-foreground">Discover and analyze process activities and their relationships</p>
+                    </div>
+                    <Button className="mt-2">Generate Activity View</Button>
                   </div>
-                  <Button className="mt-2">Generate Activity View</Button>
                 </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="process" className="m-0">
-              <div className="h-[500px] bg-muted/50 rounded-lg border flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <PieChart className="h-16 w-16 text-muted-foreground/60" />
-                  <div>
-                    <h3 className="text-lg font-medium">Process Flow View</h3>
-                    <p className="text-sm text-muted-foreground">Visualize complete process flows based on event data</p>
+              </TabsContent>
+              
+              <TabsContent value="process" className="m-0">
+                <div className="h-[500px] bg-muted/50 rounded-lg border flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <PieChart className="h-16 w-16 text-muted-foreground/60" />
+                    <div>
+                      <h3 className="text-lg font-medium">Process Flow View</h3>
+                      <p className="text-sm text-muted-foreground">Visualize complete process flows based on event data</p>
+                    </div>
+                    <Button className="mt-2">Generate Process View</Button>
                   </div>
-                  <Button className="mt-2">Generate Process View</Button>
                 </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="social" className="m-0">
-              <div className="h-[500px] bg-muted/50 rounded-lg border flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <BarChart className="h-16 w-16 text-muted-foreground/60" />
-                  <div>
-                    <h3 className="text-lg font-medium">Social Interaction View</h3>
-                    <p className="text-sm text-muted-foreground">Analyze handovers and interactions between process participants</p>
+              </TabsContent>
+              
+              <TabsContent value="social" className="m-0">
+                <div className="h-[500px] bg-muted/50 rounded-lg border flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <BarChart className="h-16 w-16 text-muted-foreground/60" />
+                    <div>
+                      <h3 className="text-lg font-medium">Social Interaction View</h3>
+                      <p className="text-sm text-muted-foreground">Analyze handovers and interactions between process participants</p>
+                    </div>
+                    <Button className="mt-2">Generate Social View</Button>
                   </div>
-                  <Button className="mt-2">Generate Social View</Button>
                 </div>
-              </div>
-            </TabsContent>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
