@@ -7,7 +7,9 @@ import {
   ZoomIn,
   ZoomOut,
   Check,
-  Settings,
+  Grid,
+  Download,
+  Upload,
 } from "lucide-react";
 import {
   Tooltip,
@@ -15,6 +17,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface EditorToolbarProps {
   zoomLevel: number;
@@ -42,11 +50,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onExportJson,
 }) => {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={onZoomOut}>
+            <Button variant="outline" size="sm" onClick={onZoomOut} className="h-8 w-8 p-0">
               <ZoomOut className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -59,7 +67,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={onZoomIn}>
+            <Button variant="outline" size="sm" onClick={onZoomIn} className="h-8 w-8 p-0">
               <ZoomIn className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -70,8 +78,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={onToggleGrid}>
-              <Settings className="h-4 w-4" />
+            <Button 
+              variant={showGrid ? "secondary" : "outline"} 
+              size="sm" 
+              onClick={onToggleGrid} 
+              className="h-8 w-8 p-0"
+            >
+              <Grid className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>{showGrid ? "Hide Grid" : "Show Grid"}</TooltipContent>
@@ -81,7 +94,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={onToggleValidation}>
+            <Button 
+              variant={showValidation ? "secondary" : "outline"} 
+              size="sm" 
+              onClick={onToggleValidation} 
+              className="h-8 w-8 p-0"
+            >
               <Check className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -89,40 +107,58 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </Tooltip>
       </TooltipProvider>
 
+      <div className="border-l h-6 mx-2"></div>
+
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={onSaveModel}>
-              <Save className="h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={onSaveModel} className="flex items-center">
+              <Save className="h-4 w-4 mr-1" />
+              Save
             </Button>
           </TooltipTrigger>
           <TooltipContent>Save Model</TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
-      <div className="flex items-center border-l ml-1 pl-1">
+      <DropdownMenu>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={onExportXml}>
-                <FileText className="h-4 w-4" />
-              </Button>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center">
+                  <Download className="h-4 w-4 mr-1" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent>Export XML</TooltipContent>
+            <TooltipContent>Export Model</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={onExportJson}>
-                <FileText className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Export JSON</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+        
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={onExportXml}>
+            <FileText className="h-4 w-4 mr-2" />
+            Export as BPMN XML
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onExportJson}>
+            <FileText className="h-4 w-4 mr-2" />
+            Export as JSON
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" className="flex items-center">
+              <Upload className="h-4 w-4 mr-1" />
+              Import
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Import Model</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };

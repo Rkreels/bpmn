@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { EditorToolbar } from "./editor/EditorToolbar";
@@ -28,7 +28,11 @@ const sampleBpmnXml = `<?xml version="1.0" encoding="UTF-8"?>
   </bpmn:process>
 </bpmn:definitions>`;
 
-export const BpmnEditor: React.FC = () => {
+interface BpmnEditorProps {
+  activeTool?: string;
+}
+
+export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" }) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("editor");
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -49,6 +53,16 @@ export const BpmnEditor: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [currentElementPosition, setCurrentElementPosition] = useState({ x: 0, y: 0 });
+  const [connectingElement, setConnectingElement] = useState<string | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+
+  // Sync with the parent component's tool selection
+  useEffect(() => {
+    if (activeTool) {
+      setSelectedTool(activeTool);
+    }
+  }, [activeTool]);
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 10, 200));
@@ -64,6 +78,12 @@ export const BpmnEditor: React.FC = () => {
 
   const handleToggleValidation = () => {
     setShowValidation((prev) => !prev);
+    toast({
+      title: showValidation ? "Validation Hidden" : "Validation Shown",
+      description: showValidation 
+        ? "Process validation indicators are now hidden." 
+        : "Process validation indicators are now visible.",
+    });
   };
 
   const handleSaveModel = () => {
@@ -122,6 +142,30 @@ export const BpmnEditor: React.FC = () => {
   const handleElementSelect = (elementId: string) => {
     if (selectedTool === "select") {
       setSelectedElement(elementId === selectedElement ? null : elementId);
+    } else if (selectedTool === "connector" && connectingElement === null) {
+      // Start connecting
+      setConnectingElement(elementId);
+      toast({
+        title: "Connection Started",
+        description: "Select a target element to complete the connection.",
+      });
+    } else if (selectedTool === "connector" && connectingElement !== null && connectingElement !== elementId) {
+      // Finish connecting
+      const newConnectionId = `Flow_${Date.now()}`;
+      const newConnection = {
+        id: newConnectionId,
+        sourceId: connectingElement,
+        targetId: elementId,
+        type: "sequence-flow"
+      };
+      
+      setConnections([...connections, newConnection]);
+      setConnectingElement(null);
+      
+      toast({
+        title: "Connection Created",
+        description: "A new connection has been created between the elements."
+      });
     }
   };
 
@@ -152,6 +196,51 @@ export const BpmnEditor: React.FC = () => {
     }
   };
 
+  const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (selectedTool !== "select" && selectedTool !== "connector" && selectedTool !== "hand") {
+      // Calculate position relative to canvas
+      const canvasRect = e.currentTarget.getBoundingClientRect();
+      const xPos = (e.clientX - canvasRect.left) / (zoomLevel / 100);
+      const yPos = (e.clientY - canvasRect.top) / (zoomLevel / 100);
+      
+      const newId = `${selectedTool}_${Date.now()}`;
+      let name = `New ${selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1)}`;
+      
+      if (selectedTool === "task") name = "New Task";
+      if (selectedTool === "gateway") name = "New Gateway";
+      if (selectedTool === "start-event" || selectedTool === "event") name = "New Event";
+      if (selectedTool === "end-event") name = "End Event";
+      if (selectedTool === "subprocess") name = "New Subprocess";
+      if (selectedTool === "dataobject") name = "New Data Object";
+      if (selectedTool === "pool") name = "New Pool";
+      
+      const newElement = {
+        id: newId,
+        type: selectedTool === "event" ? "start-event" : selectedTool,
+        name,
+        position: { x: xPos, y: yPos }
+      };
+      
+      setElements([...elements, newElement]);
+      setSelectedElement(newId);
+      
+      toast({
+        title: "Element Added",
+        description: `New ${selectedTool} element has been added to the diagram.`
+      });
+    } else if (connectingElement !== null && selectedTool === "connector") {
+      // Cancel connecting if clicking on canvas
+      setConnectingElement(null);
+      toast({
+        title: "Connection Canceled",
+        description: "Connection creation has been canceled."
+      });
+    } else if (selectedTool === "select") {
+      // Deselect when clicking on canvas
+      setSelectedElement(null);
+    }
+  };
+
   const handleElementDelete = () => {
     if (selectedElement) {
       setElements(elements.filter(el => el.id !== selectedElement));
@@ -169,7 +258,7 @@ export const BpmnEditor: React.FC = () => {
   };
 
   const handleElementDragStart = (e: React.MouseEvent, elementId: string) => {
-    if (selectedTool === "select" || selectedTool === "move") {
+    if (selectedTool === "select" || selectedTool === "move" || selectedTool === "hand") {
       e.preventDefault();
       const element = elements.find(el => el.id === elementId);
       if (element) {
@@ -183,8 +272,8 @@ export const BpmnEditor: React.FC = () => {
 
   const handleElementDragMove = (e: React.MouseEvent) => {
     if (isDragging && selectedElement) {
-      const dx = e.clientX - dragStartPos.x;
-      const dy = e.clientY - dragStartPos.y;
+      const dx = (e.clientX - dragStartPos.x) / (zoomLevel / 100);
+      const dy = (e.clientY - dragStartPos.y) / (zoomLevel / 100);
       
       setElements(elements.map(el => {
         if (el.id === selectedElement) {
@@ -203,6 +292,28 @@ export const BpmnEditor: React.FC = () => {
 
   const handleElementDragEnd = () => {
     setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Track mouse position for drawing temporary connections
+    const canvasRect = e.currentTarget.getBoundingClientRect();
+    setMousePosition({
+      x: (e.clientX - canvasRect.left) / (zoomLevel / 100),
+      y: (e.clientY - canvasRect.top) / (zoomLevel / 100)
+    });
+  };
+
+  const handleSelectTool = (tool: string) => {
+    setSelectedTool(tool);
+    if (tool !== "connector") {
+      setConnectingElement(null);
+    }
+    
+    toast({
+      title: "Tool Selected",
+      description: `${tool.charAt(0).toUpperCase() + tool.slice(1)} tool is now active.`,
+      variant: "default"
+    });
   };
 
   const handleDuplicateElement = () => {
@@ -233,10 +344,26 @@ export const BpmnEditor: React.FC = () => {
   const handleEditElement = () => {
     const element = elements.find(el => el.id === selectedElement);
     if (element) {
+      // In a full implementation, this would open a modal or side panel
+      // For simplicity, we'll just show a toast
       toast({
         title: "Edit Element",
         description: `Editing ${element.name}`
       });
+      
+      // Here we could update the element name with a prompt for demo purposes
+      const newName = prompt("Enter new name for this element:", element.name);
+      if (newName && newName.trim() !== "") {
+        setElements(elements.map(el => {
+          if (el.id === selectedElement) {
+            return {
+              ...el,
+              name: newName
+            };
+          }
+          return el;
+        }));
+      }
     }
   };
 
@@ -271,7 +398,7 @@ export const BpmnEditor: React.FC = () => {
               <ElementTools
                 selectedTool={selectedTool}
                 selectedElement={selectedElement}
-                onSelectTool={setSelectedTool}
+                onSelectTool={handleSelectTool}
                 onEditElement={handleEditElement}
                 onDuplicateElement={handleDuplicateElement}
                 onDeleteElement={handleElementDelete}
@@ -279,18 +406,27 @@ export const BpmnEditor: React.FC = () => {
               
               <BpmnElementPalette onAddElement={handleAddElement} />
               
-              <BpmnCanvas 
-                elements={elements}
-                connections={connections}
-                selectedElement={selectedElement}
-                selectedTool={selectedTool}
-                zoomLevel={zoomLevel}
-                showGrid={showGrid}
-                onElementSelect={handleElementSelect}
-                onElementDragStart={handleElementDragStart}
-                onElementDragMove={handleElementDragMove}
-                onElementDragEnd={handleElementDragEnd}
-              />
+              <div 
+                className={`flex-1 overflow-auto relative ${showGrid ? 'bg-grid' : 'bg-slate-50'}`}
+                style={{ height: 'calc(100% - 50px)' }}
+                onClick={handleCanvasClick}
+                onMouseMove={handleMouseMove}
+              >
+                <BpmnCanvas 
+                  elements={elements}
+                  connections={connections}
+                  selectedElement={selectedElement}
+                  selectedTool={selectedTool}
+                  zoomLevel={zoomLevel}
+                  showGrid={showGrid}
+                  connectingElement={connectingElement}
+                  mousePosition={mousePosition}
+                  onElementSelect={handleElementSelect}
+                  onElementDragStart={handleElementDragStart}
+                  onElementDragMove={handleElementDragMove}
+                  onElementDragEnd={handleElementDragEnd}
+                />
+              </div>
               
               <div className="border-t p-3 bg-muted/20">
                 <div className="flex items-center justify-between">

@@ -30,6 +30,7 @@ export const ProcessContent: React.FC = () => {
   const [processStatus, setProcessStatus] = useState("Draft");
   const [isRenaming, setIsRenaming] = useState(false);
   const [tempProcessName, setTempProcessName] = useState(processName);
+  const [activeTool, setActiveTool] = useState<string>("select");
 
   const handleSaveProcess = () => {
     toast({
@@ -92,6 +93,15 @@ export const ProcessContent: React.FC = () => {
     toast({
       title: "Status Updated",
       description: `Process status changed to ${newStatus}.`,
+    });
+  };
+
+  const handleToolSelect = (tool: string) => {
+    setActiveTool(tool);
+    toast({
+      title: "Tool Selected",
+      description: `${tool.charAt(0).toUpperCase() + tool.slice(1)} tool is now active`,
+      variant: "default",
     });
   };
 
@@ -216,15 +226,69 @@ export const ProcessContent: React.FC = () => {
         <div className="bg-muted/50 p-3 rounded-md mb-4 overflow-x-auto whitespace-nowrap">
           <div className="flex items-center gap-3">
             <span className="font-medium text-sm">Tools:</span>
-            <Button variant="ghost" size="sm">Select</Button>
-            <Button variant="ghost" size="sm">Hand</Button>
-            <Button variant="ghost" size="sm">Task</Button>
-            <Button variant="ghost" size="sm">Gateway</Button>
-            <Button variant="ghost" size="sm">Event</Button>
-            <Button variant="ghost" size="sm">Subprocess</Button>
-            <Button variant="ghost" size="sm">Data Object</Button>
-            <Button variant="ghost" size="sm">Pool/Lane</Button>
-            <Button variant="ghost" size="sm">Connector</Button>
+            <Button 
+              variant={activeTool === "select" ? "secondary" : "ghost"} 
+              size="sm" 
+              onClick={() => handleToolSelect("select")}
+            >
+              Select
+            </Button>
+            <Button 
+              variant={activeTool === "hand" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("hand")}
+            >
+              Hand
+            </Button>
+            <Button 
+              variant={activeTool === "task" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("task")}
+            >
+              Task
+            </Button>
+            <Button 
+              variant={activeTool === "gateway" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("gateway")}
+            >
+              Gateway
+            </Button>
+            <Button 
+              variant={activeTool === "event" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("event")}
+            >
+              Event
+            </Button>
+            <Button 
+              variant={activeTool === "subprocess" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("subprocess")}
+            >
+              Subprocess
+            </Button>
+            <Button 
+              variant={activeTool === "dataobject" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("dataobject")}
+            >
+              Data Object
+            </Button>
+            <Button 
+              variant={activeTool === "pool" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("pool")}
+            >
+              Pool/Lane
+            </Button>
+            <Button 
+              variant={activeTool === "connector" ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => handleToolSelect("connector")}
+            >
+              Connector
+            </Button>
           </div>
         </div>
         
@@ -254,7 +318,7 @@ export const ProcessContent: React.FC = () => {
           </TabsList>
           
           <TabsContent value="editor">
-            <BpmnEditor />
+            <BpmnEditor activeTool={activeTool} />
           </TabsContent>
           
           <TabsContent value="history">
