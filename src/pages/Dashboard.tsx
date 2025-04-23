@@ -35,7 +35,7 @@ export default function Dashboard() {
   const { notifications, markAsRead, clearAll } = useNotifications();
 
   return (
-    <MainLayout pageTitle="Dashboard">
+    <MainLayout pageTitle="Dashboard" showPageTitle={false}>
       <div className="grid gap-6">
         {/* Welcome and quick actions section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

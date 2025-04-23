@@ -8,9 +8,15 @@ interface MainLayoutProps {
   children: React.ReactNode;
   pageTitle: string;
   className?: string;
+  showPageTitle?: boolean;
 }
 
-export function MainLayout({ children, pageTitle, className }: MainLayoutProps) {
+export function MainLayout({ 
+  children, 
+  pageTitle, 
+  className, 
+  showPageTitle = true 
+}: MainLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const toggleSidebar = () => {
@@ -25,7 +31,11 @@ export function MainLayout({ children, pageTitle, className }: MainLayoutProps) 
         style={{ 
           paddingLeft: sidebarCollapsed ? "var(--sidebar-width-collapsed)" : "var(--sidebar-width)"
         }}>
-        <Header pageTitle={pageTitle} onToggleSidebar={toggleSidebar} />
+        <Header 
+          pageTitle={pageTitle} 
+          onToggleSidebar={toggleSidebar} 
+          showPageTitle={showPageTitle} 
+        />
         
         <main className={cn("flex-1 p-6", className)}>
           {children}
