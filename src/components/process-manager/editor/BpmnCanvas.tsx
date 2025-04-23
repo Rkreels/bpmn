@@ -59,7 +59,7 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
             onMouseUp={onElementDragEnd}
             onMouseLeave={onElementDragEnd}
           >
-            {element.name}
+            <span className="text-sm font-medium truncate max-w-[90%] break-words">{element.name}</span>
           </div>
         );
         
@@ -81,7 +81,7 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
             onMouseLeave={onElementDragEnd}
           >
             <div className="w-full h-full bg-white border transform rotate-45 flex items-center justify-center">
-              <span className="transform -rotate-45 text-center">{element.name}</span>
+              <span className="transform -rotate-45 text-center text-xs max-w-[70%] truncate">{element.name}</span>
             </div>
           </div>
         );
@@ -98,7 +98,7 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
             onMouseUp={onElementDragEnd}
             onMouseLeave={onElementDragEnd}
           >
-            <div className="text-xs">{element.name}</div>
+            <div className="text-xs truncate max-w-[80%] text-center">{element.name}</div>
           </div>
         );
         
@@ -114,7 +114,7 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
             onMouseUp={onElementDragEnd}
             onMouseLeave={onElementDragEnd}
           >
-            <div className="text-xs">{element.name}</div>
+            <div className="text-xs truncate max-w-[80%] text-center">{element.name}</div>
           </div>
         );
         
@@ -130,7 +130,7 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
             onMouseUp={onElementDragEnd}
             onMouseLeave={onElementDragEnd}
           >
-            {element.name}
+            <span className="text-xs truncate max-w-[90%] text-center">{element.name}</span>
           </div>
         );
     }

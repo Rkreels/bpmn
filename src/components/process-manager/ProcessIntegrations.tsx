@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Link, Plus } from "lucide-react";
+import { Link2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { integrations } from "./integration/integrationData";
@@ -54,7 +54,7 @@ export const ProcessIntegrations: React.FC = () => {
           </p>
         </div>
         <Button size="sm" className="gap-1">
-          <Link className="h-4 w-4" />
+          <Link2 className="h-4 w-4" />
           Add Integration
         </Button>
       </div>
