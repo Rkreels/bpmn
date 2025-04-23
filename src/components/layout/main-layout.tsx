@@ -27,10 +27,12 @@ export function MainLayout({
     <div className="min-h-screen bg-background flex">
       <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       
-      <div className="flex-1 flex flex-col transition-all duration-300" 
-        style={{ 
-          paddingLeft: sidebarCollapsed ? "var(--sidebar-width-collapsed)" : "var(--sidebar-width)"
-        }}>
+      <div 
+        className={cn(
+          "flex-1 flex flex-col transition-all duration-300",
+          sidebarCollapsed ? "ml-[70px]" : "ml-[240px]"
+        )}
+      >
         <Header 
           pageTitle={pageTitle} 
           onToggleSidebar={toggleSidebar} 

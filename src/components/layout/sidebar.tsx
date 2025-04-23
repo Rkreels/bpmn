@@ -25,17 +25,16 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps) {
+  const sidebarWidth = "240px";
+  const collapsedWidth = "70px";
+  
   return (
     <div
       className={cn(
         "flex flex-col bg-sidebar fixed h-screen z-30 transition-all duration-300 border-r border-sidebar-border",
-        collapsed ? "w-[var(--sidebar-width-collapsed)]" : "w-[var(--sidebar-width)]",
+        collapsed ? "w-[70px]" : "w-[240px]",
         className
       )}
-      style={{
-        "--sidebar-width": "240px",
-        "--sidebar-width-collapsed": "70px",
-      } as React.CSSProperties}
     >
       <div className="flex items-center h-14 border-b border-sidebar-border px-4">
         <div className="flex items-center flex-1 gap-2 overflow-hidden">
