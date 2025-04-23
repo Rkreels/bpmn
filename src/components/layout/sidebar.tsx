@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,10 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
         collapsed ? "w-[var(--sidebar-width-collapsed)]" : "w-[var(--sidebar-width)]",
         className
       )}
+      style={{
+        "--sidebar-width": "240px",
+        "--sidebar-width-collapsed": "70px",
+      } as React.CSSProperties}
     >
       <div className="flex items-center h-14 border-b border-sidebar-border px-4">
         <div className="flex items-center flex-1 gap-2 overflow-hidden">
