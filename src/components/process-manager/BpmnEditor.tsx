@@ -1,33 +1,12 @@
 
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import {
-  FileJson,
-  FileCode,
-  Download,
-  Upload,
-  Settings,
-  Save,
-  Undo,
-  Redo,
-  ZoomIn,
-  ZoomOut,
-  Check,
-  Code,
-  Move,
-  Link,
-  Edit,
-  Trash2,
-  Copy
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { EditorToolbar } from "./editor/EditorToolbar";
+import { ElementTools } from "./editor/ElementTools";
+import { BpmnCanvas } from "./editor/BpmnCanvas";
+import { XmlSourceView } from "./editor/XmlSourceView";
+import { SimulationView } from "./editor/SimulationView";
 import { BpmnElementPalette } from "./BpmnElementPalette";
 
 // Sample XML for demonstration
@@ -251,140 +230,14 @@ export const BpmnEditor: React.FC = () => {
     }
   };
 
-  // Helper functions to render elements based on their type
-  const renderElement = (element: any) => {
-    const isSelected = selectedElement === element.id;
-    const commonClasses = `absolute cursor-${selectedTool === "select" || selectedTool === "move" ? "move" : "pointer"} ${isSelected ? "ring-2 ring-primary shadow-lg" : ""}`;
-    
-    switch(element.type) {
-      case "task":
-        return (
-          <div 
-            className={`${commonClasses} bg-white border rounded-md p-2 w-32 h-20 flex items-center justify-center text-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={() => handleElementSelect(element.id)}
-            onMouseDown={(e) => handleElementDragStart(e, element.id)}
-            onMouseMove={handleElementDragMove}
-            onMouseUp={handleElementDragEnd}
-            onMouseLeave={handleElementDragEnd}
-          >
-            {element.name}
-          </div>
-        );
-        
-      case "gateway":
-        return (
-          <div 
-            className={`${commonClasses}`}
-            style={{ 
-              left: element.position.x, 
-              top: element.position.y,
-              width: "60px",
-              height: "60px"
-            }}
-            onClick={() => handleElementSelect(element.id)}
-            onMouseDown={(e) => handleElementDragStart(e, element.id)}
-            onMouseMove={handleElementDragMove}
-            onMouseUp={handleElementDragEnd}
-            onMouseLeave={handleElementDragEnd}
-          >
-            <div className="w-full h-full bg-white border transform rotate-45 flex items-center justify-center">
-              <span className="transform -rotate-45 text-center">{element.name}</span>
-            </div>
-          </div>
-        );
-        
-      case "start-event":
-        return (
-          <div 
-            className={`${commonClasses} bg-white border rounded-full w-12 h-12 flex items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={() => handleElementSelect(element.id)}
-            onMouseDown={(e) => handleElementDragStart(e, element.id)}
-            onMouseMove={handleElementDragMove}
-            onMouseUp={handleElementDragEnd}
-            onMouseLeave={handleElementDragEnd}
-          >
-            <div className="text-xs">{element.name}</div>
-          </div>
-        );
-        
-      case "end-event":
-        return (
-          <div 
-            className={`${commonClasses} bg-white border-2 border-black rounded-full w-12 h-12 flex items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={() => handleElementSelect(element.id)}
-            onMouseDown={(e) => handleElementDragStart(e, element.id)}
-            onMouseMove={handleElementDragMove}
-            onMouseUp={handleElementDragEnd}
-            onMouseLeave={handleElementDragEnd}
-          >
-            <div className="text-xs">{element.name}</div>
-          </div>
-        );
-        
-      default:
-        return (
-          <div 
-            className={`${commonClasses} bg-white border rounded-md p-2 w-24 h-16 flex items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={() => handleElementSelect(element.id)}
-            onMouseDown={(e) => handleElementDragStart(e, element.id)}
-            onMouseMove={handleElementDragMove}
-            onMouseUp={handleElementDragEnd}
-            onMouseLeave={handleElementDragEnd}
-          >
-            {element.name}
-          </div>
-        );
+  const handleEditElement = () => {
+    const element = elements.find(el => el.id === selectedElement);
+    if (element) {
+      toast({
+        title: "Edit Element",
+        description: `Editing ${element.name}`
+      });
     }
-  };
-
-  // Render connections between elements
-  const renderConnections = () => {
-    return connections.map(conn => {
-      const source = elements.find(el => el.id === conn.sourceId);
-      const target = elements.find(el => el.id === conn.targetId);
-      
-      if (source && target) {
-        const sourceX = source.position.x + 50; // Approximate center
-        const sourceY = source.position.y + 30;
-        const targetX = target.position.x + 50;
-        const targetY = target.position.y + 30;
-        
-        return (
-          <svg 
-            key={conn.id} 
-            className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          >
-            <line
-              x1={sourceX}
-              y1={sourceY}
-              x2={targetX}
-              y2={targetY}
-              stroke="black"
-              strokeWidth={conn.type === "message-flow" ? 1 : 2}
-              strokeDasharray={conn.type === "message-flow" ? "5,5" : ""}
-              markerEnd="url(#arrowhead)"
-            />
-            <defs>
-              <marker
-                id="arrowhead"
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-              >
-                <polygon points="0 0, 10 3.5, 0 7" />
-              </marker>
-            </defs>
-          </svg>
-        );
-      }
-      return null;
-    });
   };
 
   return (
@@ -398,181 +251,46 @@ export const BpmnEditor: React.FC = () => {
             <TabsTrigger value="simulation">Simulation</TabsTrigger>
           </TabsList>
           
-          <div className="flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleZoomOut}>
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Zoom Out</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <span className="text-xs font-medium w-12 text-center">{zoomLevel}%</span>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleZoomIn}>
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Zoom In</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleToggleGrid}>
-                    <Code className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{showGrid ? "Hide Grid" : "Show Grid"}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleToggleValidation}>
-                    <Check className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{showValidation ? "Hide Validation" : "Show Validation"}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleSaveModel}>
-                    <Save className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Save Model</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <div className="flex items-center border-l ml-1 pl-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={handleExportXml}>
-                      <FileCode className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Export XML</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={handleExportJson}>
-                      <FileJson className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Export JSON</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
+          <EditorToolbar 
+            zoomLevel={zoomLevel}
+            showGrid={showGrid}
+            showValidation={showValidation}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onToggleGrid={handleToggleGrid}
+            onToggleValidation={handleToggleValidation}
+            onSaveModel={handleSaveModel}
+            onExportXml={handleExportXml}
+            onExportJson={handleExportJson}
+          />
         </div>
         
         <div className="flex-1">
           <TabsContent value="editor" className="flex-1 h-full m-0 p-0">
             <div className="relative h-full border-b flex flex-col">
-              <div className="p-2 border-b bg-muted/20">
-                <div className="flex gap-2">
-                  <Button 
-                    variant={selectedTool === "select" ? "secondary" : "outline"} 
-                    size="sm"
-                    onClick={() => setSelectedTool("select")}
-                  >
-                    Select
-                  </Button>
-                  <Button 
-                    variant={selectedTool === "move" ? "secondary" : "outline"} 
-                    size="sm"
-                    onClick={() => setSelectedTool("move")}
-                  >
-                    <Move className="h-4 w-4 mr-1" />
-                    Move
-                  </Button>
-                  <Button 
-                    variant={selectedTool === "sequence-flow" ? "secondary" : "outline"} 
-                    size="sm"
-                    onClick={() => setSelectedTool("sequence-flow")}
-                  >
-                    <Link className="h-4 w-4 mr-1" />
-                    Connect
-                  </Button>
-                  
-                  {selectedElement && (
-                    <div className="ml-auto flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          const element = elements.find(el => el.id === selectedElement);
-                          if (element) {
-                            toast({
-                              title: "Edit Element",
-                              description: `Editing ${element.name}`
-                            });
-                          }
-                        }}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleDuplicateElement}
-                      >
-                        <Copy className="h-4 w-4 mr-1" />
-                        Duplicate
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleElementDelete}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ElementTools
+                selectedTool={selectedTool}
+                selectedElement={selectedElement}
+                onSelectTool={setSelectedTool}
+                onEditElement={handleEditElement}
+                onDuplicateElement={handleDuplicateElement}
+                onDeleteElement={handleElementDelete}
+              />
               
               <BpmnElementPalette onAddElement={handleAddElement} />
               
-              <div 
-                className={`flex-1 overflow-auto relative ${showGrid ? 'bg-grid' : 'bg-slate-50'}`}
-                style={{ height: 'calc(100% - 50px)' }}
-              >
-                <div
-                  className="h-full w-full relative"
-                  style={{ 
-                    transform: `scale(${zoomLevel/100})`,
-                    transformOrigin: 'top left',
-                    transition: 'transform 0.2s ease-out',
-                    minWidth: '2000px',
-                    minHeight: '1000px'
-                  }}
-                >
-                  {/* Render connections */}
-                  {renderConnections()}
-                  
-                  {/* Render elements */}
-                  {elements.map(element => renderElement(element))}
-                </div>
-              </div>
+              <BpmnCanvas 
+                elements={elements}
+                connections={connections}
+                selectedElement={selectedElement}
+                selectedTool={selectedTool}
+                zoomLevel={zoomLevel}
+                showGrid={showGrid}
+                onElementSelect={handleElementSelect}
+                onElementDragStart={handleElementDragStart}
+                onElementDragMove={handleElementDragMove}
+                onElementDragEnd={handleElementDragEnd}
+              />
               
               <div className="border-t p-3 bg-muted/20">
                 <div className="flex items-center justify-between">
@@ -622,81 +340,14 @@ export const BpmnEditor: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="xml" className="flex-1 h-full m-0 p-4">
-            <div className="h-full flex flex-col">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-medium">BPMN XML Source</h3>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-              </div>
-              <div className="flex-1 border rounded-md overflow-hidden">
-                <textarea
-                  className="font-mono text-sm w-full h-full p-4 focus:outline-none resize-none"
-                  value={xmlSource}
-                  onChange={handleXmlChange}
-                  spellCheck="false"
-                ></textarea>
-              </div>
-            </div>
+            <XmlSourceView 
+              xmlSource={xmlSource}
+              onXmlChange={handleXmlChange}
+            />
           </TabsContent>
           
           <TabsContent value="simulation" className="flex-1 flex flex-col p-4 h-full m-0">
-            <div className="border rounded-md bg-white p-6 flex-1">
-              <h3 className="text-lg font-medium mb-4">Process Simulation</h3>
-              
-              <div className="mb-6">
-                <p className="text-muted-foreground mb-4">Configure simulation parameters and run scenarios to analyze process performance.</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="border rounded-md p-4">
-                    <h4 className="font-medium mb-2">Resource Configuration</h4>
-                    <p className="text-sm text-muted-foreground">Set the number of resources available for each activity.</p>
-                    <Button variant="outline" size="sm" className="mt-4">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure Resources
-                    </Button>
-                  </div>
-                  
-                  <div className="border rounded-md p-4">
-                    <h4 className="font-medium mb-2">Time Parameters</h4>
-                    <p className="text-sm text-muted-foreground">Set processing times, delays, and waiting times.</p>
-                    <Button variant="outline" size="sm" className="mt-4">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure Times
-                    </Button>
-                  </div>
-                  
-                  <div className="border rounded-md p-4">
-                    <h4 className="font-medium mb-2">Costs & Metrics</h4>
-                    <p className="text-sm text-muted-foreground">Define costs and KPIs to track during simulation.</p>
-                    <Button variant="outline" size="sm" className="mt-4">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure Metrics
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-center mt-6">
-                <Button size="lg">
-                  Run Simulation
-                </Button>
-              </div>
-              
-              <div className="mt-8 border-t pt-6">
-                <h4 className="font-medium mb-4">Simulation Results</h4>
-                <div className="flex items-center justify-center border rounded-md p-8 bg-muted/50">
-                  <p className="text-muted-foreground">Run a simulation to see results and analytics</p>
-                </div>
-              </div>
-            </div>
+            <SimulationView />
           </TabsContent>
         </div>
       </div>
