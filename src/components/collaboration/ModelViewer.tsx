@@ -17,21 +17,21 @@ export const ModelViewer: React.FC = () => {
           </div>
           
           <div className="flex-1 bg-muted/50">
-            <TabsContent value="view" className="flex-1 flex items-center justify-center h-full">
+            <TabsContent value="view" className="flex-1 flex items-center justify-center h-full m-0 p-0">
               <div className="text-muted-foreground flex flex-col items-center">
                 <GitMerge className="h-10 w-10 mb-2 opacity-70" />
                 <p>[Process Model Viewer]</p>
               </div>
             </TabsContent>
             
-            <TabsContent value="edit" className="flex-1 flex items-center justify-center h-full">
+            <TabsContent value="edit" className="flex-1 flex items-center justify-center h-full m-0 p-0">
               <div className="text-muted-foreground flex flex-col items-center">
                 <GitMerge className="h-10 w-10 mb-2 opacity-70" />
                 <p>[Process Model Editor]</p>
               </div>
             </TabsContent>
             
-            <TabsContent value="comments" className="flex-1 flex items-center justify-center h-full">
+            <TabsContent value="comments" className="flex-1 flex items-center justify-center h-full m-0 p-0">
               <div className="text-muted-foreground flex flex-col items-center">
                 <GitMerge className="h-10 w-10 mb-2 opacity-70" />
                 <p>[Process Model Comments]</p>
