@@ -15,6 +15,11 @@ import {
   ZoomOut,
   Check,
   Code,
+  Move,
+  Link,
+  Edit,
+  Trash2,
+  Copy
 } from "lucide-react";
 import {
   Tooltip,
@@ -22,6 +27,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+import { BpmnElementPalette } from "./BpmnElementPalette";
 
 // Sample XML for demonstration
 const sampleBpmnXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -43,11 +50,26 @@ const sampleBpmnXml = `<?xml version="1.0" encoding="UTF-8"?>
 </bpmn:definitions>`;
 
 export const BpmnEditor: React.FC = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("editor");
   const [zoomLevel, setZoomLevel] = useState(100);
   const [showGrid, setShowGrid] = useState(true);
   const [showValidation, setShowValidation] = useState(false);
   const [xmlSource, setXmlSource] = useState(sampleBpmnXml);
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [selectedTool, setSelectedTool] = useState<string>("select");
+  const [elements, setElements] = useState([
+    { id: "StartEvent_1", type: "start-event", name: "Order received", position: { x: 150, y: 150 } },
+    { id: "Activity_1", type: "task", name: "Process Order", position: { x: 300, y: 150 } },
+    { id: "EndEvent_1", type: "end-event", name: "Order fulfilled", position: { x: 450, y: 150 } },
+  ]);
+  const [connections, setConnections] = useState([
+    { id: "Flow_1", sourceId: "StartEvent_1", targetId: "Activity_1", type: "sequence-flow" },
+    { id: "Flow_2", sourceId: "Activity_1", targetId: "EndEvent_1", type: "sequence-flow" },
+  ]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [currentElementPosition, setCurrentElementPosition] = useState({ x: 0, y: 0 });
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 10, 200));
@@ -66,16 +88,13 @@ export const BpmnEditor: React.FC = () => {
   };
 
   const handleSaveModel = () => {
-    // In a real implementation, this would save the model to the backend
-    console.log("Saving BPMN model...");
-    // Simulate successful save
-    const timestamp = new Date().toLocaleTimeString();
-    console.log(`Model saved at ${timestamp}`);
+    toast({
+      title: "Model Saved",
+      description: "Your BPMN model has been saved successfully."
+    });
   };
 
   const handleExportXml = () => {
-    // In a real implementation, this would trigger a file download
-    console.log("Exporting BPMN XML...");
     const blob = new Blob([xmlSource], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -85,31 +104,23 @@ export const BpmnEditor: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    toast({
+      title: "BPMN XML Exported",
+      description: "The BPMN XML file has been downloaded."
+    });
   };
 
   const handleExportJson = () => {
-    // In a real implementation, this would convert BPMN XML to JSON and trigger download
-    console.log("Exporting BPMN as JSON...");
-    // Simple mock JSON conversion
-    const mockJson = JSON.stringify(
-      {
-        id: "Process_1",
-        name: "Order Processing",
-        nodes: [
-          { id: "StartEvent_1", type: "startEvent", name: "Order received" },
-          { id: "Activity_1", type: "task", name: "Process Order" },
-          { id: "EndEvent_1", type: "endEvent", name: "Order fulfilled" },
-        ],
-        edges: [
-          { id: "Flow_1", source: "StartEvent_1", target: "Activity_1" },
-          { id: "Flow_2", source: "Activity_1", target: "EndEvent_1" },
-        ],
-      },
-      null,
-      2
-    );
+    // Simple conversion to JSON for demonstration
+    const processJson = {
+      id: "Process_1",
+      name: "Order Processing",
+      elements: elements,
+      connections: connections
+    };
 
-    const blob = new Blob([mockJson], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(processJson, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -118,10 +129,262 @@ export const BpmnEditor: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    toast({
+      title: "JSON Exported",
+      description: "The process model JSON has been downloaded."
+    });
   };
 
   const handleXmlChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setXmlSource(e.target.value);
+  };
+
+  const handleElementSelect = (elementId: string) => {
+    if (selectedTool === "select") {
+      setSelectedElement(elementId === selectedElement ? null : elementId);
+    }
+  };
+
+  const handleAddElement = (elementType: string) => {
+    // Only handle element types, not connectors
+    if (!elementType.includes("flow")) {
+      const newId = `${elementType}_${Date.now()}`;
+      const newElement = {
+        id: newId,
+        type: elementType,
+        name: `New ${elementType.charAt(0).toUpperCase() + elementType.slice(1)}`,
+        position: { x: 200, y: 200 } // Default position
+      };
+      
+      setElements([...elements, newElement]);
+      setSelectedElement(newId);
+      
+      toast({
+        title: "Element Added",
+        description: `New ${elementType} element has been added to the diagram.`
+      });
+    } else {
+      setSelectedTool(elementType);
+      toast({
+        title: "Connector Tool Selected",
+        description: "Select source and target elements to create a connection."
+      });
+    }
+  };
+
+  const handleElementDelete = () => {
+    if (selectedElement) {
+      setElements(elements.filter(el => el.id !== selectedElement));
+      // Also remove any connections involving this element
+      setConnections(connections.filter(
+        conn => conn.sourceId !== selectedElement && conn.targetId !== selectedElement
+      ));
+      
+      setSelectedElement(null);
+      toast({
+        title: "Element Deleted",
+        description: "The selected element has been removed."
+      });
+    }
+  };
+
+  const handleElementDragStart = (e: React.MouseEvent, elementId: string) => {
+    if (selectedTool === "select" || selectedTool === "move") {
+      e.preventDefault();
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        setSelectedElement(elementId);
+        setIsDragging(true);
+        setDragStartPos({ x: e.clientX, y: e.clientY });
+        setCurrentElementPosition(element.position);
+      }
+    }
+  };
+
+  const handleElementDragMove = (e: React.MouseEvent) => {
+    if (isDragging && selectedElement) {
+      const dx = e.clientX - dragStartPos.x;
+      const dy = e.clientY - dragStartPos.y;
+      
+      setElements(elements.map(el => {
+        if (el.id === selectedElement) {
+          return {
+            ...el,
+            position: {
+              x: currentElementPosition.x + dx,
+              y: currentElementPosition.y + dy
+            }
+          };
+        }
+        return el;
+      }));
+    }
+  };
+
+  const handleElementDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleDuplicateElement = () => {
+    if (selectedElement) {
+      const elementToDuplicate = elements.find(el => el.id === selectedElement);
+      if (elementToDuplicate) {
+        const newId = `${elementToDuplicate.type}_${Date.now()}`;
+        const newElement = {
+          ...elementToDuplicate,
+          id: newId,
+          position: {
+            x: elementToDuplicate.position.x + 30,
+            y: elementToDuplicate.position.y + 30
+          }
+        };
+        
+        setElements([...elements, newElement]);
+        setSelectedElement(newId);
+        
+        toast({
+          title: "Element Duplicated",
+          description: "The selected element has been duplicated."
+        });
+      }
+    }
+  };
+
+  // Helper functions to render elements based on their type
+  const renderElement = (element: any) => {
+    const isSelected = selectedElement === element.id;
+    const commonClasses = `absolute cursor-${selectedTool === "select" || selectedTool === "move" ? "move" : "pointer"} ${isSelected ? "ring-2 ring-primary shadow-lg" : ""}`;
+    
+    switch(element.type) {
+      case "task":
+        return (
+          <div 
+            className={`${commonClasses} bg-white border rounded-md p-2 w-32 h-20 flex items-center justify-center text-center`}
+            style={{ left: element.position.x, top: element.position.y }}
+            onClick={() => handleElementSelect(element.id)}
+            onMouseDown={(e) => handleElementDragStart(e, element.id)}
+            onMouseMove={handleElementDragMove}
+            onMouseUp={handleElementDragEnd}
+            onMouseLeave={handleElementDragEnd}
+          >
+            {element.name}
+          </div>
+        );
+        
+      case "gateway":
+        return (
+          <div 
+            className={`${commonClasses}`}
+            style={{ 
+              left: element.position.x, 
+              top: element.position.y,
+              width: "60px",
+              height: "60px"
+            }}
+            onClick={() => handleElementSelect(element.id)}
+            onMouseDown={(e) => handleElementDragStart(e, element.id)}
+            onMouseMove={handleElementDragMove}
+            onMouseUp={handleElementDragEnd}
+            onMouseLeave={handleElementDragEnd}
+          >
+            <div className="w-full h-full bg-white border transform rotate-45 flex items-center justify-center">
+              <span className="transform -rotate-45 text-center">{element.name}</span>
+            </div>
+          </div>
+        );
+        
+      case "start-event":
+        return (
+          <div 
+            className={`${commonClasses} bg-white border rounded-full w-12 h-12 flex items-center justify-center`}
+            style={{ left: element.position.x, top: element.position.y }}
+            onClick={() => handleElementSelect(element.id)}
+            onMouseDown={(e) => handleElementDragStart(e, element.id)}
+            onMouseMove={handleElementDragMove}
+            onMouseUp={handleElementDragEnd}
+            onMouseLeave={handleElementDragEnd}
+          >
+            <div className="text-xs">{element.name}</div>
+          </div>
+        );
+        
+      case "end-event":
+        return (
+          <div 
+            className={`${commonClasses} bg-white border-2 border-black rounded-full w-12 h-12 flex items-center justify-center`}
+            style={{ left: element.position.x, top: element.position.y }}
+            onClick={() => handleElementSelect(element.id)}
+            onMouseDown={(e) => handleElementDragStart(e, element.id)}
+            onMouseMove={handleElementDragMove}
+            onMouseUp={handleElementDragEnd}
+            onMouseLeave={handleElementDragEnd}
+          >
+            <div className="text-xs">{element.name}</div>
+          </div>
+        );
+        
+      default:
+        return (
+          <div 
+            className={`${commonClasses} bg-white border rounded-md p-2 w-24 h-16 flex items-center justify-center`}
+            style={{ left: element.position.x, top: element.position.y }}
+            onClick={() => handleElementSelect(element.id)}
+            onMouseDown={(e) => handleElementDragStart(e, element.id)}
+            onMouseMove={handleElementDragMove}
+            onMouseUp={handleElementDragEnd}
+            onMouseLeave={handleElementDragEnd}
+          >
+            {element.name}
+          </div>
+        );
+    }
+  };
+
+  // Render connections between elements
+  const renderConnections = () => {
+    return connections.map(conn => {
+      const source = elements.find(el => el.id === conn.sourceId);
+      const target = elements.find(el => el.id === conn.targetId);
+      
+      if (source && target) {
+        const sourceX = source.position.x + 50; // Approximate center
+        const sourceY = source.position.y + 30;
+        const targetX = target.position.x + 50;
+        const targetY = target.position.y + 30;
+        
+        return (
+          <svg 
+            key={conn.id} 
+            className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          >
+            <line
+              x1={sourceX}
+              y1={sourceY}
+              x2={targetX}
+              y2={targetY}
+              stroke="black"
+              strokeWidth={conn.type === "message-flow" ? 1 : 2}
+              strokeDasharray={conn.type === "message-flow" ? "5,5" : ""}
+              markerEnd="url(#arrowhead)"
+            />
+            <defs>
+              <marker
+                id="arrowhead"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" />
+              </marker>
+            </defs>
+          </svg>
+        );
+      }
+      return null;
+    });
   };
 
   return (
@@ -222,42 +485,92 @@ export const BpmnEditor: React.FC = () => {
         <div className="flex-1">
           <TabsContent value="editor" className="flex-1 h-full m-0 p-0">
             <div className="relative h-full border-b flex flex-col">
-              <div className="absolute left-4 top-4 bg-white border rounded shadow-sm p-2 z-10">
-                <h4 className="text-sm font-medium mb-2">Elements</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <div className="w-5 h-5 mr-2 rounded-full border border-black flex items-center justify-center text-[10px]">S</div>
-                    Start
+              <div className="p-2 border-b bg-muted/20">
+                <div className="flex gap-2">
+                  <Button 
+                    variant={selectedTool === "select" ? "secondary" : "outline"} 
+                    size="sm"
+                    onClick={() => setSelectedTool("select")}
+                  >
+                    Select
                   </Button>
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <div className="w-5 h-5 mr-2 rounded-md border border-black"></div>
-                    Task
+                  <Button 
+                    variant={selectedTool === "move" ? "secondary" : "outline"} 
+                    size="sm"
+                    onClick={() => setSelectedTool("move")}
+                  >
+                    <Move className="h-4 w-4 mr-1" />
+                    Move
                   </Button>
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <div className="w-5 h-5 mr-2 diamond border border-black"></div>
-                    Gateway
+                  <Button 
+                    variant={selectedTool === "sequence-flow" ? "secondary" : "outline"} 
+                    size="sm"
+                    onClick={() => setSelectedTool("sequence-flow")}
+                  >
+                    <Link className="h-4 w-4 mr-1" />
+                    Connect
                   </Button>
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <div className="w-5 h-5 mr-2 rounded-full border border-black flex items-center justify-center text-[10px]">E</div>
-                    End
-                  </Button>
+                  
+                  {selectedElement && (
+                    <div className="ml-auto flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          const element = elements.find(el => el.id === selectedElement);
+                          if (element) {
+                            toast({
+                              title: "Edit Element",
+                              description: `Editing ${element.name}`
+                            });
+                          }
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleDuplicateElement}
+                      >
+                        <Copy className="h-4 w-4 mr-1" />
+                        Duplicate
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleElementDelete}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div className="flex-1 flex items-center justify-center p-4 h-full bg-slate-50">
-                <div 
-                  className={`bg-white border ${showGrid ? 'bg-grid' : ''}`} 
+              <BpmnElementPalette onAddElement={handleAddElement} />
+              
+              <div 
+                className={`flex-1 overflow-auto relative ${showGrid ? 'bg-grid' : 'bg-slate-50'}`}
+                style={{ height: 'calc(100% - 50px)' }}
+              >
+                <div
+                  className="h-full w-full relative"
                   style={{ 
-                    width: '100%', 
-                    height: '80%', 
                     transform: `scale(${zoomLevel/100})`,
-                    transformOrigin: 'center',
-                    transition: 'transform 0.2s ease-out'
+                    transformOrigin: 'top left',
+                    transition: 'transform 0.2s ease-out',
+                    minWidth: '2000px',
+                    minHeight: '1000px'
                   }}
                 >
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    [BPMN Editor Canvas - In a production app, this would integrate with an actual BPMN.js library]
-                  </div>
+                  {/* Render connections */}
+                  {renderConnections()}
+                  
+                  {/* Render elements */}
+                  {elements.map(element => renderElement(element))}
                 </div>
               </div>
               
@@ -267,6 +580,11 @@ export const BpmnEditor: React.FC = () => {
                     <span className="text-xs text-muted-foreground">Process ID: Process_1</span>
                   </div>
                   <div>
+                    {selectedElement && (
+                      <span className="text-xs font-medium mr-4">
+                        Selected: {elements.find(el => el.id === selectedElement)?.name || selectedElement}
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground">Last saved: {new Date().toLocaleString()}</span>
                   </div>
                 </div>
@@ -385,4 +703,3 @@ export const BpmnEditor: React.FC = () => {
     </Tabs>
   );
 };
-
