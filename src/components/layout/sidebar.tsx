@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   BarChart3,
@@ -17,6 +17,8 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { useVoice } from "@/contexts/VoiceContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarProps {
   className?: string;
@@ -25,8 +27,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps) {
-  const sidebarWidth = "240px";
-  const collapsedWidth = "70px";
+  const { speakModuleNavigation, speakModuleTooltip, cancelSpeech, isVoiceEnabled } = useVoice();
+  const location = useLocation();
   
   return (
     <div
@@ -53,14 +55,94 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
 
       <div className="flex-1 overflow-auto py-4 px-3">
         <nav className="flex flex-col gap-1">
-          <NavItem to="/" icon={LayoutDashboard} label="Dashboard" collapsed={collapsed} />
-          <NavItem to="/process-manager" icon={GitMerge} label="Process Manager" collapsed={collapsed} />
-          <NavItem to="/journey-modeler" icon={Globe} label="Journey Modeler" collapsed={collapsed} />
-          <NavItem to="/collaboration-hub" icon={MessagesSquare} label="Collaboration Hub" collapsed={collapsed} />
-          <NavItem to="/repository" icon={Database} label="Repository" collapsed={collapsed} />
-          <NavItem to="/process-intelligence" icon={BarChart3} label="Process Intelligence" collapsed={collapsed} />
-          <NavItem to="/transformation-cockpit" icon={Layers} label="Transformation Cockpit" collapsed={collapsed} />
-          <NavItem to="/reports" icon={Box} label="Reports" collapsed={collapsed} />
+          <NavItem 
+            id="sidebar-dashboard" 
+            to="/" 
+            icon={LayoutDashboard} 
+            label="Dashboard" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/"}
+            onNavigate={() => speakModuleNavigation("sidebar-dashboard")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-dashboard")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
+            id="sidebar-process-manager" 
+            to="/process-manager" 
+            icon={GitMerge} 
+            label="Process Manager" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/process-manager"}
+            onNavigate={() => speakModuleNavigation("sidebar-processManager")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processManager")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
+            id="sidebar-journey-modeler" 
+            to="/journey-modeler" 
+            icon={Globe} 
+            label="Journey Modeler" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/journey-modeler"}
+            onNavigate={() => speakModuleNavigation("sidebar-journeyModeler")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-journeyModeler")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
+            id="sidebar-collaboration-hub" 
+            to="/collaboration-hub" 
+            icon={MessagesSquare} 
+            label="Collaboration Hub" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/collaboration-hub"}
+            onNavigate={() => speakModuleNavigation("sidebar-collaborationHub")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-collaborationHub")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
+            id="sidebar-repository" 
+            to="/repository" 
+            icon={Database} 
+            label="Repository" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/repository"}
+            onNavigate={() => speakModuleNavigation("sidebar-repository")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-repository")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
+            id="sidebar-process-intelligence" 
+            to="/process-intelligence" 
+            icon={BarChart3} 
+            label="Process Intelligence" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/process-intelligence"}
+            onNavigate={() => speakModuleNavigation("sidebar-processIntelligence")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processIntelligence")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
+            id="sidebar-transformation-cockpit" 
+            to="/transformation-cockpit" 
+            icon={Layers} 
+            label="Transformation Cockpit" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/transformation-cockpit"}
+            onNavigate={() => speakModuleNavigation("sidebar-transformationCockpit")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-transformationCockpit")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
+            id="sidebar-reports" 
+            to="/reports" 
+            icon={Box} 
+            label="Reports" 
+            collapsed={collapsed} 
+            isActive={location.pathname === "/reports" || location.pathname === "/reports-dashboards"}
+            onNavigate={() => speakModuleNavigation("sidebar-reports")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-reports")}
+            onLeave={() => cancelSpeech()}
+          />
         </nav>
         
         <div className="mt-8 pt-6 border-t border-sidebar-border">
@@ -68,8 +150,28 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             Administration
           </span>
           <nav className="mt-2 flex flex-col gap-1">
-            <NavItem to="/users" icon={Users} label="User Management" collapsed={collapsed} />
-            <NavItem to="/settings" icon={Settings} label="Settings" collapsed={collapsed} />
+            <NavItem 
+              id="sidebar-users" 
+              to="/users" 
+              icon={Users} 
+              label="User Management" 
+              collapsed={collapsed} 
+              isActive={location.pathname === "/users" || location.pathname === "/user-management"}
+              onNavigate={() => speakModuleNavigation("sidebar-users")}
+              onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-users")}
+              onLeave={() => cancelSpeech()}
+            />
+            <NavItem 
+              id="sidebar-settings" 
+              to="/settings" 
+              icon={Settings} 
+              label="Settings" 
+              collapsed={collapsed} 
+              isActive={location.pathname === "/settings"}
+              onNavigate={() => speakModuleNavigation("sidebar-settings")}
+              onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-settings")}
+              onLeave={() => cancelSpeech()}
+            />
           </nav>
         </div>
       </div>
@@ -92,24 +194,57 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
 }
 
 interface NavItemProps {
+  id: string;
   to: string;
   icon: React.FC<{ className?: string }>;
   label: string;
   collapsed: boolean;
   isActive?: boolean;
+  onNavigate?: () => void;
+  onHover?: () => void;
+  onLeave?: () => void;
 }
 
-function NavItem({ to, icon: Icon, label, collapsed, isActive = false }: NavItemProps) {
+function NavItem({ id, to, icon: Icon, label, collapsed, isActive = false, onNavigate, onHover, onLeave }: NavItemProps) {
+  if (collapsed) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              id={id}
+              to={to}
+              className={cn(
+                "flex items-center h-10 px-3 rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
+                isActive && "bg-sidebar-accent text-sidebar-foreground"
+              )}
+              onClick={onNavigate}
+              onMouseEnter={onHover}
+              onMouseLeave={onLeave}
+            >
+              <Icon className="h-5 w-5 min-w-5" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">{label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <Link
+      id={id}
       to={to}
       className={cn(
         "flex items-center h-10 px-3 rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
         isActive && "bg-sidebar-accent text-sidebar-foreground"
       )}
+      onClick={onNavigate}
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
     >
       <Icon className="h-5 w-5 min-w-5" />
-      {!collapsed && <span className="ml-3 truncate">{label}</span>}
+      <span className="ml-3 truncate">{label}</span>
     </Link>
   );
 }
