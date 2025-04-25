@@ -78,17 +78,24 @@ export const useVoice = () => {
 export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(false);
   const [speechSynthesis, setSpeechSynthesis] = useState<SpeechSynthesis | null>(null);
+  const [isSpeechSynthesisSupported, setIsSpeechSynthesisSupported] = useState<boolean>(true);
   
   // Initialize speech synthesis on component mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    // Check if the browser supports speech synthesis
+    if (typeof window !== "undefined" && window.speechSynthesis) {
       setSpeechSynthesis(window.speechSynthesis);
+      console.log("Speech synthesis initialized");
       
       // Try to load voice preference from localStorage
       const savedVoicePreference = localStorage.getItem("voice-enabled");
       if (savedVoicePreference) {
         setIsVoiceEnabled(savedVoicePreference === "true");
+        console.log("Voice enabled:", savedVoicePreference === "true");
       }
+    } else {
+      console.error("Speech synthesis not supported in this browser");
+      setIsSpeechSynthesisSupported(false);
     }
     
     return () => {
@@ -105,7 +112,15 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isVoiceEnabled]);
 
   const toggleVoice = () => {
-    setIsVoiceEnabled(prev => !prev);
+    const newState = !isVoiceEnabled;
+    setIsVoiceEnabled(newState);
+    console.log("Voice toggled to:", newState);
+    
+    // Provide feedback when voice is enabled
+    if (newState && speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance("Voice navigation enabled");
+      speechSynthesis.speak(utterance);
+    }
   };
 
   const cancelSpeech = () => {
@@ -115,7 +130,12 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const speakText = (text: string) => {
-    if (!isVoiceEnabled || !speechSynthesis) return;
+    if (!isVoiceEnabled || !speechSynthesis) {
+      console.log("Speech not enabled or synthesis unavailable");
+      return;
+    }
+    
+    console.log("Speaking text:", text);
     
     // Cancel any ongoing speech
     cancelSpeech();
@@ -136,7 +156,10 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     if (rule) {
       const text = `Navigating to ${module.replace(/([A-Z])/g, ' $1').trim()}. Strategic focus: ${rule.insight}. Suggested next steps: ${rule.action}.`;
+      console.log("Navigation voice command:", text);
       speakText(text);
+    } else {
+      console.warn(`No voice rule found for module: ${module}`);
     }
   };
 
@@ -146,7 +169,10 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     if (rule) {
       const text = rule.insight;
+      console.log("Tooltip voice command:", text);
       speakText(text);
+    } else {
+      console.warn(`No voice rule found for module: ${module}`);
     }
   };
 
@@ -162,6 +188,11 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }}
     >
       {children}
+      {!isSpeechSynthesisSupported && isVoiceEnabled && (
+        <div className="fixed bottom-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 p-4 rounded shadow-lg">
+          <p className="text-sm">Speech synthesis is not supported in your browser. Voice navigation is disabled.</p>
+        </div>
+      )}
     </VoiceContext.Provider>
   );
 };
