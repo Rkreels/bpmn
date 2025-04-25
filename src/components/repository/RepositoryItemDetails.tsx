@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -55,11 +54,29 @@ export function RepositoryItemDetails({
     }
   };
 
+  const getEducationalContent = () => {
+    switch (item.type) {
+      case "bpmn":
+        return "This BPMN diagram represents a business process workflow. BPMN is a standardized modeling notation that helps teams visualize, document, and improve their business processes.";
+      case "journey":
+        return "This customer journey map visualizes the customer experience across different touchpoints. Understanding the customer journey helps identify opportunities for improvement and innovation.";
+      case "dmn":
+        return "This decision model documents business rules and decision logic. DMN helps organizations maintain consistent decision-making and automate business rules.";
+      case "folder":
+        return "This folder organizes related process artifacts. Good organization is key to maintaining a clear and efficient process repository.";
+      default:
+        return "This document contains important process documentation. Clear documentation helps ensure process knowledge is preserved and shared effectively.";
+    }
+  };
+
   if (!item) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto"
+        onMouseEnter={() => speakText(`${item.name}. ${getEducationalContent()}`)}
+      >
         <DialogHeader className="flex flex-row items-center space-y-0 gap-3">
           <div className="p-2 bg-muted/40 rounded-md">{getIcon()}</div>
           <div className="flex-1">
@@ -78,9 +95,24 @@ export function RepositoryItemDetails({
 
         <Tabs defaultValue="details" className="mt-4">
           <TabsList className="mb-4">
-            <TabsTrigger value="details" onMouseEnter={() => speakText("View item details")}>Details</TabsTrigger>
-            <TabsTrigger value="history" onMouseEnter={() => speakText("View version history")}>History</TabsTrigger>
-            <TabsTrigger value="permissions" onMouseEnter={() => speakText("View access permissions")}>Permissions</TabsTrigger>
+            <TabsTrigger 
+              value="details" 
+              onMouseEnter={() => speakText("View detailed information about this item, including owner, last modified date, and type. Understanding these details helps track process governance and ownership.")}
+            >
+              Details
+            </TabsTrigger>
+            <TabsTrigger 
+              value="history"
+              onMouseEnter={() => speakText("View the version history of this item. Version control is crucial for tracking changes and maintaining process compliance.")}
+            >
+              History
+            </TabsTrigger>
+            <TabsTrigger 
+              value="permissions"
+              onMouseEnter={() => speakText("Manage access permissions for this item. Proper access control ensures process security and compliance with organizational policies.")}
+            >
+              Permissions
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="details" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -136,24 +168,40 @@ export function RepositoryItemDetails({
 
         <DialogFooter className="gap-2 sm:gap-0 mt-6">
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onEdit} 
-              onMouseEnter={() => speakText("Edit this item")}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onEdit}
+              onMouseEnter={() => speakText("Edit this item. Regular updates ensure your process documentation stays current and reflects actual business operations.")}
+            >
               <Edit className="h-4 w-4 mr-1" />
               Edit
             </Button>
-            <Button variant="outline" size="sm" onClick={onShare}
-              onMouseEnter={() => speakText("Share this item with others")}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onShare}
+              onMouseEnter={() => speakText("Share this item with team members. Collaboration is key to successful process management and continuous improvement.")}
+            >
               <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
-            <Button variant="outline" size="sm" onClick={onDownload}
-              onMouseEnter={() => speakText("Download this item")}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onDownload}
+              onMouseEnter={() => speakText("Download this item for offline access or distribution. This is useful for sharing with stakeholders who don't have direct access to the repository.")}
+            >
               <Download className="h-4 w-4 mr-1" />
               Download
             </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}
-            onMouseEnter={() => speakText("Close this dialog")}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onClose}
+            onMouseEnter={() => speakText("Close this view and return to the repository. Remember to save any changes before closing.")}
+          >
             Close
           </Button>
         </DialogFooter>

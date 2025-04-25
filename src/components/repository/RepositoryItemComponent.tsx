@@ -1,4 +1,3 @@
-
 import React from "react";
 import { RepositoryItemType } from "@/types/repository";
 import { cn } from "@/lib/utils";
@@ -107,19 +106,28 @@ export function RepositoryItemComponent({
     }
   };
   
-  const getVoiceDescription = () => {
-    let description = `${item.name}. `;
+  const getEducationalDescription = () => {
+    const baseDesc = `${item.name}. This is a ${item.type.toUpperCase()} ${item.type === 'folder' ? 'for organizing process artifacts' : 'file'}. `;
+    let typeDesc = '';
     
-    if (item.type === "folder") {
-      description += "Folder. ";
-    } else {
-      description += `${item.type.toUpperCase()} file. `;
-      if (item.version) description += `Version ${item.version}. `;
-      if (item.status) description += `Status: ${item.status}. `;
+    switch (item.type) {
+      case 'bpmn':
+        typeDesc = "BPMN processes help visualize and standardize business workflows using industry-standard notation.";
+        break;
+      case 'journey':
+        typeDesc = "Journey maps document customer experiences across touchpoints, helping identify improvement opportunities.";
+        break;
+      case 'dmn':
+        typeDesc = "Decision models document business rules and decision logic for consistent organizational decision-making.";
+        break;
+      case 'folder':
+        typeDesc = "Folders help maintain an organized repository structure for efficient process management.";
+        break;
+      default:
+        typeDesc = "Process documentation ensures knowledge sharing and standardization across the organization.";
     }
     
-    description += `Last modified ${item.lastModified} by ${item.owner}.`;
-    return description;
+    return `${baseDesc}${typeDesc} Created by ${item.owner}, last modified ${item.lastModified}${item.status ? `. Current status: ${item.status}` : ''}.`;
   };
   
   if (viewMode === "grid") {
@@ -127,7 +135,7 @@ export function RepositoryItemComponent({
       <div 
         className="border rounded-md p-4 hover:border-primary hover:shadow-sm cursor-pointer"
         onClick={() => handleAction("view")}
-        onMouseEnter={() => speakText(getVoiceDescription())}
+        onMouseEnter={() => speakText(getEducationalDescription())}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -198,7 +206,7 @@ export function RepositoryItemComponent({
     <div 
       className="flex items-center justify-between border-b py-3 px-3 hover:bg-muted/50 cursor-pointer"
       onClick={() => handleAction("view")}
-      onMouseEnter={() => speakText(getVoiceDescription())}
+      onMouseEnter={() => speakText(getEducationalDescription())}
     >
       <div className="flex items-center gap-3">
         <div className="p-1.5 bg-muted/40 rounded-md">
