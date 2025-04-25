@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "@/components/ui/breadcrumb";
+import { useToast } from "@/hooks/use-toast";
+import { useVoice } from "@/contexts/VoiceContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,23 +32,78 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function Repository() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchTerm, setSearchTerm] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const { speakText } = useVoice();
   
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    speakText(`Searching for ${value}`);
+  };
+
+  const handleUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      toast({
+        title: "File Upload Started",
+        description: `Uploading ${file.name}...`,
+      });
+      speakText(`Uploading file ${file.name}`);
+      // Here you would typically handle the actual file upload
+    }
+  };
+
+  const handleNewItem = (type: string) => {
+    toast({
+      title: `Creating New ${type}`,
+      description: `Starting ${type.toLowerCase()} creation...`,
+    });
+    speakText(`Creating new ${type}`);
+    // Here you would handle the creation of new items
+  };
+
+  const handleSettingsClick = () => {
+    toast({
+      title: "Repository Settings",
+      description: "Opening repository settings...",
+    });
+    speakText("Opening repository settings");
+    // Here you would handle opening settings
+  };
+
+  const filteredItems = repositoryItems.filter(item => 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <MainLayout pageTitle="Repository">
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Process Repository</CardTitle>
+            <CardTitle 
+              onMouseEnter={() => speakText("Process Repository - Access centralized process documentation")}
+            >
+              Process Repository
+            </CardTitle>
             <Breadcrumb className="mt-1">
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">Main Repository</BreadcrumbLink>
+                <BreadcrumbLink href="#" onClick={() => speakText("Navigating to Main Repository")}>
+                  Main Repository
+                </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">Order Management</BreadcrumbLink>
+                <BreadcrumbLink href="#" onClick={() => speakText("Order Management section")}>
+                  Order Management
+                </BreadcrumbLink>
               </BreadcrumbItem>
             </Breadcrumb>
           </div>
@@ -54,41 +111,83 @@ export default function Repository() {
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1"
+                  onMouseEnter={() => speakText("Create new item menu")}
+                >
                   <Plus className="h-4 w-4" />
                   New
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => handleNewItem("BPMN Process")}
+                  onMouseEnter={() => speakText("Create new BPMN process")}
+                >
                   <GitMerge className="h-4 w-4 mr-2" />
                   <span>BPMN Process</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => handleNewItem("Journey Map")}
+                  onMouseEnter={() => speakText("Create new journey map")}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   <span>Journey Map</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => handleNewItem("Decision Model")}
+                  onMouseEnter={() => speakText("Create new decision model")}
+                >
                   <FileText className="h-4 w-4 mr-2" />
                   <span>Decision Model</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => handleNewItem("Folder")}
+                  onMouseEnter={() => speakText("Create new folder")}
+                >
                   <Folder className="h-4 w-4 mr-2" />
                   <span>New Folder</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={handleUpload}
+                  onMouseEnter={() => speakText("Import file")}
+                >
                   <Upload className="h-4 w-4 mr-2" />
                   <span>Import File</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Button size="sm" variant="outline">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleUpload}
+              onMouseEnter={() => speakText("Upload files")}
+            >
               <Upload className="h-4 w-4" />
             </Button>
             
-            <Button size="sm" variant="outline">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleSettingsClick}
+              onMouseEnter={() => speakText("Repository settings")}
+            >
               <Settings className="h-4 w-4" />
             </Button>
           </div>
@@ -101,11 +200,22 @@ export default function Repository() {
               <Input
                 placeholder="Search repository..."
                 className="pl-8"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                onFocus={() => speakText("Enter search terms to find repository items")}
               />
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1"
+                onClick={() => {
+                  // Here you would implement sorting logic
+                  speakText("Sorting repository items");
+                }}
+              >
                 <SortAsc className="h-4 w-4" />
                 Sort
               </Button>
@@ -118,6 +228,7 @@ export default function Repository() {
                   "h-8 w-8",
                   viewMode === "grid" ? "bg-muted" : ""
                 )}
+                onMouseEnter={() => speakText("Switch to grid view")}
               >
                 <Grid2X2 className="h-4 w-4" />
               </Button>
@@ -130,6 +241,7 @@ export default function Repository() {
                   "h-8 w-8",
                   viewMode === "list" ? "bg-muted" : ""
                 )}
+                onMouseEnter={() => speakText("Switch to list view")}
               >
                 <List className="h-4 w-4" />
               </Button>
