@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Square, Diamond, Circle, Layers, Database, Layout, ArrowRight } from "lucide-react";
+import { Square, Diamond, Circle, Layers, Database, Layout, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BpmnElementPaletteProps {
   onAddElement: (elementType: string) => void;
@@ -11,6 +12,8 @@ interface BpmnElementPaletteProps {
 
 export const BpmnElementPalette: React.FC<BpmnElementPaletteProps> = ({ onAddElement }) => {
   const { isVoiceEnabled, speakText } = useVoice();
+  const isMobile = useIsMobile();
+  const [isCollapsed, setIsCollapsed] = useState(false);
   
   const elementTypes = [
     { 
@@ -95,55 +98,108 @@ export const BpmnElementPalette: React.FC<BpmnElementPaletteProps> = ({ onAddEle
     }
   };
 
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    if (isVoiceEnabled) {
+      speakText(isCollapsed ? "Element palette expanded" : "Element palette collapsed");
+    }
+  };
+
   return (
-    <div className="absolute left-4 top-20 bg-white border rounded shadow-md p-3 z-10 w-56">
-      <h4 className="text-sm font-medium mb-2 px-2">Elements</h4>
-      <div className="grid grid-cols-2 gap-2">
-        {elementTypes.map(element => (
-          <TooltipProvider key={element.id}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="justify-start"
-                  id={`element-${element.id}`}
-                  onClick={() => handleElementClick(element)}
-                  onMouseEnter={() => handleElementHover(element)}
-                >
-                  <element.icon className="h-4 w-4 mr-2" />
-                  {element.name}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">{element.description}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
+    <div className={cn(
+      "absolute left-0 top-20 bg-white border rounded shadow-md p-3 z-10 transition-all duration-300",
+      isCollapsed ? "w-12" : "w-56 sm:w-64"
+    )}>
+      <div className="flex items-center justify-between mb-2">
+        {!isCollapsed && <h4 className="text-sm font-medium px-2">Elements</h4>}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="ml-auto"
+          onClick={toggleCollapse}
+          aria-label={isCollapsed ? "Expand palette" : "Collapse palette"}
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
       </div>
       
-      <h4 className="text-sm font-medium mt-4 mb-2 px-2">Connectors</h4>
-      <div className="grid grid-cols-1 gap-2">
-        {connectorTypes.map(connector => (
-          <TooltipProvider key={connector.id}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="justify-start"
-                  id={`element-${connector.id}`}
-                  onClick={() => handleElementClick(connector)}
-                  onMouseEnter={() => handleElementHover(connector)}
-                >
-                  <connector.icon className={`h-4 w-4 mr-2 ${connector.iconClass || ''}`} />
-                  {connector.name}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">{connector.description}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
+      {!isCollapsed && (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            {elementTypes.map(element => (
+              <TooltipProvider key={element.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="justify-start"
+                      id={`element-${element.id}`}
+                      onClick={() => handleElementClick(element)}
+                      onMouseEnter={() => handleElementHover(element)}
+                    >
+                      <element.icon className="h-4 w-4 mr-2" />
+                      {element.name}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">{element.description}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+          
+          <h4 className="text-sm font-medium mt-4 mb-2 px-2">Connectors</h4>
+          <div className="grid grid-cols-1 gap-2">
+            {connectorTypes.map(connector => (
+              <TooltipProvider key={connector.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="justify-start"
+                      id={`element-${connector.id}`}
+                      onClick={() => handleElementClick(connector)}
+                      onMouseEnter={() => handleElementHover(connector)}
+                    >
+                      <connector.icon className={`h-4 w-4 mr-2 ${connector.iconClass || ''}`} />
+                      {connector.name}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">{connector.description}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+        </>
+      )}
+      
+      {isCollapsed && (
+        <div className="flex flex-col gap-2 items-center">
+          {elementTypes.slice(0, 4).map(element => (
+            <TooltipProvider key={element.id}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="p-1.5 h-auto w-auto"
+                    onClick={() => handleElementClick(element)}
+                  >
+                    <element.icon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">{element.name}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+        </div>
+      )}
     </div>
   );
-};
+}
+
+// Helper function for class name concatenation since we no longer have direct access to cn from @/lib/utils
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(' ');
+}

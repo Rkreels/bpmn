@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Save, Download, Copy, Check, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface XmlSourceViewProps {
   xmlSource: string;
@@ -16,6 +17,7 @@ export const XmlSourceView: React.FC<XmlSourceViewProps> = ({
 }) => {
   const { toast } = useToast();
   const { isVoiceEnabled, speakText } = useVoice();
+  const isMobile = useIsMobile();
   const [isCopied, setIsCopied] = React.useState(false);
   
   const handleFormatXml = () => {
@@ -108,14 +110,14 @@ export const XmlSourceView: React.FC<XmlSourceViewProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h3 className="text-lg font-medium">BPMN XML Source</h3>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleFormatXml}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={handleFormatXml} className="flex-1 sm:flex-none">
             <RefreshCw className="h-4 w-4 mr-2" />
             Format XML
           </Button>
-          <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
+          <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="flex-1 sm:flex-none">
             {isCopied ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
@@ -128,7 +130,7 @@ export const XmlSourceView: React.FC<XmlSourceViewProps> = ({
               </>
             )}
           </Button>
-          <Button variant="outline" size="sm" onClick={handleExport}>
+          <Button variant="outline" size="sm" onClick={handleExport} className="flex-1 sm:flex-none">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
