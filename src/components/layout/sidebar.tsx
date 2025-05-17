@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -29,26 +28,56 @@ interface SidebarProps {
 export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps) {
   const { speakModuleNavigation, speakModuleTooltip, cancelSpeech, isVoiceEnabled } = useVoice();
   const location = useLocation();
+  const [isHovered, setIsHovered] = useState(false);
+  const [isAutoCollapsed, setIsAutoCollapsed] = useState(true);
+  
+  // Effect to manage auto-collapse timers
+  useEffect(() => {
+    let collapseTimer: NodeJS.Timeout;
+    
+    // Auto-expand when hovering
+    if (isHovered && isAutoCollapsed) {
+      setIsAutoCollapsed(false);
+    }
+    
+    // Auto-collapse after leaving with delay
+    if (!isHovered && !isAutoCollapsed) {
+      collapseTimer = setTimeout(() => {
+        setIsAutoCollapsed(true);
+      }, 800); // Delay before auto-collapsing
+    }
+    
+    return () => {
+      if (collapseTimer) {
+        clearTimeout(collapseTimer);
+      }
+    };
+  }, [isHovered, isAutoCollapsed]);
+  
+  // Determine if sidebar should be collapsed based on manual toggle or auto-collapse
+  const shouldCollapse = collapsed || (isAutoCollapsed && !isHovered);
   
   return (
     <div
       className={cn(
         "flex flex-col bg-sidebar fixed h-screen z-30 transition-all duration-300 border-r border-sidebar-border",
-        collapsed ? "w-[70px]" : "w-[240px]",
+        shouldCollapse ? "w-[70px]" : "w-[240px]",
         className
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex items-center h-14 border-b border-sidebar-border px-4">
         <div className="flex items-center flex-1 gap-2 overflow-hidden">
           <GitMerge className="h-6 w-6 text-primary" />
-          {!collapsed && <span className="font-semibold text-sidebar-foreground">ProcessFlow</span>}
+          {!shouldCollapse && <span className="font-semibold text-sidebar-foreground">ProcessFlow</span>}
         </div>
         {onToggle && (
           <button
             onClick={onToggle}
             className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-sidebar-accent text-sidebar-foreground"
           >
-            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            {shouldCollapse ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </button>
         )}
       </div>
@@ -60,7 +89,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/" 
             icon={LayoutDashboard} 
             label="Dashboard" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/"}
             onNavigate={() => speakModuleNavigation("sidebar-dashboard")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-dashboard")}
@@ -71,7 +100,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/process-manager" 
             icon={GitMerge} 
             label="Process Manager" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/process-manager"}
             onNavigate={() => speakModuleNavigation("sidebar-processManager")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processManager")}
@@ -82,7 +111,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/journey-modeler" 
             icon={Globe} 
             label="Journey Modeler" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/journey-modeler"}
             onNavigate={() => speakModuleNavigation("sidebar-journeyModeler")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-journeyModeler")}
@@ -93,7 +122,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/collaboration-hub" 
             icon={MessagesSquare} 
             label="Collaboration Hub" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/collaboration-hub"}
             onNavigate={() => speakModuleNavigation("sidebar-collaborationHub")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-collaborationHub")}
@@ -104,7 +133,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/repository" 
             icon={Database} 
             label="Repository" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/repository"}
             onNavigate={() => speakModuleNavigation("sidebar-repository")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-repository")}
@@ -115,7 +144,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/process-intelligence" 
             icon={BarChart3} 
             label="Process Intelligence" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/process-intelligence"}
             onNavigate={() => speakModuleNavigation("sidebar-processIntelligence")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processIntelligence")}
@@ -126,7 +155,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/transformation-cockpit" 
             icon={Layers} 
             label="Transformation Cockpit" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/transformation-cockpit"}
             onNavigate={() => speakModuleNavigation("sidebar-transformationCockpit")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-transformationCockpit")}
@@ -137,7 +166,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             to="/reports" 
             icon={Box} 
             label="Reports" 
-            collapsed={collapsed} 
+            collapsed={shouldCollapse} 
             isActive={location.pathname === "/reports" || location.pathname === "/reports-dashboards"}
             onNavigate={() => speakModuleNavigation("sidebar-reports")}
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-reports")}
@@ -146,7 +175,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
         </nav>
         
         <div className="mt-8 pt-6 border-t border-sidebar-border">
-          <span className={cn("text-xs font-medium text-sidebar-foreground/50 px-3", collapsed && "hidden")}>
+          <span className={cn("text-xs font-medium text-sidebar-foreground/50 px-3", shouldCollapse && "hidden")}>
             Administration
           </span>
           <nav className="mt-2 flex flex-col gap-1">
@@ -155,7 +184,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
               to="/users" 
               icon={Users} 
               label="User Management" 
-              collapsed={collapsed} 
+              collapsed={shouldCollapse} 
               isActive={location.pathname === "/users" || location.pathname === "/user-management"}
               onNavigate={() => speakModuleNavigation("sidebar-users")}
               onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-users")}
@@ -166,7 +195,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
               to="/settings" 
               icon={Settings} 
               label="Settings" 
-              collapsed={collapsed} 
+              collapsed={shouldCollapse} 
               isActive={location.pathname === "/settings"}
               onNavigate={() => speakModuleNavigation("sidebar-settings")}
               onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-settings")}
@@ -177,11 +206,11 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
       </div>
 
       <div className="h-14 border-t border-sidebar-border flex items-center px-3">
-        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+        <div className={cn("flex items-center gap-3", shouldCollapse && "justify-center")}>
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
             JD
           </div>
-          {!collapsed && (
+          {!shouldCollapse && (
             <div className="overflow-hidden">
               <div className="text-sm font-medium text-sidebar-foreground truncate">John Doe</div>
               <div className="text-xs text-sidebar-foreground/70 truncate">john.doe@example.com</div>
