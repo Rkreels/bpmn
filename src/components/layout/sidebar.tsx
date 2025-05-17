@@ -58,9 +58,9 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
   const shouldCollapse = collapsed || (isAutoCollapsed && !isHovered);
   
   return (
-    <div
+    <aside
       className={cn(
-        "flex flex-col bg-sidebar fixed h-screen z-30 transition-all duration-300 border-r border-sidebar-border",
+        "fixed top-0 left-0 h-screen bg-sidebar z-30 border-r border-sidebar-border transition-all duration-300 ease-in-out",
         shouldCollapse ? "w-[70px]" : "w-[240px]",
         className
       )}
@@ -70,7 +70,9 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
       <div className="flex items-center h-14 border-b border-sidebar-border px-4">
         <div className="flex items-center flex-1 gap-2 overflow-hidden">
           <GitMerge className="h-6 w-6 text-primary" />
-          {!shouldCollapse && <span className="font-semibold text-sidebar-foreground">ProcessFlow</span>}
+          <span className={cn("font-semibold text-sidebar-foreground whitespace-nowrap transition-opacity duration-300", 
+            shouldCollapse ? "opacity-0" : "opacity-100"
+          )}>ProcessFlow</span>
         </div>
         {onToggle && (
           <button
@@ -151,6 +153,17 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             onLeave={() => cancelSpeech()}
           />
           <NavItem 
+            id="sidebar-process-mining" 
+            to="/process-mining" 
+            icon={Box} 
+            label="Process Mining" 
+            collapsed={shouldCollapse} 
+            isActive={location.pathname === "/process-mining"}
+            onNavigate={() => speakModuleNavigation("sidebar-processMining")}
+            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processMining")}
+            onLeave={() => cancelSpeech()}
+          />
+          <NavItem 
             id="sidebar-transformation-cockpit" 
             to="/transformation-cockpit" 
             icon={Layers} 
@@ -161,21 +174,13 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
             onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-transformationCockpit")}
             onLeave={() => cancelSpeech()}
           />
-          <NavItem 
-            id="sidebar-reports" 
-            to="/reports" 
-            icon={Box} 
-            label="Reports" 
-            collapsed={shouldCollapse} 
-            isActive={location.pathname === "/reports" || location.pathname === "/reports-dashboards"}
-            onNavigate={() => speakModuleNavigation("sidebar-reports")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-reports")}
-            onLeave={() => cancelSpeech()}
-          />
         </nav>
         
         <div className="mt-8 pt-6 border-t border-sidebar-border">
-          <span className={cn("text-xs font-medium text-sidebar-foreground/50 px-3", shouldCollapse && "hidden")}>
+          <span className={cn(
+            "text-xs font-medium text-sidebar-foreground/50 px-3 transition-opacity duration-300",
+            shouldCollapse ? "opacity-0" : "opacity-100"
+          )}>
             Administration
           </span>
           <nav className="mt-2 flex flex-col gap-1">
@@ -210,15 +215,16 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
             JD
           </div>
-          {!shouldCollapse && (
-            <div className="overflow-hidden">
-              <div className="text-sm font-medium text-sidebar-foreground truncate">John Doe</div>
-              <div className="text-xs text-sidebar-foreground/70 truncate">john.doe@example.com</div>
-            </div>
-          )}
+          <div className={cn(
+            "overflow-hidden transition-opacity duration-300",
+            shouldCollapse ? "opacity-0 w-0" : "opacity-100 w-auto"
+          )}>
+            <div className="text-sm font-medium text-sidebar-foreground truncate">John Doe</div>
+            <div className="text-xs text-sidebar-foreground/70 truncate">john.doe@example.com</div>
+          </div>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
 

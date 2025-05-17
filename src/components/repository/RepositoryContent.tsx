@@ -3,6 +3,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { RepositoryItemType } from "@/types/repository";
 import { RepositoryItemComponent } from "@/components/repository/RepositoryItemComponent";
+import { useVoice } from "@/contexts/VoiceContext";
 
 interface RepositoryContentProps {
   items: RepositoryItemType[];
@@ -23,12 +24,18 @@ export function RepositoryContent({
   onShareItem,
   onDownloadItem
 }: RepositoryContentProps) {
+  const { speakText } = useVoice();
+  
   return (
-    <div className={cn(
-      viewMode === "grid" 
-        ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
-        : "flex flex-col gap-1"
-    )}>
+    <div 
+      className={cn(
+        "transition-all duration-300",
+        viewMode === "grid" 
+          ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
+          : "flex flex-col gap-1"
+      )}
+      onMouseEnter={() => speakText("Repository content area. This displays all your process artifacts in your selected view mode. Organize and manage your process documentation efficiently to support process governance and knowledge sharing.")}
+    >
       {items.length > 0 ? (
         items.map((item, index) => (
           <RepositoryItemComponent
@@ -45,6 +52,7 @@ export function RepositoryContent({
       ) : (
         <div className="col-span-full py-8 text-center">
           <p className="text-muted-foreground">No items found matching your search.</p>
+          <p className="text-sm text-muted-foreground mt-2">Try adjusting your search criteria or create new process artifacts.</p>
         </div>
       )}
     </div>
