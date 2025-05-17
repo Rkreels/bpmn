@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { cn } from "@/lib/utils";
@@ -17,25 +17,15 @@ export function MainLayout({
   className, 
   showPageTitle = true 
 }: MainLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
+  // Remove the collapsible state
   
   return (
     <div className="min-h-screen bg-background flex">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <Sidebar />
       
-      <div 
-        className={cn(
-          "flex-1 flex flex-col transition-all duration-300 ease-in-out",
-          sidebarCollapsed ? "ml-[70px]" : "ml-[240px]"
-        )}
-      >
+      <div className="flex-1 flex flex-col ml-[240px]">
         <Header 
-          pageTitle={pageTitle} 
-          onToggleSidebar={toggleSidebar} 
+          pageTitle={pageTitle}
           showPageTitle={showPageTitle} 
         />
         
