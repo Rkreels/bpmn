@@ -17,8 +17,6 @@ export function MainLayout({
   className, 
   showPageTitle = true 
 }: MainLayoutProps) {
-  // Remove the collapsible state
-  
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />

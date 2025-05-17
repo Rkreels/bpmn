@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { EditorToolbar } from "./editor/EditorToolbar";
@@ -8,6 +8,12 @@ import { BpmnCanvas } from "./editor/BpmnCanvas";
 import { XmlSourceView } from "./editor/XmlSourceView";
 import { SimulationView } from "./editor/SimulationView";
 import { BpmnElementPalette } from "./BpmnElementPalette";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useVoice } from "@/contexts/VoiceContext";
 
 // Sample XML for demonstration
 const sampleBpmnXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -32,8 +38,21 @@ interface BpmnEditorProps {
   activeTool?: string;
 }
 
+interface ElementPropertiesType {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  assignee?: string;
+  duration?: string;
+  priority?: string;
+  documentation?: string;
+  implementation?: string;
+}
+
 export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" }) => {
   const { toast } = useToast();
+  const { isVoiceEnabled, speakText } = useVoice();
   const [activeTab, setActiveTab] = useState("editor");
   const [zoomLevel, setZoomLevel] = useState(100);
   const [showGrid, setShowGrid] = useState(true);
@@ -56,6 +75,24 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
   const [connectingElement, setConnectingElement] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  
+  // New States for enhanced functionality
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [elementProperties, setElementProperties] = useState<ElementPropertiesType | null>(null);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importSource, setImportSource] = useState("");
+  const [history, setHistory] = useState<{
+    elements: typeof elements;
+    connections: typeof connections;
+  }[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  
+  // Initialize history with current state
+  useEffect(() => {
+    setHistory([{ elements, connections }]);
+    setHistoryIndex(0);
+  }, []);
 
   // Sync with the parent component's tool selection
   useEffect(() => {
@@ -63,6 +100,51 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
       setSelectedTool(activeTool);
     }
   }, [activeTool]);
+
+  const saveToHistory = useCallback(() => {
+    // Remove any "future" states if we're not at the end of the history
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({ elements: [...elements], connections: [...connections] });
+    
+    if (newHistory.length > 20) { // Limit history to 20 steps
+      newHistory.shift();
+    }
+    
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [elements, connections, history, historyIndex]);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const previousState = history[newIndex];
+      
+      setElements(previousState.elements);
+      setConnections(previousState.connections);
+      setHistoryIndex(newIndex);
+      
+      toast({
+        title: "Undo",
+        description: "Previous action has been undone.",
+      });
+    }
+  }, [history, historyIndex, toast]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const nextState = history[newIndex];
+      
+      setElements(nextState.elements);
+      setConnections(nextState.connections);
+      setHistoryIndex(newIndex);
+      
+      toast({
+        title: "Redo",
+        description: "Action has been redone.",
+      });
+    }
+  }, [history, historyIndex, toast]);
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 10, 200));
@@ -87,13 +169,19 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
   };
 
   const handleSaveModel = () => {
+    // Simulate saving the model
     toast({
       title: "Model Saved",
       description: "Your BPMN model has been saved successfully."
     });
+    
+    if (isVoiceEnabled) {
+      speakText("Model saved successfully");
+    }
   };
 
   const handleExportXml = () => {
+    // Create an XML file from the model
     const blob = new Blob([xmlSource], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -108,10 +196,14 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
       title: "BPMN XML Exported",
       description: "The BPMN XML file has been downloaded."
     });
+    
+    if (isVoiceEnabled) {
+      speakText("BPMN XML file exported successfully");
+    }
   };
 
   const handleExportJson = () => {
-    // Simple conversion to JSON for demonstration
+    // Export as JSON for demonstration
     const processJson = {
       id: "Process_1",
       name: "Order Processing",
@@ -133,18 +225,88 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
       title: "JSON Exported",
       description: "The process model JSON has been downloaded."
     });
+    
+    if (isVoiceEnabled) {
+      speakText("Process model exported as JSON successfully");
+    }
+  };
+
+  const handleImportClick = () => {
+    setIsImportDialogOpen(true);
+  };
+
+  const handleImportConfirm = () => {
+    try {
+      // Basic validation that it's XML
+      if (importSource.trim().startsWith('<?xml')) {
+        setXmlSource(importSource);
+        setIsImportDialogOpen(false);
+        
+        // For a real implementation, we would parse the XML and update the model
+        // This is a simplified version for demonstration
+        toast({
+          title: "Import Successful",
+          description: "BPMN XML has been imported successfully."
+        });
+        
+        if (isVoiceEnabled) {
+          speakText("BPMN XML imported successfully");
+        }
+      } else {
+        toast({
+          title: "Invalid XML",
+          description: "The provided content doesn't appear to be valid BPMN XML.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Import Failed",
+        description: "Failed to import BPMN XML. Please check the format.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleXmlChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setXmlSource(e.target.value);
+    
+    // In a real implementation, we would parse the XML and update the model
+    // This is simplified for demonstration
   };
 
   const handleElementSelect = (elementId: string) => {
     if (selectedTool === "select") {
       setSelectedElement(elementId === selectedElement ? null : elementId);
+      
+      if (elementId !== selectedElement) {
+        const element = elements.find(el => el.id === elementId);
+        if (element) {
+          setElementProperties({
+            id: element.id,
+            name: element.name,
+            type: element.type,
+            description: "",
+            assignee: "",
+            duration: "",
+            priority: "medium",
+            documentation: "",
+            implementation: "",
+          });
+          
+          if (isVoiceEnabled) {
+            speakText(`Selected ${element.type} element: ${element.name}`);
+          }
+        }
+      }
     } else if (selectedTool === "connector" && connectingElement === null) {
       // Start connecting
       setConnectingElement(elementId);
+      
+      if (isVoiceEnabled) {
+        speakText("Connection started. Select a target element to complete the connection.");
+      }
+      
       toast({
         title: "Connection Started",
         description: "Select a target element to complete the connection.",
@@ -159,8 +321,16 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         type: "sequence-flow"
       };
       
-      setConnections([...connections, newConnection]);
+      const updatedConnections = [...connections, newConnection];
+      setConnections(updatedConnections);
       setConnectingElement(null);
+      
+      // Save to history
+      saveToHistory();
+      
+      if (isVoiceEnabled) {
+        speakText("Connection created successfully");
+      }
       
       toast({
         title: "Connection Created",
@@ -180,8 +350,16 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         position: { x: 200, y: 200 } // Default position
       };
       
-      setElements([...elements, newElement]);
+      const updatedElements = [...elements, newElement];
+      setElements(updatedElements);
       setSelectedElement(newId);
+      
+      // Save to history
+      saveToHistory();
+      
+      if (isVoiceEnabled) {
+        speakText(`Added new ${elementType} element`);
+      }
       
       toast({
         title: "Element Added",
@@ -189,6 +367,11 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
       });
     } else {
       setSelectedTool(elementType);
+      
+      if (isVoiceEnabled) {
+        speakText("Connector tool selected. Select source and target elements to create a connection.");
+      }
+      
       toast({
         title: "Connector Tool Selected",
         description: "Select source and target elements to create a connection."
@@ -200,8 +383,14 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     if (selectedTool !== "select" && selectedTool !== "connector" && selectedTool !== "hand") {
       // Calculate position relative to canvas
       const canvasRect = e.currentTarget.getBoundingClientRect();
-      const xPos = (e.clientX - canvasRect.left) / (zoomLevel / 100);
-      const yPos = (e.clientY - canvasRect.top) / (zoomLevel / 100);
+      let xPos = (e.clientX - canvasRect.left) / (zoomLevel / 100);
+      let yPos = (e.clientY - canvasRect.top) / (zoomLevel / 100);
+      
+      // Apply snap to grid if enabled
+      if (snapToGrid) {
+        xPos = Math.round(xPos / 20) * 20;
+        yPos = Math.round(yPos / 20) * 20;
+      }
       
       const newId = `${selectedTool}_${Date.now()}`;
       let name = `New ${selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1)}`;
@@ -221,8 +410,16 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         position: { x: xPos, y: yPos }
       };
       
-      setElements([...elements, newElement]);
+      const updatedElements = [...elements, newElement];
+      setElements(updatedElements);
       setSelectedElement(newId);
+      
+      // Save to history
+      saveToHistory();
+      
+      if (isVoiceEnabled) {
+        speakText(`Added new ${selectedTool} element`);
+      }
       
       toast({
         title: "Element Added",
@@ -231,6 +428,11 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     } else if (connectingElement !== null && selectedTool === "connector") {
       // Cancel connecting if clicking on canvas
       setConnectingElement(null);
+      
+      if (isVoiceEnabled) {
+        speakText("Connection canceled");
+      }
+      
       toast({
         title: "Connection Canceled",
         description: "Connection creation has been canceled."
@@ -238,18 +440,31 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     } else if (selectedTool === "select") {
       // Deselect when clicking on canvas
       setSelectedElement(null);
+      setElementProperties(null);
     }
   };
 
   const handleElementDelete = () => {
     if (selectedElement) {
-      setElements(elements.filter(el => el.id !== selectedElement));
-      // Also remove any connections involving this element
-      setConnections(connections.filter(
-        conn => conn.sourceId !== selectedElement && conn.targetId !== selectedElement
-      ));
+      const updatedElements = elements.filter(el => el.id !== selectedElement);
       
+      // Also remove any connections involving this element
+      const updatedConnections = connections.filter(
+        conn => conn.sourceId !== selectedElement && conn.targetId !== selectedElement
+      );
+      
+      setElements(updatedElements);
+      setConnections(updatedConnections);
       setSelectedElement(null);
+      setElementProperties(null);
+      
+      // Save to history
+      saveToHistory();
+      
+      if (isVoiceEnabled) {
+        speakText("Element deleted successfully");
+      }
+      
       toast({
         title: "Element Deleted",
         description: "The selected element has been removed."
@@ -272,26 +487,43 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
 
   const handleElementDragMove = (e: React.MouseEvent) => {
     if (isDragging && selectedElement) {
-      const dx = (e.clientX - dragStartPos.x) / (zoomLevel / 100);
-      const dy = (e.clientY - dragStartPos.y) / (zoomLevel / 100);
+      let dx = (e.clientX - dragStartPos.x) / (zoomLevel / 100);
+      let dy = (e.clientY - dragStartPos.y) / (zoomLevel / 100);
       
-      setElements(elements.map(el => {
+      // Calculate new position
+      let newX = currentElementPosition.x + dx;
+      let newY = currentElementPosition.y + dy;
+      
+      // Apply snap to grid if enabled
+      if (snapToGrid) {
+        newX = Math.round(newX / 20) * 20;
+        newY = Math.round(newY / 20) * 20;
+      }
+      
+      const updatedElements = elements.map(el => {
         if (el.id === selectedElement) {
           return {
             ...el,
             position: {
-              x: currentElementPosition.x + dx,
-              y: currentElementPosition.y + dy
+              x: newX,
+              y: newY
             }
           };
         }
         return el;
-      }));
+      });
+      
+      setElements(updatedElements);
     }
   };
 
   const handleElementDragEnd = () => {
-    setIsDragging(false);
+    if (isDragging) {
+      setIsDragging(false);
+      
+      // Save to history
+      saveToHistory();
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -307,6 +539,10 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     setSelectedTool(tool);
     if (tool !== "connector") {
       setConnectingElement(null);
+    }
+    
+    if (isVoiceEnabled) {
+      speakText(`${tool} tool selected`);
     }
     
     toast({
@@ -330,8 +566,16 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
           }
         };
         
-        setElements([...elements, newElement]);
+        const updatedElements = [...elements, newElement];
+        setElements(updatedElements);
         setSelectedElement(newId);
+        
+        // Save to history
+        saveToHistory();
+        
+        if (isVoiceEnabled) {
+          speakText("Element duplicated successfully");
+        }
         
         toast({
           title: "Element Duplicated",
@@ -342,29 +586,52 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
   };
 
   const handleEditElement = () => {
-    const element = elements.find(el => el.id === selectedElement);
-    if (element) {
-      // In a full implementation, this would open a modal or side panel
-      // For simplicity, we'll just show a toast
-      toast({
-        title: "Edit Element",
-        description: `Editing ${element.name}`
-      });
-      
-      // Here we could update the element name with a prompt for demo purposes
-      const newName = prompt("Enter new name for this element:", element.name);
-      if (newName && newName.trim() !== "") {
-        setElements(elements.map(el => {
-          if (el.id === selectedElement) {
-            return {
-              ...el,
-              name: newName
-            };
-          }
-          return el;
-        }));
+    if (selectedElement) {
+      const element = elements.find(el => el.id === selectedElement);
+      if (element) {
+        setIsEditDialogOpen(true);
       }
     }
+  };
+  
+  const handleUpdateElementProperties = () => {
+    if (selectedElement && elementProperties) {
+      const updatedElements = elements.map(el => {
+        if (el.id === selectedElement) {
+          return {
+            ...el,
+            name: elementProperties.name
+          };
+        }
+        return el;
+      });
+      
+      setElements(updatedElements);
+      setIsEditDialogOpen(false);
+      
+      // Save to history
+      saveToHistory();
+      
+      if (isVoiceEnabled) {
+        speakText("Element properties updated successfully");
+      }
+      
+      toast({
+        title: "Element Updated",
+        description: "The element properties have been updated successfully."
+      });
+    }
+  };
+  
+  const handleToggleSnapToGrid = () => {
+    setSnapToGrid(prev => !prev);
+    
+    toast({
+      title: snapToGrid ? "Snap to Grid Disabled" : "Snap to Grid Enabled",
+      description: snapToGrid 
+        ? "Elements will move freely on the canvas." 
+        : "Elements will snap to the grid when moved or created.",
+    });
   };
 
   return (
@@ -430,8 +697,36 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
               
               <div className="border-t p-3 bg-muted/20">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex items-center gap-4">
                     <span className="text-xs text-muted-foreground">Process ID: Process_1</span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleUndo}
+                        disabled={historyIndex <= 0}
+                        className="h-7 px-2"
+                      >
+                        Undo
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRedo}
+                        disabled={historyIndex >= history.length - 1}
+                        className="h-7 px-2"
+                      >
+                        Redo
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleToggleSnapToGrid}
+                        className={`h-7 px-2 ${snapToGrid ? 'bg-muted' : ''}`}
+                      >
+                        {snapToGrid ? "Grid Snap: On" : "Grid Snap: Off"}
+                      </Button>
+                    </div>
                   </div>
                   <div>
                     {selectedElement && (
@@ -471,6 +766,11 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
                     </div>
                   </div>
                 </div>
+                
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" className="mr-2">Full Screen</Button>
+                  <Button>Run Simulation</Button>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -480,6 +780,14 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
               xmlSource={xmlSource}
               onXmlChange={handleXmlChange}
             />
+            
+            <div className="mt-4 flex justify-between">
+              <Button variant="outline" onClick={handleImportClick}>Import XML</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleExportXml}>Export XML</Button>
+                <Button onClick={handleSaveModel}>Apply Changes</Button>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="simulation" className="flex-1 flex flex-col p-4 h-full m-0">
@@ -487,6 +795,176 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
           </TabsContent>
         </div>
       </div>
+      
+      {/* Element Properties Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Element Properties</DialogTitle>
+          </DialogHeader>
+          {elementProperties && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="element-name">Name</Label>
+                <Input
+                  id="element-name"
+                  value={elementProperties.name}
+                  onChange={(e) => setElementProperties({
+                    ...elementProperties,
+                    name: e.target.value
+                  })}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="element-type">Type</Label>
+                  <Input
+                    id="element-type"
+                    value={elementProperties.type
+                      .split('-')
+                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(' ')}
+                    disabled
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="element-id">ID</Label>
+                  <Input
+                    id="element-id"
+                    value={elementProperties.id}
+                    disabled
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="element-description">Description</Label>
+                <Input
+                  id="element-description"
+                  value={elementProperties.description}
+                  onChange={(e) => setElementProperties({
+                    ...elementProperties,
+                    description: e.target.value
+                  })}
+                />
+              </div>
+              
+              {(elementProperties.type === 'task' || elementProperties.type === 'subprocess') && (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="element-assignee">Assignee</Label>
+                    <Input
+                      id="element-assignee"
+                      value={elementProperties.assignee}
+                      onChange={(e) => setElementProperties({
+                        ...elementProperties,
+                        assignee: e.target.value
+                      })}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="element-duration">Duration</Label>
+                      <Input
+                        id="element-duration"
+                        value={elementProperties.duration}
+                        onChange={(e) => setElementProperties({
+                          ...elementProperties,
+                          duration: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="element-priority">Priority</Label>
+                      <Select
+                        value={elementProperties.priority}
+                        onValueChange={(value) => setElementProperties({
+                          ...elementProperties,
+                          priority: value
+                        })}
+                      >
+                        <SelectTrigger id="element-priority">
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="critical">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  {elementProperties.type === 'task' && (
+                    <div className="grid gap-2">
+                      <Label htmlFor="element-implementation">Implementation</Label>
+                      <Select
+                        value={elementProperties.implementation || ""}
+                        onValueChange={(value) => setElementProperties({
+                          ...elementProperties,
+                          implementation: value
+                        })}
+                      >
+                        <SelectTrigger id="element-implementation">
+                          <SelectValue placeholder="Select implementation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unspecified">Unspecified</SelectItem>
+                          <SelectItem value="webservice">Web Service</SelectItem>
+                          <SelectItem value="script">Script</SelectItem>
+                          <SelectItem value="manual">Manual</SelectItem>
+                          <SelectItem value="user">User</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              <div className="grid gap-2">
+                <Label htmlFor="element-documentation">Documentation</Label>
+                <textarea
+                  id="element-documentation"
+                  className="min-h-[100px] rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm"
+                  value={elementProperties.documentation}
+                  onChange={(e) => setElementProperties({
+                    ...elementProperties,
+                    documentation: e.target.value
+                  })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateElementProperties}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Import Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Import BPMN XML</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <textarea
+              className="min-h-[300px] rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm font-mono"
+              value={importSource}
+              onChange={(e) => setImportSource(e.target.value)}
+              placeholder="Paste BPMN XML here..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleImportConfirm}>Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   );
 };
