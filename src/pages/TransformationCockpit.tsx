@@ -1,4 +1,4 @@
-
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,12 +18,87 @@ import {
   Settings,
   Share2,
   Target,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CardMetric } from "@/components/ui/card-metric";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { useVoice } from "@/contexts/VoiceContext";
 
 export default function TransformationCockpit() {
+  const [activeTab, setActiveTab] = useState("initiatives");
+  const [initiatives, setInitiatives] = useState<TransformationInitiative[]>(transformationInitiatives);
+  const [isNewInitiativeDialogOpen, setIsNewInitiativeDialogOpen] = useState(false);
+  const [editingInitiative, setEditingInitiative] = useState<TransformationInitiative | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const { toast } = useToast();
+  const { speakText } = useVoice();
+  
+  const handleSpeakText = (text: string) => {
+    if (speakText) {
+      speakText(text);
+    }
+  };
+
+  const handleCreateInitiative = (initiative: TransformationInitiative) => {
+    const newInitiative = {
+      ...initiative,
+      id: crypto.randomUUID(),
+    };
+    
+    setInitiatives([newInitiative, ...initiatives]);
+    setIsNewInitiativeDialogOpen(false);
+    
+    toast({
+      title: "Initiative created",
+      description: `"${initiative.name}" has been added to your initiatives.`,
+      action: <ToastAction altText="View">View</ToastAction>,
+    });
+    
+    handleSpeakText("New transformation initiative created successfully");
+  };
+  
+  const handleUpdateInitiative = (updatedInitiative: TransformationInitiative) => {
+    setInitiatives(
+      initiatives.map((item) => 
+        item.id === updatedInitiative.id ? updatedInitiative : item
+      )
+    );
+    setEditingInitiative(null);
+    
+    toast({
+      title: "Initiative updated",
+      description: `"${updatedInitiative.name}" has been updated.`,
+    });
+    
+    handleSpeakText("Transformation initiative updated successfully");
+  };
+  
+  const handleDeleteInitiative = (id: string) => {
+    setInitiatives(initiatives.filter((item) => item.id !== id));
+    setConfirmDeleteId(null);
+    
+    toast({
+      title: "Initiative deleted",
+      description: "The initiative has been removed.",
+      variant: "destructive",
+    });
+    
+    handleSpeakText("Transformation initiative deleted");
+  };
+  
+  const filteredInitiatives = initiatives.filter(
+    (initiative) => initiative.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <MainLayout pageTitle="Transformation Cockpit">
       <div className="space-y-6">
@@ -34,19 +109,39 @@ export default function TransformationCockpit() {
             <p className="text-muted-foreground">Monitor and manage your transformation initiatives</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1"
+              onMouseEnter={() => handleSpeakText("Filter initiatives by status, priority or owner")}
+            >
               <Filter className="h-4 w-4" />
               Filter
             </Button>
-            <Button variant="outline" size="sm" className="gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1"
+              onMouseEnter={() => handleSpeakText("Share your transformation cockpit with stakeholders")}
+            >
               <Share2 className="h-4 w-4" />
               Share
             </Button>
-            <Button variant="outline" size="sm" className="gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1"
+              onMouseEnter={() => handleSpeakText("Export your transformation data for reporting")}
+            >
               <Download className="h-4 w-4" />
               Export
             </Button>
-            <Button size="sm" className="gap-1">
+            <Button 
+              size="sm" 
+              className="gap-1"
+              onClick={() => setIsNewInitiativeDialogOpen(true)}
+              onMouseEnter={() => handleSpeakText("Create a new transformation initiative")}
+            >
               <Plus className="h-4 w-4" />
               New Initiative
             </Button>
@@ -57,9 +152,10 @@ export default function TransformationCockpit() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <CardMetric
             title="Transformation Initiatives"
-            value="12"
+            value={initiatives.length.toString()}
             icon={<Target className="h-5 w-5" />}
             trend={{ value: 20, isUpward: true, isPositive: true }}
+            onMouseEnter={() => handleSpeakText("You have " + initiatives.length + " transformation initiatives in progress")}
           />
           <CardMetric
             title="Processes Impacted"
@@ -67,6 +163,7 @@ export default function TransformationCockpit() {
             icon={<BarChart4 className="h-5 w-5" />}
             trend={{ value: 8, isUpward: true, isPositive: true }}
             variant="primary"
+            onMouseEnter={() => handleSpeakText("48 business processes are impacted by your transformation initiatives")}
           />
           <CardMetric
             title="Completion Rate"
@@ -74,6 +171,7 @@ export default function TransformationCockpit() {
             icon={<LineChart className="h-5 w-5" />}
             trend={{ value: 5, isUpward: true, isPositive: true }}
             variant="success"
+            onMouseEnter={() => handleSpeakText("Your overall completion rate is 67 percent, showing a positive trend")}
           />
           <CardMetric
             title="At Risk Initiatives"
@@ -81,34 +179,87 @@ export default function TransformationCockpit() {
             icon={<AlertCircle className="h-5 w-5" />}
             trend={{ value: 2, isUpward: false, isPositive: true }}
             variant="warning"
+            onMouseEnter={() => handleSpeakText("3 initiatives are currently at risk and need attention")}
           />
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="initiatives" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
-            <TabsTrigger value="initiatives">Initiatives</TabsTrigger>
-            <TabsTrigger value="valueDrivers">Value Drivers</TabsTrigger>
-            <TabsTrigger value="kpis">KPIs</TabsTrigger>
-            <TabsTrigger value="heatmap">Impact Heatmap</TabsTrigger>
+            <TabsTrigger 
+              value="initiatives"
+              onMouseEnter={() => handleSpeakText("View and manage all transformation initiatives")}
+            >
+              Initiatives
+            </TabsTrigger>
+            <TabsTrigger 
+              value="valueDrivers"
+              onMouseEnter={() => handleSpeakText("Analyze business value drivers linked to initiatives")}
+            >
+              Value Drivers
+            </TabsTrigger>
+            <TabsTrigger 
+              value="kpis"
+              onMouseEnter={() => handleSpeakText("Monitor key performance indicators for your transformation")}
+            >
+              KPIs
+            </TabsTrigger>
+            <TabsTrigger 
+              value="heatmap"
+              onMouseEnter={() => handleSpeakText("Visualize impact across your organization")}
+            >
+              Impact Heatmap
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="initiatives" className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="relative w-full max-w-sm">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search initiatives..." className="pl-8" />
+                <Input 
+                  placeholder="Search initiatives..." 
+                  className="pl-8" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <Button className="gap-1">
+              <Button 
+                className="gap-1"
+                onClick={() => setIsNewInitiativeDialogOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
                 New Initiative
               </Button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {transformationInitiatives.map((initiative, index) => (
-                <InitiativeCard key={index} initiative={initiative} />
+              {filteredInitiatives.map((initiative) => (
+                <InitiativeCard 
+                  key={initiative.id} 
+                  initiative={initiative}
+                  onEdit={() => setEditingInitiative(initiative)}
+                  onDelete={() => setConfirmDeleteId(initiative.id)}
+                  onSpeakText={handleSpeakText}
+                />
               ))}
+              
+              {filteredInitiatives.length === 0 && (
+                <div className="col-span-2 py-12 text-center">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+                    <Target className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold">No initiatives found</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {searchTerm ? 'Try a different search term' : 'Create your first initiative to get started'}
+                  </p>
+                  <Button 
+                    onClick={() => setIsNewInitiativeDialogOpen(true)}
+                    className="mt-4"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Create Initiative
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
           
@@ -284,11 +435,53 @@ export default function TransformationCockpit() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* New/Edit Initiative Dialog */}
+      <InitiativeDialog 
+        isOpen={isNewInitiativeDialogOpen || editingInitiative !== null}
+        onClose={() => {
+          setIsNewInitiativeDialogOpen(false);
+          setEditingInitiative(null);
+        }}
+        onSave={(initiative) => {
+          if (editingInitiative) {
+            handleUpdateInitiative(initiative);
+          } else {
+            handleCreateInitiative(initiative);
+          }
+        }}
+        initiative={editingInitiative || undefined}
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={confirmDeleteId !== null} onOpenChange={() => setConfirmDeleteId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Initiative</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this initiative? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <div className="flex flex-1 gap-2 justify-end">
+              <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => confirmDeleteId && handleDeleteInitiative(confirmDeleteId)}
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
 
+// Define initiative type
 interface TransformationInitiative {
+  id: string;
   name: string;
   description: string;
   status: "Planning" | "In Progress" | "Completed" | "On Hold";
@@ -299,8 +492,10 @@ interface TransformationInitiative {
   priority: "High" | "Medium" | "Low";
 }
 
+// Sample data with added ids
 const transformationInitiatives: TransformationInitiative[] = [
   {
+    id: "1",
     name: "Order-to-Cash Optimization",
     description: "Streamline and automate the order-to-cash process to reduce cycle time and improve accuracy",
     status: "In Progress",
@@ -311,6 +506,7 @@ const transformationInitiatives: TransformationInitiative[] = [
     priority: "High"
   },
   {
+    id: "2",
     name: "Customer Onboarding Redesign",
     description: "Redesign the customer onboarding journey to improve experience and reduce dropoffs",
     status: "In Progress",
@@ -321,6 +517,7 @@ const transformationInitiatives: TransformationInitiative[] = [
     priority: "High"
   },
   {
+    id: "3",
     name: "Procure-to-Pay Automation",
     description: "Implement automation in procurement and payment processes to reduce manual effort",
     status: "Planning",
@@ -331,6 +528,7 @@ const transformationInitiatives: TransformationInitiative[] = [
     priority: "Medium"
   },
   {
+    id: "4",
     name: "Compliance Framework Integration",
     description: "Integrate regulatory compliance frameworks into core business processes",
     status: "On Hold",
@@ -342,11 +540,15 @@ const transformationInitiatives: TransformationInitiative[] = [
   },
 ];
 
+// Enhanced Initiative Card Component with edit/delete actions
 interface InitiativeCardProps {
   initiative: TransformationInitiative;
+  onEdit: () => void;
+  onDelete: () => void;
+  onSpeakText: (text: string) => void;
 }
 
-function InitiativeCard({ initiative }: InitiativeCardProps) {
+function InitiativeCard({ initiative, onEdit, onDelete, onSpeakText }: InitiativeCardProps) {
   const statusColors = {
     "Planning": "bg-blue-100 text-blue-800",
     "In Progress": "bg-amber-100 text-amber-800",
@@ -361,7 +563,10 @@ function InitiativeCard({ initiative }: InitiativeCardProps) {
   };
   
   return (
-    <Card className="hover:border-primary cursor-pointer">
+    <Card 
+      className="hover:border-primary cursor-pointer group transition-all duration-200"
+      onMouseEnter={() => onSpeakText(`Initiative: ${initiative.name}. Status: ${initiative.status}. Completion: ${initiative.completion}%`)}
+    >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle>{initiative.name}</CardTitle>
@@ -413,15 +618,222 @@ function InitiativeCard({ initiative }: InitiativeCardProps) {
             </div>
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
             <Button variant="ghost" size="sm" className="gap-1">
               View Details
               <ChevronRight className="h-4 w-4" />
             </Button>
+            
+            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// Initiative Dialog for Create/Edit
+interface InitiativeDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (initiative: TransformationInitiative) => void;
+  initiative?: TransformationInitiative;
+}
+
+function InitiativeDialog({ isOpen, onClose, onSave, initiative }: InitiativeDialogProps) {
+  const [formData, setFormData] = useState<Partial<TransformationInitiative>>(
+    initiative || {
+      name: "",
+      description: "",
+      status: "Planning",
+      completion: 0,
+      owner: "",
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      priority: "Medium"
+    }
+  );
+  
+  const handleChange = (field: keyof TransformationInitiative, value: any) => {
+    setFormData({
+      ...formData,
+      [field]: value
+    });
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!formData.name || !formData.owner || !formData.startDate || !formData.endDate) {
+      return;
+    }
+    
+    onSave({
+      id: initiative?.id || "",
+      name: formData.name || "",
+      description: formData.description || "",
+      status: formData.status as "Planning" | "In Progress" | "Completed" | "On Hold",
+      completion: formData.completion || 0,
+      owner: formData.owner || "",
+      startDate: formData.startDate || "",
+      endDate: formData.endDate || "",
+      priority: formData.priority as "High" | "Medium" | "Low"
+    });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{initiative ? "Edit Initiative" : "Create Initiative"}</DialogTitle>
+          <DialogDescription>
+            {initiative 
+              ? "Update the details of your transformation initiative"
+              : "Add a new transformation initiative to your portfolio"
+            }
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Initiative Name</Label>
+              <Input 
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Input 
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.status}
+                  onChange={(e) => handleChange("status", e.target.value)}
+                >
+                  <option value="Planning">Planning</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="On Hold">On Hold</option>
+                </select>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="owner">Owner</Label>
+                <Input 
+                  id="owner"
+                  value={formData.owner}
+                  onChange={(e) => handleChange("owner", e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="completion">Completion (%)</Label>
+              <Input 
+                id="completion"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.completion}
+                onChange={(e) => handleChange("completion", parseInt(e.target.value, 10))}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input 
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => handleChange("startDate", e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input 
+                  id="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => handleChange("endDate", e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <div className="flex gap-4">
+                {["Low", "Medium", "High"].map((priority) => (
+                  <div key={priority} className="flex items-center">
+                    <input
+                      type="radio"
+                      id={`priority-${priority}`}
+                      name="priority"
+                      value={priority}
+                      checked={formData.priority === priority}
+                      onChange={(e) => handleChange("priority", e.target.value)}
+                      className="mr-2"
+                    />
+                    <Label htmlFor={`priority-${priority}`}>{priority}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {initiative ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
