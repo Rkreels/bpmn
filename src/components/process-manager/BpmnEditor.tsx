@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useBpmnEditorState } from "./editor/hooks/useBpmnEditorState";
 import { useBpmnEditorActions } from "./editor/hooks/useBpmnEditorActions";
@@ -55,6 +56,12 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     speakText: state.speakText
   });
 
+  // Create a wrapper function to adapt the signature for onAddElement
+  const handleAddElement = (elementType: string) => {
+    // Use default coordinates for the center of the canvas when adding from palette
+    actions.handleAddElement(elementType, 300, 200);
+  };
+
   return (
     <>
       <BpmnEditorTabs
@@ -84,7 +91,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onExportJson={actions.handleExportJson}
         onXmlChange={actions.handleXmlChange}
         onCanvasClick={actions.handleCanvasClick}
-        onElementSelect={actions.handleElementSelect}
+        onElementSelect={actions.handleSelectElement}
         onElementDragStart={actions.handleElementDragStart}
         onElementDragMove={actions.handleElementDragMove}
         onElementDragEnd={actions.handleElementDragEnd}
@@ -93,7 +100,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onEditElement={actions.handleEditElement}
         onDuplicateElement={actions.handleDuplicateElement}
         onDeleteElement={actions.handleElementDelete}
-        onAddElement={actions.handleAddElement}
+        onAddElement={handleAddElement}
         onUndo={actions.handleUndo}
         onRedo={actions.handleRedo}
         onToggleSnapToGrid={actions.handleToggleSnapToGrid}
@@ -115,7 +122,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onOpenChange={state.setIsImportDialogOpen}
         importSource={state.importSource}
         setImportSource={state.setImportSource}
-        onImportConfirm={() => actions.handleImportConfirm(state.importSource)}
+        onImportConfirm={actions.handleImportConfirm}
       />
     </>
   );

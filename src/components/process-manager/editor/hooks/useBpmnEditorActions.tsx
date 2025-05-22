@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { ElementProperties } from "../types";
@@ -66,7 +67,7 @@ export const useBpmnEditorActions = ({
   setSelectedElement: React.Dispatch<React.SetStateAction<string | null>>;
   setSelectedTool: React.Dispatch<React.SetStateAction<string>>;
   setConnectingElement: React.Dispatch<React.SetStateAction<string | null>>;
-  setMousePosition: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
+  setMousePosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
   setDragStartPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
   setCurrentElementPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
@@ -84,7 +85,8 @@ export const useBpmnEditorActions = ({
   toast: (props: ToastProps) => void;
   speakText: (text: string) => void;
 }) => {
-  const handleAddElement = useCallback((type: string, x: number, y: number) => {
+  // Add a new element to the diagram
+  const handleAddElement = useCallback((type: string, x: number = 250, y: number = 250) => {
     const id = uuidv4();
     const newElement = {
       id,
@@ -94,6 +96,10 @@ export const useBpmnEditorActions = ({
       width: type === 'task' ? 120 : type === 'gateway' ? 50 : 40,
       height: type === 'task' ? 80 : type === 'gateway' ? 50 : 40,
       name: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+      position: {
+        x: snapToGrid ? Math.round(x / 20) * 20 : x,
+        y: snapToGrid ? Math.round(y / 20) * 20 : y
+      }
     };
     
     setElements(prev => [...prev, newElement]);
@@ -112,6 +118,7 @@ export const useBpmnEditorActions = ({
     return id;
   }, [elements, connections, snapToGrid, saveToHistory, setElements, setSelectedElement, toast, isVoiceEnabled, speakText]);
 
+  // Select an element in the diagram
   const handleSelectElement = useCallback((id: string | null) => {
     setSelectedElement(id);
     
@@ -141,6 +148,7 @@ export const useBpmnEditorActions = ({
     }
   }, [elements, setSelectedElement, setElementProperties, isVoiceEnabled, speakText]);
 
+  // Start connecting elements
   const handleStartConnecting = useCallback((id: string) => {
     setConnectingElement(id);
     setSelectedTool('connector');
@@ -150,6 +158,7 @@ export const useBpmnEditorActions = ({
     }
   }, [setConnectingElement, setSelectedTool, isVoiceEnabled, speakText]);
 
+  // Complete connection between elements
   const handleCompleteConnection = useCallback((targetId: string) => {
     if (connectingElement && connectingElement !== targetId) {
       const id = uuidv4();
@@ -157,6 +166,8 @@ export const useBpmnEditorActions = ({
         id,
         source: connectingElement,
         target: targetId,
+        sourceId: connectingElement,
+        targetId: targetId,
         type: 'sequence',
       };
       
@@ -176,6 +187,7 @@ export const useBpmnEditorActions = ({
     }
   }, [connectingElement, elements, connections, saveToHistory, setConnections, setConnectingElement, setSelectedTool, toast, isVoiceEnabled, speakText]);
 
+  // Handle element dragging start
   const handleStartDrag = useCallback((id: string, x: number, y: number) => {
     setSelectedElement(id);
     setIsDragging(true);
@@ -187,6 +199,7 @@ export const useBpmnEditorActions = ({
     }
   }, [elements, setSelectedElement, setIsDragging, setDragStartPos, setCurrentElementPosition]);
 
+  // Handle element dragging
   const handleDrag = useCallback((x: number, y: number) => {
     if (isDragging && dragStartPos && currentElementPosition && selectedElement) {
       const deltaX = x - dragStartPos.x;
@@ -200,12 +213,21 @@ export const useBpmnEditorActions = ({
       
       setElements(prev => prev.map(el => 
         el.id === selectedElement 
-          ? { ...el, x: snappedX, y: snappedY } 
+          ? { 
+              ...el, 
+              x: snappedX, 
+              y: snappedY, 
+              position: { 
+                x: snappedX, 
+                y: snappedY 
+              } 
+            } 
           : el
       ));
     }
   }, [isDragging, dragStartPos, currentElementPosition, selectedElement, snapToGrid, setElements]);
 
+  // Handle element dragging end
   const handleEndDrag = useCallback(() => {
     if (isDragging && selectedElement) {
       setIsDragging(false);
@@ -215,6 +237,7 @@ export const useBpmnEditorActions = ({
     }
   }, [isDragging, selectedElement, elements, connections, saveToHistory, setIsDragging, setDragStartPos, setCurrentElementPosition]);
 
+  // Delete selected element
   const handleDeleteElement = useCallback(() => {
     if (selectedElement) {
       // Remove the element
@@ -241,6 +264,7 @@ export const useBpmnEditorActions = ({
     }
   }, [selectedElement, elements, connections, saveToHistory, setElements, setConnections, setSelectedElement, toast, isVoiceEnabled, speakText]);
 
+  // Update element properties
   const handleUpdateElementProperties = useCallback((props: ElementProperties) => {
     if (props.id) {
       setElements(prev => prev.map(el => 
@@ -280,6 +304,7 @@ export const useBpmnEditorActions = ({
     }
   }, [elements, connections, saveToHistory, setElements, setIsEditDialogOpen, toast, isVoiceEnabled, speakText]);
 
+  // Edit element properties
   const handleEditElement = useCallback(() => {
     if (selectedElement) {
       const element = elements.find(el => el.id === selectedElement);
@@ -296,30 +321,34 @@ export const useBpmnEditorActions = ({
     }
   }, [selectedElement, elements, setElementProperties, setIsEditDialogOpen]);
 
+  // Zoom in
   const handleZoomIn = useCallback(() => {
-    setZoomLevel(prev => Math.min(prev + 0.1, 2));
+    setZoomLevel(prev => Math.min(prev + 10, 200));
     
     if (isVoiceEnabled) {
       speakText('Zoomed in');
     }
   }, [setZoomLevel, isVoiceEnabled, speakText]);
 
+  // Zoom out
   const handleZoomOut = useCallback(() => {
-    setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
+    setZoomLevel(prev => Math.max(prev - 10, 50));
     
     if (isVoiceEnabled) {
       speakText('Zoomed out');
     }
   }, [setZoomLevel, isVoiceEnabled, speakText]);
 
+  // Reset zoom
   const handleResetZoom = useCallback(() => {
-    setZoomLevel(1);
+    setZoomLevel(100);
     
     if (isVoiceEnabled) {
       speakText('Zoom reset');
     }
   }, [setZoomLevel, isVoiceEnabled, speakText]);
 
+  // Toggle grid
   const handleToggleGrid = useCallback(() => {
     setShowGrid(prev => !prev);
     
@@ -328,6 +357,7 @@ export const useBpmnEditorActions = ({
     }
   }, [setShowGrid, isVoiceEnabled, speakText]);
 
+  // Toggle validation
   const handleToggleValidation = useCallback(() => {
     setShowValidation(prev => !prev);
     
@@ -336,6 +366,7 @@ export const useBpmnEditorActions = ({
     }
   }, [setShowValidation, isVoiceEnabled, speakText]);
 
+  // Toggle snap to grid
   const handleToggleSnapToGrid = useCallback(() => {
     setSnapToGrid(prev => !prev);
     
@@ -351,6 +382,7 @@ export const useBpmnEditorActions = ({
     });
   }, [snapToGrid, setSnapToGrid, toast, isVoiceEnabled, speakText]);
 
+  // Export XML
   const handleExportXml = useCallback(() => {
     // This is a simplified example - in a real app, you'd generate actual BPMN XML
     const xml = `
@@ -388,21 +420,69 @@ export const useBpmnEditorActions = ({
     URL.revokeObjectURL(url);
   }, [elements, connections, setXmlSource, toast, isVoiceEnabled, speakText]);
 
-  const handleImportXml = useCallback((xml: string) => {
+  // Export JSON
+  const handleExportJson = useCallback(() => {
+    const data = {
+      elements,
+      connections,
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        version: "1.0"
+      }
+    };
+    
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'process.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    if (isVoiceEnabled) {
+      speakText('JSON exported');
+    }
+    
+    toast({
+      title: "JSON Exported",
+      description: "Process data has been exported as JSON.",
+    });
+  }, [elements, connections, toast, isVoiceEnabled, speakText]);
+
+  // Handle XML changes
+  const handleXmlChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setXmlSource(e.target.value);
+  }, [setXmlSource]);
+
+  // Open the import dialog
+  const handleImportClick = useCallback(() => {
+    setIsImportDialogOpen(true);
+    setImportSource('');
+    
+    if (isVoiceEnabled) {
+      speakText('Import dialog opened');
+    }
+  }, [setIsImportDialogOpen, setImportSource, isVoiceEnabled, speakText]);
+
+  // Import XML
+  const handleImportConfirm = useCallback((xml: string) => {
     try {
       // This is a simplified example - in a real app, you'd parse actual BPMN XML
       // For now, we'll just set some dummy data
       const newElements = [
-        { id: 'start1', type: 'event', x: 100, y: 150, width: 40, height: 40, name: 'Start Event' },
-        { id: 'task1', type: 'task', x: 200, y: 130, width: 120, height: 80, name: 'User Task' },
-        { id: 'gateway1', type: 'gateway', x: 380, y: 150, width: 50, height: 50, name: 'Gateway' },
-        { id: 'end1', type: 'event', x: 500, y: 150, width: 40, height: 40, name: 'End Event' },
+        { id: 'start1', type: 'start-event', x: 100, y: 150, width: 40, height: 40, name: 'Start Event', position: { x: 100, y: 150 } },
+        { id: 'task1', type: 'task', x: 200, y: 130, width: 120, height: 80, name: 'User Task', position: { x: 200, y: 130 } },
+        { id: 'gateway1', type: 'gateway', x: 380, y: 150, width: 50, height: 50, name: 'Gateway', position: { x: 380, y: 150 } },
+        { id: 'end1', type: 'end-event', x: 500, y: 150, width: 40, height: 40, name: 'End Event', position: { x: 500, y: 150 } },
       ];
       
       const newConnections = [
-        { id: 'conn1', source: 'start1', target: 'task1', type: 'sequence' },
-        { id: 'conn2', source: 'task1', target: 'gateway1', type: 'sequence' },
-        { id: 'conn3', source: 'gateway1', target: 'end1', type: 'sequence' },
+        { id: 'conn1', source: 'start1', target: 'task1', type: 'sequence', sourceId: 'start1', targetId: 'task1' },
+        { id: 'conn2', source: 'task1', target: 'gateway1', type: 'sequence', sourceId: 'task1', targetId: 'gateway1' },
+        { id: 'conn3', source: 'gateway1', target: 'end1', type: 'sequence', sourceId: 'gateway1', targetId: 'end1' },
       ];
       
       setElements(newElements);
@@ -430,11 +510,7 @@ export const useBpmnEditorActions = ({
     }
   }, [setElements, setConnections, setSelectedElement, saveToHistory, setIsImportDialogOpen, toast, isVoiceEnabled, speakText]);
 
-  const handleOpenImportDialog = useCallback(() => {
-    setIsImportDialogOpen(true);
-    setImportSource('');
-  }, [setIsImportDialogOpen, setImportSource]);
-
+  // Clear the diagram
   const handleClearDiagram = useCallback(() => {
     setElements([]);
     setConnections([]);
@@ -450,6 +526,141 @@ export const useBpmnEditorActions = ({
       description: "All elements have been removed from the diagram.",
     });
   }, [setElements, setConnections, setSelectedElement, saveToHistory, toast, isVoiceEnabled, speakText]);
+
+  // Handle canvas click
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (selectedTool === 'select') {
+      // Deselect when clicking on empty canvas area
+      setSelectedElement(null);
+    } else if (selectedTool !== 'connector') {
+      // Add new element when using an element tool
+      const rect = (e.target as HTMLDivElement).getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      if (selectedTool === 'start-event' || selectedTool === 'end-event' || 
+          selectedTool === 'task' || selectedTool === 'gateway') {
+        handleAddElement(selectedTool, x, y);
+      }
+    }
+  }, [selectedTool, setSelectedElement, handleAddElement]);
+
+  // Handle mouse move
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    setMousePosition({ x: e.clientX, y: e.clientY });
+    
+    if (isDragging && selectedElement) {
+      handleDrag(e.clientX, e.clientY);
+    }
+  }, [isDragging, selectedElement, setMousePosition, handleDrag]);
+
+  // Handle element drag start
+  const handleElementDragStart = useCallback((e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    handleStartDrag(elementId, e.clientX, e.clientY);
+  }, [handleStartDrag]);
+
+  // Handle element drag move
+  const handleElementDragMove = useCallback((e: React.MouseEvent) => {
+    if (isDragging) {
+      handleDrag(e.clientX, e.clientY);
+    }
+  }, [isDragging, handleDrag]);
+
+  // Handle element drag end
+  const handleElementDragEnd = useCallback(() => {
+    handleEndDrag();
+  }, [handleEndDrag]);
+
+  // Handle tool selection
+  const handleSelectTool = useCallback((tool: string) => {
+    setSelectedTool(tool);
+    
+    if (tool === 'select') {
+      setConnectingElement(null);
+    }
+    
+    if (isVoiceEnabled) {
+      speakText(`Selected ${tool} tool`);
+    }
+  }, [setSelectedTool, setConnectingElement, isVoiceEnabled, speakText]);
+
+  // Handle duplicate element
+  const handleDuplicateElement = useCallback(() => {
+    if (selectedElement) {
+      const elementToDuplicate = elements.find(el => el.id === selectedElement);
+      if (elementToDuplicate) {
+        const id = uuidv4();
+        const newElement = {
+          ...elementToDuplicate,
+          id,
+          x: elementToDuplicate.x + 20,
+          y: elementToDuplicate.y + 20,
+          name: `Copy of ${elementToDuplicate.name}`,
+          position: {
+            x: elementToDuplicate.x + 20,
+            y: elementToDuplicate.y + 20
+          }
+        };
+        
+        setElements([...elements, newElement]);
+        setSelectedElement(id);
+        saveToHistory([...elements, newElement], connections);
+        
+        if (isVoiceEnabled) {
+          speakText('Element duplicated');
+        }
+        
+        toast({
+          title: "Element Duplicated",
+          description: "A copy of the selected element has been created.",
+        });
+      }
+    }
+  }, [selectedElement, elements, connections, setElements, setSelectedElement, saveToHistory, toast, isVoiceEnabled, speakText]);
+
+  // Element delete alias for consistency with BpmnEditorTabs component 
+  const handleElementDelete = handleDeleteElement;
+
+  // Handle save model
+  const handleSaveModel = useCallback(() => {
+    saveToHistory(elements, connections);
+    
+    toast({
+      title: "Model Saved",
+      description: "Your process model has been saved successfully.",
+    });
+    
+    if (isVoiceEnabled) {
+      speakText('Model saved');
+    }
+  }, [elements, connections, saveToHistory, toast, isVoiceEnabled, speakText]);
+
+  // Handle undo
+  const handleUndo = useCallback(() => {
+    // This would be implemented with the history functionality
+    toast({
+      title: "Undo",
+      description: "The last action has been undone.",
+    });
+    
+    if (isVoiceEnabled) {
+      speakText('Undo');
+    }
+  }, [toast, isVoiceEnabled, speakText]);
+
+  // Handle redo
+  const handleRedo = useCallback(() => {
+    // This would be implemented with the history functionality
+    toast({
+      title: "Redo",
+      description: "The previously undone action has been redone.",
+    });
+    
+    if (isVoiceEnabled) {
+      speakText('Redo');
+    }
+  }, [toast, isVoiceEnabled, speakText]);
 
   return {
     handleAddElement,
@@ -469,8 +680,22 @@ export const useBpmnEditorActions = ({
     handleToggleValidation,
     handleToggleSnapToGrid,
     handleExportXml,
-    handleImportXml,
-    handleOpenImportDialog,
+    handleExportJson,
+    handleXmlChange,
+    handleImportClick,
+    handleImportConfirm,
     handleClearDiagram,
+    handleCanvasClick,
+    handleMouseMove,
+    handleElementDragStart,
+    handleElementDragMove,
+    handleElementDragEnd,
+    handleSelectTool,
+    handleDuplicateElement,
+    handleElementDelete,
+    handleSaveModel,
+    handleUndo,
+    handleRedo
   };
 };
+
