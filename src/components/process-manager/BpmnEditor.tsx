@@ -5,6 +5,7 @@ import { useBpmnEditorActions } from "./editor/hooks/useBpmnEditorActions";
 import { BpmnEditorTabs } from "./editor/BpmnEditorTabs";
 import { ElementPropertiesDialog } from "./editor/dialogs/ElementPropertiesDialog";
 import { ImportDialog } from "./editor/dialogs/ImportDialog";
+import { ElementProperties } from "./editor/types";
 
 interface BpmnEditorProps {
   activeTool?: string;
@@ -33,6 +34,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     setElements: state.setElements,
     setConnections: state.setConnections,
     setSelectedElement: state.setSelectedElement,
+    setSelectedTool: state.setSelectedTool,
     setConnectingElement: state.setConnectingElement,
     setMousePosition: state.setMousePosition,
     setIsDragging: state.setIsDragging,
@@ -105,7 +107,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onOpenChange={state.setIsEditDialogOpen}
         elementProperties={state.elementProperties}
         setElementProperties={state.setElementProperties}
-        onUpdateProperties={actions.handleUpdateElementProperties}
+        onUpdateProperties={(props: ElementProperties) => actions.handleUpdateElementProperties(props)}
       />
       
       {/* Import Dialog */}
@@ -114,7 +116,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onOpenChange={state.setIsImportDialogOpen}
         importSource={state.importSource}
         setImportSource={state.setImportSource}
-        onImportConfirm={actions.handleImportConfirm}
+        onImportConfirm={(src: string) => actions.handleImportConfirm(src)}
       />
     </>
   );

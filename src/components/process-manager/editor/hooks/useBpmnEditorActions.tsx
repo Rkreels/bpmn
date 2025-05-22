@@ -1,14 +1,13 @@
-
 import { useCallback } from "react";
 import { 
   BpmnElement, 
   BpmnConnection, 
   ElementPosition,
-  ElementProperties
+  ElementProperties,
+  MousePosition
 } from "../types";
-import { MousePosition } from "../types";
 import { v4 as uuidv4 } from 'uuid';
-import { UseToastReturn } from "@/components/ui/use-toast";
+import { Toast } from "@/components/ui/use-toast";
 
 interface UseBpmnEditorActionsProps {
   // State
@@ -29,6 +28,7 @@ interface UseBpmnEditorActionsProps {
   setElements: React.Dispatch<React.SetStateAction<BpmnElement[]>>;
   setConnections: React.Dispatch<React.SetStateAction<BpmnConnection[]>>;
   setSelectedElement: React.Dispatch<React.SetStateAction<string | null>>;
+  setSelectedTool: React.Dispatch<React.SetStateAction<string>>;
   setConnectingElement: React.Dispatch<React.SetStateAction<string | null>>;
   setMousePosition: React.Dispatch<React.SetStateAction<MousePosition>>;
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
@@ -46,7 +46,7 @@ interface UseBpmnEditorActionsProps {
   
   // Functions
   saveToHistory: (elements: BpmnElement[], connections: BpmnConnection[]) => void;
-  toast: UseToastReturn["toast"];
+  toast: (props: Toast) => void;
   speakText: (text: string) => void;
 }
 
@@ -69,6 +69,7 @@ export const useBpmnEditorActions = ({
   setElements,
   setConnections,
   setSelectedElement,
+  setSelectedTool,
   setConnectingElement,
   setMousePosition,
   setIsDragging,

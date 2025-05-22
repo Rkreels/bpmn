@@ -2,33 +2,7 @@
 import React, { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
-
-// Types for the editor state
-export interface BpmnElement {
-  id: string;
-  type: string;
-  name: string;
-  position: { x: number; y: number };
-}
-
-export interface BpmnConnection {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  type: string;
-}
-
-export interface ElementPropertiesType {
-  id: string;
-  name: string;
-  type: string;
-  description?: string;
-  assignee?: string;
-  duration?: string;
-  priority?: string;
-  documentation?: string;
-  implementation?: string;
-}
+import { BpmnElement, BpmnConnection, ElementProperties, ElementPosition, MousePosition } from "../types";
 
 export interface BpmnEditorStateProps {
   activeTool?: string;
@@ -38,28 +12,35 @@ export const useBpmnEditorState = ({ activeTool = "select" }: BpmnEditorStatePro
   const { toast } = useToast();
   const { isVoiceEnabled, speakText } = useVoice();
   const [activeTab, setActiveTab] = useState("editor");
-  const [zoomLevel, setZoomLevel] = useState(100);
+  const [zoomLevel, setZoomLevel] = useState(1.0);
   const [showGrid, setShowGrid] = useState(true);
   const [showValidation, setShowValidation] = useState(false);
   const [xmlSource, setXmlSource] = useState(sampleBpmnXml);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<string>(activeTool);
   const [elements, setElements] = useState<BpmnElement[]>([
-    { id: "StartEvent_1", type: "start-event", name: "Order received", position: { x: 150, y: 150 } },
-    { id: "Activity_1", type: "task", name: "Process Order", position: { x: 300, y: 150 } },
-    { id: "EndEvent_1", type: "end-event", name: "Order fulfilled", position: { x: 450, y: 150 } },
+    { id: "StartEvent_1", type: "start-event", name: "Order received", x: 150, y: 150, width: 80, height: 60 },
+    { id: "Activity_1", type: "task", name: "Process Order", x: 300, y: 150, width: 120, height: 80 },
+    { id: "EndEvent_1", type: "end-event", name: "Order fulfilled", x: 450, y: 150, width: 80, height: 60 },
   ]);
   const [connections, setConnections] = useState<BpmnConnection[]>([
-    { id: "Flow_1", sourceId: "StartEvent_1", targetId: "Activity_1", type: "sequence-flow" },
-    { id: "Flow_2", sourceId: "Activity_1", targetId: "EndEvent_1", type: "sequence-flow" },
+    { id: "Flow_1", source: "StartEvent_1", target: "Activity_1", type: "sequence-flow" },
+    { id: "Flow_2", source: "Activity_1", target: "EndEvent_1", type: "sequence-flow" },
   ]);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
-  const [currentElementPosition, setCurrentElementPosition] = useState({ x: 0, y: 0 });
+  const [dragStartPos, setDragStartPos] = useState<MousePosition | null>(null);
+  const [currentElementPosition, setCurrentElementPosition] = useState<ElementPosition | null>(null);
   const [connectingElement, setConnectingElement] = useState<string | null>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState<MousePosition>({ x: 0, y: 0 });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [elementProperties, setElementProperties] = useState<ElementPropertiesType | null>(null);
+  const [elementProperties, setElementProperties] = useState<ElementProperties>({
+    id: "",
+    name: "",
+    type: "",
+    description: "",
+    color: "#ffffff",
+    custom: {}
+  });
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importSource, setImportSource] = useState("");
@@ -82,10 +63,10 @@ export const useBpmnEditorState = ({ activeTool = "select" }: BpmnEditorStatePro
     }
   }, [activeTool]);
 
-  const saveToHistory = useCallback(() => {
+  const saveToHistory = useCallback((newElements: BpmnElement[], newConnections: BpmnConnection[]) => {
     // Remove any "future" states if we're not at the end of the history
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({ elements: [...elements], connections: [...connections] });
+    newHistory.push({ elements: [...newElements], connections: [...newConnections] });
     
     if (newHistory.length > 20) { // Limit history to 20 steps
       newHistory.shift();
