@@ -3,50 +3,77 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './styles/voice-trainer.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --foreground: 222.2 47.4% 11.2%;
+
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --status-success: 142.1 76.2% 36.3%;
+    --status-warning: 38 92% 50%;
+    --status-danger: 0 84.2% 60.2%;
+
+    --ring: 215 20.2% 65.1%;
+
     --radius: 0.5rem;
   }
- 
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.5% 48%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.5rem;
   }
 }
 
@@ -56,63 +83,51 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-/* Background grid for BPMN editor */
+/* Background grid pattern for the editor */
 .bg-grid {
-  background-color: #f9fafb;
-  background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-                    linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-color: #f8f8f8;
+  background-image:
+    linear-gradient(#e5e5e5 1px, transparent 1px),
+    linear-gradient(90deg, #e5e5e5 1px, transparent 1px),
+    linear-gradient(#eee 0.5px, transparent 0.5px),
+    linear-gradient(90deg, #eee 0.5px, transparent 0.5px);
+  background-size: 20px 20px, 20px 20px, 5px 5px, 5px 5px;
 }
 
-/* Styling for diamond shapes (gateways) */
-.diamond {
-  transform: rotate(45deg);
-}
+@media (max-width: 640px) {
+  .process-element-palette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 10;
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 1rem;
+    transition: transform 0.3s ease;
+    transform: translateY(-100%);
+  }
 
-/* Process elements hover effects */
-.process-element {
-  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-}
+  .process-element-palette.expanded {
+    transform: translateY(0);
+  }
 
-.process-element:hover {
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Process connection lines */
-.connection-line {
-  stroke: #333;
-  stroke-width: 2px;
-}
-
-.connection-line.message {
-  stroke-dasharray: 5, 5;
-  stroke-width: 1px;
-}
-
-.connection-line.selected {
-  stroke: #3b82f6;
-  stroke-width: 3px;
-}
-
-/* Tooltip animations */
-.tooltip-enter {
-  opacity: 0;
-  transform: translateY(4px);
-}
-.tooltip-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 200ms, transform 200ms;
-}
-.tooltip-exit {
-  opacity: 1;
-}
-.tooltip-exit-active {
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 150ms, transform 150ms;
+  .palette-toggle {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #e5e5e5;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    padding: 0.25rem 0.5rem;
+    z-index: 10;
+  }
 }

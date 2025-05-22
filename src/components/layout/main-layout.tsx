@@ -4,6 +4,7 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { VoiceTrainerToggle } from "../voice/VoiceTrainerToggle";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,8 @@ export function MainLayout({
         <main className={cn("flex-1 p-3 md:p-6", className)}>
           {children}
         </main>
+        
+        <VoiceTrainerToggle />
       </div>
     </div>
   );

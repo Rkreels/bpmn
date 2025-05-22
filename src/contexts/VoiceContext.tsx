@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { BrowserVoiceSynthesisService } from "../components/voice/VoiceSynthesisService";
 
 // Define voice rule types
 export type VoiceRule = {
@@ -36,6 +37,10 @@ export const voiceRules: VoiceRules = {
   processIntelligence: {
     insight: "Analyze process bottlenecks and inefficiencies",
     action: "Start by uploading your workflow data or connecting to SAP ERP"
+  },
+  processMining: {
+    insight: "Discover actual process flows from event logs",
+    action: "Upload your event logs or connect to your data source to begin analysis"
   },
   transformationCockpit: {
     insight: "Track ROI of digital transformation initiatives",
@@ -77,14 +82,20 @@ export const useVoice = () => {
 
 export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(false);
-  const [speechSynthesis, setSpeechSynthesis] = useState<SpeechSynthesis | null>(null);
+  const [voiceService, setVoiceService] = useState<BrowserVoiceSynthesisService | null>(null);
   const [isSpeechSynthesisSupported, setIsSpeechSynthesisSupported] = useState<boolean>(true);
   
   // Initialize speech synthesis on component mount
   useEffect(() => {
     // Check if the browser supports speech synthesis
     if (typeof window !== "undefined" && window.speechSynthesis) {
-      setSpeechSynthesis(window.speechSynthesis);
+      const service = new BrowserVoiceSynthesisService({
+        pitch: 1.1,
+        rate: 0.95,
+        preferFemaleVoice: true
+      });
+      
+      setVoiceService(service);
       console.log("Speech synthesis initialized");
       
       // Try to load voice preference from localStorage
@@ -117,20 +128,21 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     console.log("Voice toggled to:", newState);
     
     // Provide feedback when voice is enabled
-    if (newState && speechSynthesis) {
-      const utterance = new SpeechSynthesisUtterance("Voice navigation enabled");
-      speechSynthesis.speak(utterance);
+    if (newState && voiceService) {
+      voiceService.speak("Voice navigation enabled");
     }
   };
 
   const cancelSpeech = () => {
-    if (speechSynthesis) {
-      speechSynthesis.cancel();
+    if (voiceService) {
+      voiceService.stop();
+    } else if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
   };
 
   const speakText = (text: string) => {
-    if (!isVoiceEnabled || !speechSynthesis) {
+    if (!isVoiceEnabled || !voiceService) {
       console.log("Speech not enabled or synthesis unavailable");
       return;
     }
@@ -140,14 +152,8 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Cancel any ongoing speech
     cancelSpeech();
     
-    // Create a new speech utterance
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-    
-    // Speak the text
-    speechSynthesis.speak(utterance);
+    // Speak the text using our enhanced voice service
+    voiceService.speak(text);
   };
 
   const speakModuleNavigation = (moduleId: string) => {
