@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { EditorToolbar } from "./EditorToolbar";
 import { ElementTools } from "./ElementTools";
 import { BpmnCanvas } from "./BpmnCanvas";
