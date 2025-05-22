@@ -5,13 +5,16 @@ import App from './App'
 import './index.css'
 import { VoiceProvider } from './contexts/VoiceContext'
 import { VoiceTrainerProvider } from './contexts/VoiceTrainerContext'
+import { BrowserRouter } from 'react-router-dom'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <VoiceProvider>
-      <VoiceTrainerProvider>
-        <App />
-      </VoiceTrainerProvider>
-    </VoiceProvider>
+    <BrowserRouter>
+      <VoiceProvider>
+        <VoiceTrainerProvider>
+          <App />
+        </VoiceTrainerProvider>
+      </VoiceProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 )
