@@ -47,6 +47,10 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
 
   // Helper to get element center position
   const getElementCenter = (element: BpmnElement) => {
+    if (!element || !element.position) {
+      return { x: 0, y: 0 }; // Safe fallback when element or position is undefined
+    }
+    
     const elementType = element.type;
     let centerX = element.position.x;
     let centerY = element.position.y;
@@ -68,6 +72,11 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
 
   // Helper functions to render elements based on their type
   const renderElement = (element: BpmnElement) => {
+    if (!element || !element.position) {
+      console.error("Invalid element or missing position:", element);
+      return null; // Don't render if element or position is invalid
+    }
+
     const isSelected = selectedElement === element.id;
     const isCursorStyle = selectedTool === "connector" ? "crosshair" : 
                           (selectedTool === "select" || selectedTool === "move" || selectedTool === "hand") ? "move" : "default";

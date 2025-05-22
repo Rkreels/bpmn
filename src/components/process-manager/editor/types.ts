@@ -28,6 +28,7 @@ export interface BpmnElement {
   y: number;
   width: number;
   height: number;
+  position: ElementPosition; // Added position property to match interface
   properties?: {
     description?: string;
     color?: string;
@@ -39,5 +40,7 @@ export interface BpmnConnection {
   id: string;
   source: string;
   target: string;
+  sourceId: string; // Added to match interface
+  targetId: string; // Added to match interface
   type?: string;
 }

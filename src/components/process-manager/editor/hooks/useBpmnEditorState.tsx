@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
@@ -12,20 +11,20 @@ export const useBpmnEditorState = ({ activeTool = "select" }: BpmnEditorStatePro
   const { toast } = useToast();
   const { isVoiceEnabled, speakText } = useVoice();
   const [activeTab, setActiveTab] = useState("editor");
-  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const [zoomLevel, setZoomLevel] = useState(100); // Fixed: Changed from 1.0 to 100 to match scale usage
   const [showGrid, setShowGrid] = useState(true);
   const [showValidation, setShowValidation] = useState(false);
   const [xmlSource, setXmlSource] = useState(sampleBpmnXml);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<string>(activeTool);
   const [elements, setElements] = useState<BpmnElement[]>([
-    { id: "StartEvent_1", type: "start-event", name: "Order received", x: 150, y: 150, width: 80, height: 60 },
-    { id: "Activity_1", type: "task", name: "Process Order", x: 300, y: 150, width: 120, height: 80 },
-    { id: "EndEvent_1", type: "end-event", name: "Order fulfilled", x: 450, y: 150, width: 80, height: 60 },
+    { id: "StartEvent_1", type: "start-event", name: "Order received", x: 150, y: 150, width: 80, height: 60, position: { x: 150, y: 150 } },
+    { id: "Activity_1", type: "task", name: "Process Order", x: 300, y: 150, width: 120, height: 80, position: { x: 300, y: 150 } },
+    { id: "EndEvent_1", type: "end-event", name: "Order fulfilled", x: 450, y: 150, width: 80, height: 60, position: { x: 450, y: 150 } },
   ]);
   const [connections, setConnections] = useState<BpmnConnection[]>([
-    { id: "Flow_1", source: "StartEvent_1", target: "Activity_1", type: "sequence-flow" },
-    { id: "Flow_2", source: "Activity_1", target: "EndEvent_1", type: "sequence-flow" },
+    { id: "Flow_1", source: "StartEvent_1", target: "Activity_1", type: "sequence-flow", sourceId: "StartEvent_1", targetId: "Activity_1" },
+    { id: "Flow_2", source: "Activity_1", target: "EndEvent_1", type: "sequence-flow", sourceId: "Activity_1", targetId: "EndEvent_1" },
   ]);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState<MousePosition | null>(null);
@@ -62,6 +61,27 @@ export const useBpmnEditorState = ({ activeTool = "select" }: BpmnEditorStatePro
       setSelectedTool(activeTool);
     }
   }, [activeTool]);
+
+  // Make sure all elements have position property 
+  React.useEffect(() => {
+    setElements(prevElements => 
+      prevElements.map(el => ({
+        ...el,
+        position: { x: el.x, y: el.y }
+      }))
+    );
+  }, []);
+
+  // Make sure connections have sourceId and targetId
+  React.useEffect(() => {
+    setConnections(prevConnections => 
+      prevConnections.map(conn => ({
+        ...conn,
+        sourceId: conn.source,
+        targetId: conn.target
+      }))
+    );
+  }, []);
 
   const saveToHistory = useCallback((newElements: BpmnElement[], newConnections: BpmnConnection[]) => {
     // Remove any "future" states if we're not at the end of the history
