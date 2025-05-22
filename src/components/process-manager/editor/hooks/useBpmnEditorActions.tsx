@@ -7,7 +7,7 @@ import {
   MousePosition
 } from "../types";
 import { v4 as uuidv4 } from 'uuid';
-import { Toast } from "@/components/ui/use-toast";
+import { type Toast } from "@/components/ui/toast";
 
 interface UseBpmnEditorActionsProps {
   // State

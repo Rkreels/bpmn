@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useBpmnEditorState } from "./editor/hooks/useBpmnEditorState";
 import { useBpmnEditorActions } from "./editor/hooks/useBpmnEditorActions";
@@ -116,7 +115,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onOpenChange={state.setIsImportDialogOpen}
         importSource={state.importSource}
         setImportSource={state.setImportSource}
-        onImportConfirm={(src: string) => actions.handleImportConfirm(src)}
+        onImportConfirm={() => actions.handleImportConfirm(state.importSource)}
       />
     </>
   );
