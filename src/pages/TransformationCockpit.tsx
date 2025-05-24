@@ -1,786 +1,351 @@
+
 import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent } from "@/components/ui/card";
-import { CardMetric } from "@/components/ui/card-metric";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { TransformationRoadmap } from "@/components/transformation/TransformationRoadmap";
 import { 
-  PieChart, 
-  BarChart, 
-  LineChart, 
-  TrendingUp, 
-  TrendingDown, 
-  Plus, 
-  Edit, 
-  Trash, 
-  FileSpreadsheet, 
-  Download, 
-  RefreshCw 
+  Zap, 
+  Target, 
+  BarChart3, 
+  TrendingUp,
+  Users,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Settings,
+  Download,
+  Plus
 } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
-} from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useVoice } from "@/contexts/VoiceContext";
-
-// Types for our initiatives
-interface Initiative {
-  id: string;
-  name: string;
-  status: string;
-  impact: string;
-  owner: string;
-  progress: number;
-  description: string;
-}
 
 export default function TransformationCockpit() {
-  const { toast } = useToast();
-  const { isVoiceEnabled, speakText } = useVoice();
-  const [selectedView, setSelectedView] = useState("initiatives");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentInitiative, setCurrentInitiative] = useState<Initiative | null>(null);
-  const [newInitiative, setNewInitiative] = useState({
-    name: "",
-    status: "planning",
-    impact: "medium",
-    owner: "",
-    progress: 0,
-    description: ""
-  });
+  const [activeTab, setActiveTab] = useState("roadmap");
 
-  // Sample initiatives data
-  const [initiatives, setInitiatives] = useState<Initiative[]>([
-    {
-      id: "ini-001",
-      name: "Digital Onboarding Process",
-      status: "in-progress",
-      impact: "high",
-      owner: "Sarah Chen",
-      progress: 65,
-      description: "Automating customer onboarding process through digital channels to reduce paperwork and processing time."
+  const dashboardMetrics = [
+    { label: "Active Initiatives", value: "12", change: "+2", trend: "up", icon: Target },
+    { label: "Total Investment", value: "$2.4M", change: "+15%", trend: "up", icon: DollarSign },
+    { label: "Expected ROI", value: "285%", change: "+12%", trend: "up", icon: TrendingUp },
+    { label: "On Track", value: "9/12", change: "75%", trend: "stable", icon: CheckCircle }
+  ];
+
+  const portfolioHealth = [
+    { phase: "Planning", count: 3, color: "bg-blue-500" },
+    { phase: "In Progress", count: 5, color: "bg-yellow-500" },
+    { phase: "Testing", count: 2, color: "bg-orange-500" },
+    { phase: "Completed", count: 2, color: "bg-green-500" },
+    { phase: "On Hold", count: 0, color: "bg-red-500" }
+  ];
+
+  const riskAssessment = [
+    { 
+      initiative: "Procurement Automation",
+      risk: "Medium",
+      issues: ["Resource availability", "Technical complexity"],
+      mitigation: "Additional training planned"
     },
     {
-      id: "ini-002",
-      name: "AP/AR Process Optimization",
-      status: "completed",
-      impact: "medium",
-      owner: "John Davis",
-      progress: 100,
-      description: "Streamlining accounts payable and accounts receivable processes through automated workflows."
+      initiative: "Customer Service Digital",
+      risk: "Low", 
+      issues: ["Vendor delays"],
+      mitigation: "Alternative vendors identified"
     },
     {
-      id: "ini-003",
-      name: "Customer Support Redesign",
-      status: "planning",
-      impact: "high",
-      owner: "Emily Rodriguez",
-      progress: 25,
-      description: "Reimagining customer support process with AI-based routing and resolution suggestions."
+      initiative: "Financial Reporting",
+      risk: "High",
+      issues: ["Data quality", "User adoption"],
+      mitigation: "Enhanced testing phase"
+    }
+  ];
+
+  const keyMilestones = [
+    {
+      date: "2024-02-15",
+      title: "Financial Reporting Go-Live",
+      initiative: "Financial Reporting Modernization",
+      status: "upcoming"
     },
     {
-      id: "ini-004",
-      name: "Supply Chain Visibility",
-      status: "in-progress",
-      impact: "critical",
-      owner: "Michael Thompson",
-      progress: 40,
-      description: "Implementing end-to-end visibility in supply chain operations through IoT and blockchain integration."
+      date: "2024-03-01",
+      title: "Customer Service Phase 1",
+      initiative: "Customer Service Digital Transformation", 
+      status: "upcoming"
     },
     {
-      id: "ini-005",
-      name: "HR Self-Service Portal",
-      status: "planning",
-      impact: "medium",
-      owner: "Lisa Kumar",
-      progress: 10,
-      description: "Developing an employee self-service portal for HR requests and information."
+      date: "2024-03-15",
+      title: "Procurement Automation Pilot",
+      initiative: "Procurement Process Automation",
+      status: "upcoming"
     }
-  ]);
-
-  // Handle initiative creation
-  const handleCreateInitiative = () => {
-    const id = `ini-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-    const progress = newInitiative.status === "completed" ? 100 : parseInt(newInitiative.progress.toString()) || 0;
-    
-    const initiative: Initiative = {
-      id,
-      name: newInitiative.name,
-      status: newInitiative.status,
-      impact: newInitiative.impact,
-      owner: newInitiative.owner,
-      progress,
-      description: newInitiative.description
-    };
-    
-    setInitiatives([...initiatives, initiative]);
-    setIsCreateDialogOpen(false);
-    
-    // Reset form
-    setNewInitiative({
-      name: "",
-      status: "planning",
-      impact: "medium",
-      owner: "",
-      progress: 0,
-      description: ""
-    });
-
-    if (isVoiceEnabled) {
-      speakText("Initiative created successfully");
-    }
-    
-    toast({
-      title: "Initiative Created",
-      description: "The new transformation initiative has been created successfully."
-    });
-  };
-
-  // Handle initiative update
-  const handleUpdateInitiative = () => {
-    if (currentInitiative) {
-      const updatedInitiatives = initiatives.map(ini => 
-        ini.id === currentInitiative.id ? currentInitiative : ini
-      );
-      
-      setInitiatives(updatedInitiatives);
-      setIsEditDialogOpen(false);
-      setCurrentInitiative(null);
-      
-      if (isVoiceEnabled) {
-        speakText("Initiative updated successfully");
-      }
-      
-      toast({
-        title: "Initiative Updated",
-        description: "The transformation initiative has been updated successfully."
-      });
-    }
-  };
-
-  // Handle initiative deletion
-  const handleDeleteInitiative = () => {
-    if (currentInitiative) {
-      const filteredInitiatives = initiatives.filter(ini => ini.id !== currentInitiative.id);
-      
-      setInitiatives(filteredInitiatives);
-      setIsDeleteDialogOpen(false);
-      setCurrentInitiative(null);
-      
-      if (isVoiceEnabled) {
-        speakText("Initiative deleted successfully");
-      }
-      
-      toast({
-        title: "Initiative Deleted",
-        description: "The transformation initiative has been deleted successfully."
-      });
-    }
-  };
-
-  // Prepare for editing
-  const handleEditClick = (initiative: Initiative) => {
-    setCurrentInitiative(initiative);
-    setIsEditDialogOpen(true);
-  };
-
-  // Prepare for deletion
-  const handleDeleteClick = (initiative: Initiative) => {
-    setCurrentInitiative(initiative);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // Handle voice guidance for metrics
-  const handleMetricHover = (metricName: string) => {
-    if (isVoiceEnabled) {
-      speakText(`${metricName} metrics showing current transformation progress`);
-    }
-  };
+  ];
 
   return (
     <MainLayout pageTitle="Transformation Cockpit">
-      <div className="grid gap-4 md:gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <CardMetric
-            title="Initiatives"
-            value="5"
-            icon={<PieChart className="h-5 w-5" />}
-            trend={{ value: 20, isUpward: true, isPositive: true }}
-          />
-          <CardMetric
-            title="Processes Optimized"
-            value="12"
-            icon={<BarChart className="h-5 w-5" />}
-            trend={{ value: 15, isUpward: true, isPositive: true }}
-            variant="primary"
-          />
-          <CardMetric
-            title="Cost Reduction"
-            value="$1.2M"
-            icon={<TrendingUp className="h-5 w-5" />}
-            trend={{ value: 8, isUpward: true, isPositive: true }}
-            variant="success"
-          />
-          <CardMetric
-            title="Cycle Time"
-            value="-35%"
-            icon={<TrendingDown className="h-5 w-5" />}
-            trend={{ value: 35, isUpward: false, isPositive: true }}
-            variant="warning"
-          />
+      <div className="space-y-6">
+        {/* Header with Actions */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Zap className="h-8 w-8" />
+              Transformation Cockpit
+            </h1>
+            <p className="text-muted-foreground">Monitor and manage your digital transformation portfolio</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+            <Button variant="outline">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Initiative
+            </Button>
+          </div>
         </div>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-medium">Transformation Management</h3>
-              <div className="flex gap-2">
-                <Button onClick={() => setSelectedView("initiatives")} variant={selectedView === "initiatives" ? "default" : "outline"}>
-                  Initiatives
-                </Button>
-                <Button onClick={() => setSelectedView("roadmap")} variant={selectedView === "roadmap" ? "default" : "outline"}>
-                  Roadmap
-                </Button>
-                <Button onClick={() => setSelectedView("reports")} variant={selectedView === "reports" ? "default" : "outline"}>
-                  Reports
-                </Button>
-              </div>
-            </div>
-            
-            {selectedView === "initiatives" && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-lg font-medium">Transformation Initiatives</h4>
-                  <div className="flex gap-2">
-                    <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
-                          New Initiative
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Create New Initiative</DialogTitle>
-                          <DialogDescription>
-                            Add a new transformation initiative to your portfolio.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="name">Name</Label>
-                            <Input 
-                              id="name" 
-                              value={newInitiative.name} 
-                              onChange={(e) => setNewInitiative({...newInitiative, name: e.target.value})} 
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                              <Label htmlFor="status">Status</Label>
-                              <Select 
-                                value={newInitiative.status} 
-                                onValueChange={(value) => setNewInitiative({...newInitiative, status: value})}
-                              >
-                                <SelectTrigger id="status">
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="planning">Planning</SelectItem>
-                                  <SelectItem value="in-progress">In Progress</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="impact">Business Impact</Label>
-                              <Select 
-                                value={newInitiative.impact} 
-                                onValueChange={(value) => setNewInitiative({...newInitiative, impact: value})}
-                              >
-                                <SelectTrigger id="impact">
-                                  <SelectValue placeholder="Select impact" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="low">Low</SelectItem>
-                                  <SelectItem value="medium">Medium</SelectItem>
-                                  <SelectItem value="high">High</SelectItem>
-                                  <SelectItem value="critical">Critical</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="owner">Owner</Label>
-                            <Input 
-                              id="owner" 
-                              value={newInitiative.owner} 
-                              onChange={(e) => setNewInitiative({...newInitiative, owner: e.target.value})}
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="progress">Progress (%)</Label>
-                            <Input 
-                              id="progress" 
-                              type="number" 
-                              min="0" 
-                              max="100" 
-                              value={newInitiative.progress} 
-                              onChange={(e) => setNewInitiative({...newInitiative, progress: parseInt(e.target.value) || 0})}
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea 
-                              id="description" 
-                              value={newInitiative.description} 
-                              onChange={(e) => setNewInitiative({...newInitiative, description: e.target.value})}
-                            />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                          <Button type="submit" onClick={handleCreateInitiative}>Create</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                    <Button variant="outline">
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Export
-                    </Button>
-                    <Button variant="outline" onClick={() => {
-                      toast({
-                        title: "Refreshed",
-                        description: "Initiative data has been refreshed"
-                      });
-                    }}>
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
+
+        {/* Dashboard Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {dashboardMetrics.map((metric, index) => {
+            const Icon = metric.icon;
+            return (
+              <Card key={index}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{metric.label}</p>
+                      <p className="text-2xl font-bold">{metric.value}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-8 w-8 text-primary/60" />
+                      <Badge variant={metric.trend === "up" ? "default" : "secondary"} className="text-xs">
+                        {metric.change}
+                      </Badge>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="roadmap" className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Roadmap
+                </TabsTrigger>
+                <TabsTrigger value="portfolio" className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Portfolio
+                </TabsTrigger>
+                <TabsTrigger value="performance" className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Performance
+                </TabsTrigger>
+                <TabsTrigger value="resources" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Resources
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="roadmap" className="mt-6">
+                <TransformationRoadmap />
+              </TabsContent>
+              
+              <TabsContent value="portfolio" className="mt-6">
+                <div className="space-y-6">
+                  {/* Portfolio Health */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Portfolio Health</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {portfolioHealth.map((phase, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-4 h-4 rounded-full ${phase.color}`} />
+                              <span className="font-medium">{phase.phase}</span>
+                            </div>
+                            <Badge variant="outline">{phase.count} initiatives</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Risk Assessment */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Risk Assessment</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {riskAssessment.map((item, index) => (
+                          <div key={index} className="p-4 border rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium">{item.initiative}</h4>
+                              <Badge variant={
+                                item.risk === "High" ? "destructive" :
+                                item.risk === "Medium" ? "secondary" : "outline"
+                              }>
+                                {item.risk} Risk
+                              </Badge>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="font-medium">Issues: </span>
+                                <span className="text-muted-foreground">{item.issues.join(", ")}</span>
+                              </div>
+                              <div>
+                                <span className="font-medium">Mitigation: </span>
+                                <span className="text-muted-foreground">{item.mitigation}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="performance" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance Analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="font-semibold mb-2">Performance Analytics</h3>
+                      <p className="text-muted-foreground">
+                        Detailed performance metrics and analytics for transformation initiatives.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="resources" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Resource Management</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="font-semibold mb-2">Resource Allocation</h3>
+                      <p className="text-muted-foreground">
+                        Manage team assignments, capacity planning, and resource optimization.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Key Milestones */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Upcoming Milestones
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {keyMilestones.map((milestone, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full" />
+                      <div className="font-medium text-sm">{milestone.title}</div>
+                    </div>
+                    <div className="text-xs text-muted-foreground ml-4">
+                      {new Date(milestone.date).toLocaleDateString()} • {milestone.initiative}
+                    </div>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="w-full mt-4">
+                  View All Milestones
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Alerts & Issues */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Alerts & Issues
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <span className="font-medium text-yellow-800">Resource Conflict</span>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    Sarah Chen scheduled on 2 initiatives simultaneously next week
+                  </p>
                 </div>
                 
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-                    <TabsTrigger value="planning">Planning</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="all" className="mt-0">
-                    <div className="border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Impact</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Progress</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {initiatives.map((initiative) => (
-                            <TableRow key={initiative.id}>
-                              <TableCell className="font-medium">{initiative.name}</TableCell>
-                              <TableCell>
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                  initiative.status === 'planning' ? 'bg-blue-100 text-blue-800' :
-                                  initiative.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-green-100 text-green-800'
-                                }`}>
-                                  {initiative.status === 'planning' ? 'Planning' :
-                                   initiative.status === 'in-progress' ? 'In Progress' : 'Completed'}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                  initiative.impact === 'low' ? 'bg-gray-100 text-gray-800' :
-                                  initiative.impact === 'medium' ? 'bg-blue-100 text-blue-800' :
-                                  initiative.impact === 'high' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-red-100 text-red-800'
-                                }`}>
-                                  {initiative.impact.charAt(0).toUpperCase() + initiative.impact.slice(1)}
-                                </span>
-                              </TableCell>
-                              <TableCell>{initiative.owner}</TableCell>
-                              <TableCell>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                  <div 
-                                    className={`h-2.5 rounded-full ${
-                                      initiative.progress < 30 ? 'bg-blue-600' :
-                                      initiative.progress < 70 ? 'bg-yellow-600' : 'bg-green-600'
-                                    }`}
-                                    style={{ width: `${initiative.progress}%` }}
-                                  ></div>
-                                </div>
-                                <span className="text-xs text-gray-500 mt-1 block">{initiative.progress}%</span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditClick(initiative)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteClick(initiative)}
-                                >
-                                  <Trash className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </TabsContent>
-                  
-                  {/* Filter initiatives by status for other tabs */}
-                  <TabsContent value="in-progress">
-                    {/* Similar table with filtered data */}
-                    <div className="border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Impact</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Progress</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {initiatives
-                            .filter(initiative => initiative.status === 'in-progress')
-                            .map((initiative) => (
-                              <TableRow key={initiative.id}>
-                                <TableCell className="font-medium">{initiative.name}</TableCell>
-                                <TableCell>
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    initiative.impact === 'low' ? 'bg-gray-100 text-gray-800' :
-                                    initiative.impact === 'medium' ? 'bg-blue-100 text-blue-800' :
-                                    initiative.impact === 'high' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}>
-                                    {initiative.impact.charAt(0).toUpperCase() + initiative.impact.slice(1)}
-                                  </span>
-                                </TableCell>
-                                <TableCell>{initiative.owner}</TableCell>
-                                <TableCell>
-                                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div 
-                                      className="h-2.5 rounded-full bg-yellow-600"
-                                      style={{ width: `${initiative.progress}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-xs text-gray-500 mt-1 block">{initiative.progress}%</span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditClick(initiative)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </TabsContent>
-                  
-                  {/* Other tabs with filtered content */}
-                  <TabsContent value="planning">
-                    {/* Similar table filtered for planning status */}
-                    <div className="border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Impact</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Progress</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {initiatives
-                            .filter(initiative => initiative.status === 'planning')
-                            .map((initiative) => (
-                              <TableRow key={initiative.id}>
-                                <TableCell className="font-medium">{initiative.name}</TableCell>
-                                <TableCell>
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    initiative.impact === 'low' ? 'bg-gray-100 text-gray-800' :
-                                    initiative.impact === 'medium' ? 'bg-blue-100 text-blue-800' :
-                                    initiative.impact === 'high' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}>
-                                    {initiative.impact.charAt(0).toUpperCase() + initiative.impact.slice(1)}
-                                  </span>
-                                </TableCell>
-                                <TableCell>{initiative.owner}</TableCell>
-                                <TableCell>
-                                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div 
-                                      className="h-2.5 rounded-full bg-blue-600"
-                                      style={{ width: `${initiative.progress}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-xs text-gray-500 mt-1 block">{initiative.progress}%</span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditClick(initiative)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="completed">
-                    {/* Similar table filtered for completed status */}
-                    <div className="border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Impact</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Completed Date</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {initiatives
-                            .filter(initiative => initiative.status === 'completed')
-                            .map((initiative) => (
-                              <TableRow key={initiative.id}>
-                                <TableCell className="font-medium">{initiative.name}</TableCell>
-                                <TableCell>
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    initiative.impact === 'low' ? 'bg-gray-100 text-gray-800' :
-                                    initiative.impact === 'medium' ? 'bg-blue-100 text-blue-800' :
-                                    initiative.impact === 'high' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}>
-                                    {initiative.impact.charAt(0).toUpperCase() + initiative.impact.slice(1)}
-                                  </span>
-                                </TableCell>
-                                <TableCell>{initiative.owner}</TableCell>
-                                <TableCell>May 15, 2023</TableCell>
-                                <TableCell className="text-right">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            )}
-            
-            {/* Roadmap view */}
-            {selectedView === "roadmap" && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-lg font-medium">Transformation Roadmap</h4>
-                </div>
-                <div className="border rounded-md p-6 bg-muted/20 flex items-center justify-center min-h-[400px]">
-                  <div className="text-center space-y-2">
-                    <p className="text-muted-foreground">Roadmap visualization will be displayed here</p>
-                    <p className="text-sm text-muted-foreground">Timeline view with initiative milestones and dependencies</p>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-blue-800">Milestone Due</span>
                   </div>
+                  <p className="text-sm text-blue-700">
+                    Financial Reporting go-live in 5 days
+                  </p>
                 </div>
-              </div>
-            )}
-            
-            {/* Reports view */}
-            {selectedView === "reports" && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-lg font-medium">Transformation Reports</h4>
-                  <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export Reports
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border rounded-md p-4">
-                    <h5 className="font-medium mb-2">Initiative Progress</h5>
-                    <div className="bg-muted/20 rounded-md flex items-center justify-center h-[200px]">
-                      <span className="text-muted-foreground">Progress chart placeholder</span>
-                    </div>
-                  </div>
-                  <div className="border rounded-md p-4">
-                    <h5 className="font-medium mb-2">Impact Analysis</h5>
-                    <div className="bg-muted/20 rounded-md flex items-center justify-center h-[200px]">
-                      <span className="text-muted-foreground">Impact chart placeholder</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Initiative</DialogTitle>
-            <DialogDescription>
-              Update the details of this transformation initiative.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input 
-                id="edit-name" 
-                value={currentInitiative?.name || ''} 
-                onChange={(e) => setCurrentInitiative(
-                  currentInitiative ? {...currentInitiative, name: e.target.value} : null
-                )} 
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <Select 
-                  value={currentInitiative?.status || ''} 
-                  onValueChange={(value) => setCurrentInitiative(
-                    currentInitiative ? {...currentInitiative, status: value} : null
-                  )}
-                >
-                  <SelectTrigger id="edit-status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="planning">Planning</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-impact">Business Impact</Label>
-                <Select 
-                  value={currentInitiative?.impact || ''} 
-                  onValueChange={(value) => setCurrentInitiative(
-                    currentInitiative ? {...currentInitiative, impact: value} : null
-                  )}
-                >
-                  <SelectTrigger id="edit-impact">
-                    <SelectValue placeholder="Select impact" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-owner">Owner</Label>
-              <Input 
-                id="edit-owner" 
-                value={currentInitiative?.owner || ''} 
-                onChange={(e) => setCurrentInitiative(
-                  currentInitiative ? {...currentInitiative, owner: e.target.value} : null
-                )}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-progress">Progress (%)</Label>
-              <Input 
-                id="edit-progress" 
-                type="number" 
-                min="0" 
-                max="100" 
-                value={currentInitiative?.progress || 0} 
-                onChange={(e) => setCurrentInitiative(
-                  currentInitiative ? {...currentInitiative, progress: parseInt(e.target.value) || 0} : null
-                )}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea 
-                id="edit-description" 
-                value={currentInitiative?.description || ''} 
-                onChange={(e) => setCurrentInitiative(
-                  currentInitiative ? {...currentInitiative, description: e.target.value} : null
-                )}
-              />
-            </div>
+
+                <Button variant="outline" size="sm" className="w-full">
+                  View All Alerts
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Initiative
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Generate Report
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Resources
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Portfolio Settings
+                </Button>
+              </CardContent>
+            </Card>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" onClick={handleUpdateInitiative}>Update</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the initiative "{currentInitiative?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteInitiative}>Delete</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </MainLayout>
   );
 }

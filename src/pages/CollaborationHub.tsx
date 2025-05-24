@@ -1,376 +1,260 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  AtSign,
-  Filter,
-  GitMerge,
-  MessageSquare,
-  Paperclip,
-  Search,
-  Send,
-  User,
-  Users
+import { ProcessDiscussions } from "@/components/collaboration/ProcessDiscussions";
+import { WorkflowApprovals } from "@/components/collaboration/WorkflowApprovals";
+import { 
+  Users, 
+  MessageSquare, 
+  CheckCircle, 
+  Calendar,
+  Bell,
+  TrendingUp,
+  Clock,
+  Target,
+  UserPlus,
+  Settings
 } from "lucide-react";
 
-// Import the refactored components
-import { ModelItem } from "@/components/collaboration/ModelItem";
-import { Comment } from "@/components/collaboration/Comment";
-import { TaskItem } from "@/components/collaboration/TaskItem";
-import { VersionItem } from "@/components/collaboration/VersionItem";
-import { ApprovalItem } from "@/components/collaboration/ApprovalItem";
-import { ModelViewer } from "@/components/collaboration/ModelViewer";
-
 export default function CollaborationHub() {
+  const [activeTab, setActiveTab] = useState("discussions");
+
+  const collaborationMetrics = [
+    { label: "Active Discussions", value: "12", change: "+3", trend: "up" },
+    { label: "Pending Approvals", value: "5", change: "-2", trend: "down" },
+    { label: "Team Members", value: "24", change: "+1", trend: "up" },
+    { label: "This Week's Reviews", value: "18", change: "+6", trend: "up" }
+  ];
+
+  const recentActivities = [
+    {
+      id: "1",
+      type: "discussion",
+      title: "New discussion started on Purchase Order bottlenecks",
+      user: "Sarah Chen",
+      time: "2 hours ago",
+      status: "active"
+    },
+    {
+      id: "2",
+      type: "approval",
+      title: "Employee Onboarding process approved",
+      user: "Mike Rodriguez",
+      time: "4 hours ago",
+      status: "approved"
+    },
+    {
+      id: "3",
+      type: "comment",
+      title: "New comment on Invoice Processing automation",
+      user: "Lisa Wang",
+      time: "6 hours ago",
+      status: "active"
+    },
+    {
+      id: "4",
+      type: "approval",
+      title: "Compliance update requires your review",
+      user: "System",
+      time: "1 day ago",
+      status: "pending"
+    }
+  ];
+
+  const teamMembers = [
+    { name: "Sarah Chen", role: "Business Analyst", initials: "SC", status: "online" },
+    { name: "Mike Rodriguez", role: "Process Owner", initials: "MR", status: "online" },
+    { name: "Lisa Wang", role: "Compliance Manager", initials: "LW", status: "away" },
+    { name: "David Park", role: "IT Manager", initials: "DP", status: "offline" },
+    { name: "John Smith", role: "Department Head", initials: "JS", status: "online" }
+  ];
+
   return (
     <MainLayout pageTitle="Collaboration Hub">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle>Models</CardTitle>
-                <Button variant="outline" size="sm" className="h-8">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="relative mt-2">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search models..."
-                  className="pl-8"
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Tabs defaultValue="recent" className="px-4 pb-2">
-                <TabsList className="grid grid-cols-3">
-                  <TabsTrigger value="recent">Recent</TabsTrigger>
-                  <TabsTrigger value="mine">Mine</TabsTrigger>
-                  <TabsTrigger value="shared">Shared</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="recent">
-                  <div className="divide-y max-h-[calc(100vh-300px)] overflow-auto">
-                    <ModelItem
-                      title="Order to Cash Process"
-                      type="BPMN"
-                      author="John Doe"
-                      time="10 min ago"
-                      comments={5}
-                      isActive
-                    />
-                    <ModelItem
-                      title="Customer Onboarding Journey"
-                      type="Journey"
-                      author="Lisa Johnson"
-                      time="Yesterday"
-                      comments={12}
-                    />
-                    <ModelItem
-                      title="Invoice Approval"
-                      type="BPMN"
-                      author="Michael Chen"
-                      time="2 days ago"
-                      comments={3}
-                    />
-                    <ModelItem
-                      title="Procurement Process"
-                      type="BPMN"
-                      author="Sarah Miller"
-                      time="1 week ago"
-                      comments={8}
-                    />
-                    <ModelItem
-                      title="Client Support Experience"
-                      type="Journey"
-                      author="Robert Taylor"
-                      time="2 weeks ago"
-                      comments={15}
-                    />
-                    <ModelItem
-                      title="Employee Hire to Retire"
-                      type="BPMN"
-                      author="Jennifer Adams"
-                      time="3 weeks ago"
-                      comments={7}
-                    />
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="mine">
-                  <div className="divide-y max-h-[calc(100vh-300px)] overflow-auto">
-                    <ModelItem
-                      title="Order to Cash Process"
-                      type="BPMN"
-                      author="John Doe"
-                      time="10 min ago"
-                      comments={5}
-                      isActive
-                    />
-                    <ModelItem
-                      title="Return Process"
-                      type="BPMN"
-                      author="John Doe"
-                      time="3 days ago"
-                      comments={2}
-                    />
-                    <ModelItem
-                      title="Customer Acquisition"
-                      type="Journey"
-                      author="John Doe"
-                      time="1 week ago"
-                      comments={9}
-                    />
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="shared">
-                  <div className="divide-y max-h-[calc(100vh-300px)] overflow-auto">
-                    <ModelItem
-                      title="Customer Onboarding Journey"
-                      type="Journey"
-                      author="Lisa Johnson"
-                      time="Yesterday"
-                      comments={12}
-                    />
-                    <ModelItem
-                      title="Invoice Approval"
-                      type="BPMN"
-                      author="Michael Chen"
-                      time="2 days ago"
-                      comments={3}
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+      <div className="space-y-6">
+        {/* Header with Actions */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Collaboration Hub</h1>
+            <p className="text-muted-foreground">Collaborate on process improvements and reviews</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="outline">
+              <Bell className="h-4 w-4 mr-2" />
+              Notifications
+            </Button>
+            <Button variant="outline">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Invite Team
+            </Button>
+            <Button>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+          </div>
         </div>
-        
-        <div className="md:col-span-2">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <GitMerge className="h-5 w-5 text-enterprise-blue-600" />
-                    Order to Cash Process
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2 mt-1">
-                    <User className="h-3.5 w-3.5" />
-                    John Doe
-                    <span className="text-xs">•</span>
-                    v2.3
-                    <span className="text-xs">•</span>
-                    Last updated 10 min ago
-                  </CardDescription>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    9 Collaborators
+
+        {/* Quick Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {collaborationMetrics.map((metric, index) => (
+            <Card key={index}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{metric.label}</p>
+                    <p className="text-2xl font-bold">{metric.value}</p>
+                  </div>
+                  <Badge variant={metric.trend === "up" ? "default" : "secondary"} className="text-xs">
+                    {metric.trend === "up" ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingUp className="w-3 h-3 mr-1 rotate-180" />}
+                    {metric.change}
                   </Badge>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-0">
-              <ModelViewer />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="discussions" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Discussions
+                </TabsTrigger>
+                <TabsTrigger value="approvals" className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Approvals
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Reviews
+                </TabsTrigger>
+                <TabsTrigger value="schedule" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Schedule
+                </TabsTrigger>
+              </TabsList>
               
-              <div className="flex-1 flex flex-col">
-                <Tabs defaultValue="comments" className="px-6 pt-4">
-                  <TabsList className="grid grid-cols-4">
-                    <TabsTrigger value="comments">Comments</TabsTrigger>
-                    <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                    <TabsTrigger value="versions">Versions</TabsTrigger>
-                    <TabsTrigger value="approvals">Approvals</TabsTrigger>
-                  </TabsList>
-                  
-                  <div className="px-0 py-4 flex-1 overflow-auto max-h-[calc(100vh-600px)]">
-                    <TabsContent value="comments" className="mt-0 space-y-4">
-                      <Comment
-                        author="Lisa Johnson"
-                        avatar="LJ"
-                        time="10 min ago"
-                        text="I think we should add a verification step after the order is submitted but before it gets processed. This would help reduce errors that occur in the later stages."
-                        replies={[
-                          {
-                            author: "Michael Chen",
-                            avatar: "MC",
-                            time: "5 min ago",
-                            text: "Good point, Lisa. We've seen several cases where errors in the order led to delivery issues. A verification step could save us a lot of trouble."
-                          }
-                        ]}
-                      />
-                      
-                      <Comment
-                        author="Sarah Miller"
-                        avatar="SM"
-                        time="1 hour ago"
-                        text="The payment processing step needs to account for international transactions. Right now it seems to only handle domestic payments."
-                      />
-                      
-                      <Comment
-                        author="Robert Taylor"
-                        avatar="RT"
-                        time="2 hours ago"
-                        text="Can we add more details to the fulfillment step? For instance, we should specify which inventory system we're checking against."
-                        replies={[
-                          {
-                            author: "John Doe",
-                            avatar: "JD",
-                            time: "1 hour ago",
-                            text: "Good catch! I'll add integration points with both our primary and backup inventory systems."
-                          }
-                        ]}
-                      />
-                      
-                      <Comment
-                        author="Jennifer Adams"
-                        avatar="JA"
-                        time="Yesterday"
-                        text="We should also consider adding a customer satisfaction survey at the end of the process. This would give us valuable feedback on how our order fulfillment is performing."
-                      />
-                    </TabsContent>
-                    
-                    <TabsContent value="tasks" className="mt-0 space-y-4">
-                      <div className="space-y-3">
-                        <TaskItem
-                          title="Verify order submission flow"
-                          assigned="Lisa Johnson"
-                          dueDate="Oct 25, 2023"
-                          status="In Progress"
-                        />
-                        <TaskItem
-                          title="Update payment processing for international"
-                          assigned="Sarah Miller"
-                          dueDate="Oct 28, 2023"
-                          status="Not Started"
-                        />
-                        <TaskItem
-                          title="Define inventory system integration"
-                          assigned="John Doe"
-                          dueDate="Oct 22, 2023"
-                          status="Completed"
-                        />
-                        <TaskItem
-                          title="Create post-fulfillment satisfaction survey"
-                          assigned="Jennifer Adams"
-                          dueDate="Nov 5, 2023"
-                          status="Not Started"
-                        />
-                        <TaskItem
-                          title="Review entire process with stakeholders"
-                          assigned="Robert Taylor"
-                          dueDate="Nov 10, 2023"
-                          status="Not Started"
-                        />
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="versions" className="mt-0 space-y-4">
-                      <div className="space-y-3">
-                        <VersionItem 
-                          version="2.3"
-                          date="Oct 15, 2023"
-                          author="John Doe"
-                          changes={["Added verification step", "Updated payment processing"]}
-                          isCurrent
-                        />
-                        <VersionItem 
-                          version="2.2"
-                          date="Oct 8, 2023"
-                          author="Sarah Miller"
-                          changes={["Fixed shipping flow", "Added international options"]}
-                        />
-                        <VersionItem 
-                          version="2.1"
-                          date="Sep 25, 2023"
-                          author="Michael Chen"
-                          changes={["Updated inventory check", "Optimized fulfillment process"]}
-                        />
-                        <VersionItem 
-                          version="2.0"
-                          date="Sep 15, 2023"
-                          author="John Doe"
-                          changes={["Major redesign", "Added digital delivery option"]}
-                        />
-                        <VersionItem 
-                          version="1.2"
-                          date="Aug 30, 2023"
-                          author="Lisa Johnson"
-                          changes={["Bug fixes in approval flow", "Documentation updates"]}
-                        />
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="approvals" className="mt-0 space-y-4">
-                      <div className="space-y-3">
-                        <ApprovalItem
-                          stage="Process Owner Review"
-                          approver="John Doe"
-                          status="Approved"
-                          date="Oct 15, 2023"
-                          comment="Looks good, all critical changes implemented."
-                        />
-                        <ApprovalItem
-                          stage="Department Head Review"
-                          approver="Lisa Johnson"
-                          status="Approved"
-                          date="Oct 14, 2023"
-                          comment="Approved with minor suggestions for future versions."
-                        />
-                        <ApprovalItem
-                          stage="Compliance Check"
-                          approver="Michael Chen"
-                          status="Approved"
-                          date="Oct 12, 2023"
-                          comment="All compliance requirements met."
-                        />
-                        <ApprovalItem
-                          stage="Final Publication"
-                          approver="Robert Taylor"
-                          status="Pending"
-                        />
-                      </div>
-                    </TabsContent>
-                  </div>
-                </Tabs>
-                
-                <div className="px-6 pb-4">
-                  <Separator className="mb-4" />
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
-                      JD
+              <TabsContent value="discussions" className="mt-6">
+                <ProcessDiscussions />
+              </TabsContent>
+              
+              <TabsContent value="approvals" className="mt-6">
+                <WorkflowApprovals />
+              </TabsContent>
+              
+              <TabsContent value="reviews" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Process Reviews</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="font-semibold mb-2">Process Reviews</h3>
+                      <p className="text-muted-foreground">
+                        Scheduled process reviews and quality assessments will appear here.
+                      </p>
                     </div>
-                    <div className="flex-1 relative">
-                      <Input 
-                        placeholder="Add a comment or @mention someone..." 
-                        className="pr-20" 
-                      />
-                      <div className="absolute right-2 top-2 flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          <Paperclip className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          <AtSign className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" className="h-6 w-6">
-                          <Send className="h-4 w-4" />
-                        </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="schedule" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Collaboration Schedule</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="font-semibold mb-2">Collaboration Schedule</h3>
+                      <p className="text-muted-foreground">
+                        Scheduled meetings, reviews, and collaboration sessions will appear here.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Team Members */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Team Members
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {teamMembers.map((member, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium">
+                        {member.initials}
                       </div>
+                      <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                        member.status === "online" ? "bg-green-400" :
+                        member.status === "away" ? "bg-yellow-400" : "bg-gray-400"
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{member.name}</div>
+                      <div className="text-xs text-muted-foreground">{member.role}</div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                ))}
+                <Button variant="outline" size="sm" className="w-full mt-4">
+                  <UserPlus className="h-3 w-3 mr-2" />
+                  Add Member
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{activity.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          by {activity.user} • {activity.time}
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={activity.status === "approved" ? "default" : activity.status === "pending" ? "secondary" : "outline"}
+                        className="text-xs"
+                      >
+                        {activity.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="w-full">
+                  View All Activity
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </MainLayout>
