@@ -1,303 +1,304 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useVoice } from "@/contexts/VoiceContext";
 import { 
-  Filter, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  ZoomIn, 
-  ZoomOut, 
+  GitBranch, 
+  Activity, 
+  Clock, 
+  Users, 
+  AlertTriangle,
+  TrendingUp,
+  Filter,
   Download,
-  Settings,
-  Activity,
-  Users,
-  Clock,
-  TrendingUp
+  Search,
+  Eye,
+  Play
 } from "lucide-react";
 
 export const ProcessExplorer: React.FC = () => {
-  const [activityThreshold, setActivityThreshold] = useState([80]);
-  const [pathThreshold, setPathThreshold] = useState([60]);
-  const [selectedView, setSelectedView] = useState("activities");
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  const processMetrics = {
-    totalCases: 15420,
-    totalActivities: 234,
-    totalVariants: 87,
-    averageDuration: "3.2 days",
-    medianDuration: "2.1 days",
-    conformanceRate: "89.5%"
-  };
-
-  const topActivities = [
-    { name: "Create Purchase Order", frequency: 15420, avgDuration: "2.3h", automation: 85 },
-    { name: "Approve Request", frequency: 14850, avgDuration: "4.1h", automation: 23 },
-    { name: "Vendor Selection", frequency: 12340, avgDuration: "1.8d", automation: 67 },
-    { name: "Invoice Processing", frequency: 11200, avgDuration: "3.2h", automation: 91 },
-    { name: "Payment Authorization", frequency: 9870, avgDuration: "1.2h", automation: 45 }
-  ];
+  const { speakText } = useVoice();
+  const [selectedProcess, setSelectedProcess] = useState("order-to-cash");
+  const [selectedView, setSelectedView] = useState("flowchart");
 
   const processVariants = [
-    { id: 1, frequency: 2341, percentage: 15.2, activities: 8, avgDuration: "2.1d" },
-    { id: 2, frequency: 1892, percentage: 12.3, activities: 9, avgDuration: "2.8d" },
-    { id: 3, frequency: 1567, percentage: 10.2, activities: 7, avgDuration: "1.9d" },
-    { id: 4, frequency: 1234, percentage: 8.0, activities: 10, avgDuration: "3.4d" },
-    { id: 5, frequency: 987, percentage: 6.4, activities: 6, avgDuration: "1.5d" }
+    { 
+      id: "variant-1", 
+      name: "Standard Path", 
+      frequency: "68%", 
+      avgDuration: "3.2 days",
+      cases: 2456,
+      performance: "good"
+    },
+    { 
+      id: "variant-2", 
+      name: "Approval Required", 
+      frequency: "22%", 
+      avgDuration: "5.8 days",
+      cases: 795,
+      performance: "moderate"
+    },
+    { 
+      id: "variant-3", 
+      name: "Exception Handling", 
+      frequency: "8%", 
+      avgDuration: "12.1 days",
+      cases: 289,
+      performance: "poor"
+    },
+    { 
+      id: "variant-4", 
+      name: "Rush Processing", 
+      frequency: "2%", 
+      avgDuration: "0.8 days",
+      cases: 72,
+      performance: "excellent"
+    }
+  ];
+
+  const processSteps = [
+    { id: "step-1", name: "Order Received", frequency: "100%", avgTime: "0.1h", bottleneck: false },
+    { id: "step-2", name: "Credit Check", frequency: "98%", avgTime: "2.3h", bottleneck: true },
+    { id: "step-3", name: "Inventory Check", frequency: "95%", avgTime: "0.5h", bottleneck: false },
+    { id: "step-4", name: "Order Approval", frequency: "85%", avgTime: "4.7h", bottleneck: true },
+    { id: "step-5", name: "Production Planning", frequency: "82%", avgTime: "1.2h", bottleneck: false },
+    { id: "step-6", name: "Manufacturing", frequency: "80%", avgTime: "24.5h", bottleneck: false },
+    { id: "step-7", name: "Quality Control", frequency: "78%", avgTime: "3.1h", bottleneck: false },
+    { id: "step-8", name: "Shipping", frequency: "75%", avgTime: "2.8h", bottleneck: false },
+    { id: "step-9", name: "Delivery", frequency: "72%", avgTime: "6.2h", bottleneck: false },
+    { id: "step-10", name: "Invoice Sent", frequency: "70%", avgTime: "0.3h", bottleneck: false }
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Control Panel */}
+    <div 
+      className="space-y-6"
+      onMouseEnter={() => speakText("Process Explorer. Discover and analyze your actual process flows based on event log data. Explore process variants, identify bottlenecks, and understand how work really flows through your organization.")}
+    >
+      {/* Controls */}
       <Card>
-        <CardHeader>
+        <CardContent className="pt-6">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Process Explorer
-              </CardTitle>
-              <CardDescription>
-                Interactive process discovery and exploration
-              </CardDescription>
+            <div className="flex items-center gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Process</label>
+                <Select value={selectedProcess} onValueChange={setSelectedProcess}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="order-to-cash">Order to Cash</SelectItem>
+                    <SelectItem value="purchase-to-pay">Purchase to Pay</SelectItem>
+                    <SelectItem value="issue-to-resolution">Issue to Resolution</SelectItem>
+                    <SelectItem value="hire-to-retire">Hire to Retire</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-2 block">View</label>
+                <Select value={selectedView} onValueChange={setSelectedView}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="flowchart">Flowchart</SelectItem>
+                    <SelectItem value="variants">Variants</SelectItem>
+                    <SelectItem value="performance">Performance</SelectItem>
+                    <SelectItem value="conformance">Conformance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Button 
-                variant={isAnimating ? "default" : "outline"} 
-                size="sm"
-                onClick={() => setIsAnimating(!isAnimating)}
-              >
-                {isAnimating ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                {isAnimating ? "Pause" : "Animate"}
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
               </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4" />
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
                 Export
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">View Type</label>
-              <Select value={selectedView} onValueChange={setSelectedView}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="activities">Activities</SelectItem>
-                  <SelectItem value="handovers">Handovers</SelectItem>
-                  <SelectItem value="resources">Resources</SelectItem>
-                  <SelectItem value="variants">Variants</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Activity Threshold: {activityThreshold[0]}%
-              </label>
-              <Slider
-                value={activityThreshold}
-                onValueChange={setActivityThreshold}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Path Threshold: {pathThreshold[0]}%
-              </label>
-              <Slider
-                value={pathThreshold}
-                onValueChange={setPathThreshold}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="flex items-end gap-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4" />
-                Filters
-              </Button>
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4" />
-                Settings
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Process Visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Process Visualization */}
         <div className="lg:col-span-2">
-          <Card className="h-[600px]">
-            <CardHeader>
-              <CardTitle>Process Map</CardTitle>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <ZoomOut className="h-4 w-4" />
-                  <ZoomIn className="h-4 w-4" />
-                </div>
-                <Separator orientation="vertical" className="h-4" />
-                <Badge variant="outline">{processMetrics.totalCases} cases</Badge>
-                <Badge variant="outline">{processMetrics.totalVariants} variants</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="h-full">
-              <div className="h-full bg-muted/20 rounded-lg flex items-center justify-center relative overflow-hidden">
-                <div className="text-center space-y-4">
-                  <div className="relative">
-                    {/* Simulated Process Flow Visualization */}
-                    <svg width="500" height="300" className="mx-auto">
-                      {/* Start Event */}
-                      <circle cx="50" cy="150" r="20" fill="#22c55e" stroke="#16a34a" strokeWidth="2" />
-                      <text x="50" y="155" textAnchor="middle" className="text-xs fill-white font-medium">Start</text>
-                      
-                      {/* Activities */}
-                      <rect x="120" y="120" width="80" height="60" fill="#3b82f6" stroke="#2563eb" strokeWidth="2" rx="8" />
-                      <text x="160" y="145" textAnchor="middle" className="text-xs fill-white">Create PO</text>
-                      <text x="160" y="160" textAnchor="middle" className="text-xs fill-white">2,341 cases</text>
-                      
-                      <rect x="250" y="80" width="80" height="60" fill="#8b5cf6" stroke="#7c3aed" strokeWidth="2" rx="8" />
-                      <text x="290" y="105" textAnchor="middle" className="text-xs fill-white">Approve</text>
-                      <text x="290" y="120" textAnchor="middle" className="text-xs fill-white">1,892 cases</text>
-                      
-                      <rect x="250" y="180" width="80" height="60" fill="#f59e0b" stroke="#d97706" strokeWidth="2" rx="8" />
-                      <text x="290" y="205" textAnchor="middle" className="text-xs fill-white">Review</text>
-                      <text x="290" y="220" textAnchor="middle" className="text-xs fill-white">987 cases</text>
-                      
-                      <rect x="380" y="120" width="80" height="60" fill="#06b6d4" stroke="#0891b2" strokeWidth="2" rx="8" />
-                      <text x="420" y="145" textAnchor="middle" className="text-xs fill-white">Process</text>
-                      <text x="420" y="160" textAnchor="middle" className="text-xs fill-white">2,234 cases</text>
-                      
-                      {/* End Event */}
-                      <circle cx="500" cy="150" r="20" fill="#ef4444" stroke="#dc2626" strokeWidth="2" />
-                      <text x="500" y="155" textAnchor="middle" className="text-xs fill-white font-medium">End</text>
-                      
-                      {/* Connections */}
-                      <path d="M 70 150 Q 95 150 120 150" fill="none" stroke="#64748b" strokeWidth="3" markerEnd="url(#arrowhead)" />
-                      <path d="M 200 150 Q 225 130 250 110" fill="none" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrowhead)" />
-                      <path d="M 200 150 Q 225 180 250 210" fill="none" stroke="#64748b" strokeWidth="1" markerEnd="url(#arrowhead)" />
-                      <path d="M 330 110 Q 355 130 380 150" fill="none" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrowhead)" />
-                      <path d="M 330 210 Q 355 180 380 150" fill="none" stroke="#64748b" strokeWidth="1" markerEnd="url(#arrowhead)" />
-                      <path d="M 460 150 Q 480 150 500 150" fill="none" stroke="#64748b" strokeWidth="3" markerEnd="url(#arrowhead)" />
-                      
-                      {/* Arrow marker definition */}
-                      <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-                          <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
-                        </marker>
-                      </defs>
-                    </svg>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-6">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{processMetrics.conformanceRate}</div>
-                      <div className="text-sm text-muted-foreground">Conformance Rate</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{processMetrics.averageDuration}</div>
-                      <div className="text-sm text-muted-foreground">Avg Duration</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Side Panel */}
-        <div className="space-y-6">
-          {/* Process Metrics */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Process Metrics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-muted/20 rounded">
-                  <div className="text-xl font-bold">{processMetrics.totalCases.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">Total Cases</div>
-                </div>
-                <div className="text-center p-3 bg-muted/20 rounded">
-                  <div className="text-xl font-bold">{processMetrics.totalActivities}</div>
-                  <div className="text-xs text-muted-foreground">Activities</div>
-                </div>
-                <div className="text-center p-3 bg-muted/20 rounded">
-                  <div className="text-xl font-bold">{processMetrics.totalVariants}</div>
-                  <div className="text-xs text-muted-foreground">Variants</div>
-                </div>
-                <div className="text-center p-3 bg-muted/20 rounded">
-                  <div className="text-xl font-bold">{processMetrics.medianDuration}</div>
-                  <div className="text-xs text-muted-foreground">Median Duration</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Activities */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Top Activities</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <GitBranch className="h-5 w-5" />
+                Process Flow Visualization
+              </CardTitle>
+              <CardDescription>
+                Discovered process model based on {processSteps.reduce((sum, step) => sum + parseInt(step.frequency), 0)}% of cases
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {topActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{activity.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {activity.frequency.toLocaleString()} cases • {activity.avgDuration}
+              <div className="h-96 bg-muted/20 rounded-lg flex items-center justify-center relative overflow-hidden">
+                {/* Process Flow Diagram */}
+                <div className="w-full h-full p-4">
+                  <div className="flex flex-col gap-4 h-full justify-center">
+                    {/* Start Node */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+                        S
+                      </div>
+                      <div className="flex-1 h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded"></div>
+                    </div>
+                    
+                    {/* Process Steps */}
+                    <div className="grid grid-cols-5 gap-2">
+                      {processSteps.slice(0, 5).map((step, index) => (
+                        <div key={step.id} className="text-center">
+                          <div className={`w-16 h-12 rounded border-2 flex items-center justify-center text-xs font-medium mb-1 ${
+                            step.bottleneck ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-blue-50'
+                          }`}>
+                            {step.name.split(' ')[0]}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{step.frequency}</div>
+                          {step.bottleneck && <AlertTriangle className="h-3 w-3 text-red-500 mx-auto" />}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-5 gap-2">
+                      {processSteps.slice(5).map((step, index) => (
+                        <div key={step.id} className="text-center">
+                          <div className={`w-16 h-12 rounded border-2 flex items-center justify-center text-xs font-medium mb-1 ${
+                            step.bottleneck ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-blue-50'
+                          }`}>
+                            {step.name.split(' ')[0]}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{step.frequency}</div>
+                          {step.bottleneck && <AlertTriangle className="h-3 w-3 text-red-500 mx-auto" />}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* End Node */}
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 h-2 bg-gradient-to-r from-blue-500 to-red-500 rounded"></div>
+                      <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">
+                        E
                       </div>
                     </div>
-                    <Badge variant="outline" className="ml-2">
-                      {activity.automation}% auto
-                    </Badge>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Process Variants */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Process Variants</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {processVariants.map((variant) => (
-                  <div key={variant.id} className="p-3 border rounded-lg hover:bg-muted/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Variant {variant.id}</span>
-                      <Badge>{variant.percentage}%</Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <div>{variant.frequency.toLocaleString()} cases</div>
-                      <div>{variant.activities} activities • {variant.avgDuration}</div>
-                    </div>
-                  </div>
-                ))}
+                </div>
+                
+                <div className="absolute bottom-4 right-4">
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Full View
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Process Variants */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Process Variants
+              </CardTitle>
+              <CardDescription>
+                Different paths through the process
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {processVariants.map((variant) => (
+                <div key={variant.id} className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-sm">{variant.name}</h4>
+                    <Badge variant={
+                      variant.performance === "excellent" ? "default" :
+                      variant.performance === "good" ? "secondary" :
+                      variant.performance === "moderate" ? "outline" : "destructive"
+                    }>
+                      {variant.performance}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                    <div>
+                      <div className="font-medium">{variant.frequency}</div>
+                      <div>Frequency</div>
+                    </div>
+                    <div>
+                      <div className="font-medium">{variant.avgDuration}</div>
+                      <div>Avg Duration</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    {variant.cases.toLocaleString()} cases
+                  </div>
+                </div>
+              ))}
+              
+              <Button variant="outline" size="sm" className="w-full">
+                <Search className="h-4 w-4 mr-2" />
+                Explore All Variants
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Process Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Activity className="h-4 w-4 text-blue-500" />
+              <h3 className="font-medium text-sm">Total Cases</h3>
+            </div>
+            <div className="text-2xl font-bold">3,612</div>
+            <div className="text-xs text-muted-foreground">+156 this week</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-4 w-4 text-green-500" />
+              <h3 className="font-medium text-sm">Avg Duration</h3>
+            </div>
+            <div className="text-2xl font-bold">4.7 days</div>
+            <div className="text-xs text-muted-foreground">-0.3 from last week</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-purple-500" />
+              <h3 className="font-medium text-sm">Process Variants</h3>
+            </div>
+            <div className="text-2xl font-bold">24</div>
+            <div className="text-xs text-muted-foreground">12 common paths</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <h3 className="font-medium text-sm">Bottlenecks</h3>
+            </div>
+            <div className="text-2xl font-bold">3</div>
+            <div className="text-xs text-muted-foreground">Critical issues found</div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -3,380 +3,308 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useVoice } from "@/contexts/VoiceContext";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { 
-  CheckCircle, 
-  XCircle, 
+  Shield, 
   AlertTriangle, 
-  Upload, 
-  Download, 
+  CheckCircle, 
+  XCircle,
   FileText,
-  BarChart3,
-  TrendingDown,
-  TrendingUp
+  Eye,
+  Download,
+  Filter
 } from "lucide-react";
 
 export const ProcessConformanceChecker: React.FC = () => {
+  const { speakText } = useVoice();
   const [selectedModel, setSelectedModel] = useState("order-process");
+  const [selectedPeriod, setSelectedPeriod] = useState("last30days");
 
-  const conformanceOverview = {
-    overallScore: 87.3,
-    totalDeviations: 342,
-    criticalViolations: 23,
-    warnings: 156,
-    conformantCases: 14567,
-    totalCases: 16732
-  };
-
-  const conformanceRules = [
-    {
-      id: 1,
-      name: "Sequential Activity Order",
-      description: "Activities must follow the defined sequence",
-      compliance: 94.2,
-      violations: 85,
-      severity: "medium",
-      status: "active"
-    },
-    {
-      id: 2,
-      name: "Mandatory Approval",
-      description: "All orders above $10K require approval",
-      compliance: 78.5,
-      violations: 234,
-      severity: "high",
-      status: "active"
-    },
-    {
-      id: 3,
-      name: "Time Constraints",
-      description: "Process must complete within SLA",
-      compliance: 92.1,
-      violations: 142,
-      severity: "medium",
-      status: "active"
-    },
-    {
-      id: 4,
-      name: "Data Completeness",
-      description: "Required fields must be filled",
-      compliance: 89.7,
-      violations: 98,
-      severity: "low",
-      status: "active"
-    }
+  const conformanceMetrics = [
+    { name: "Overall Conformance", value: 82, target: 90, status: "warning" },
+    { name: "Path Conformance", value: 76, target: 85, status: "alert" },
+    { name: "Time Conformance", value: 88, target: 90, status: "good" },
+    { name: "Resource Conformance", value: 94, target: 95, status: "good" }
   ];
 
-  const violationDetails = [
-    {
-      type: "Skipped Activity",
-      description: "Quality check was skipped in rush orders",
-      frequency: 145,
-      impact: "High",
-      cases: ["Case-001", "Case-045", "Case-123"],
-      recommendation: "Implement mandatory quality gates"
-    },
-    {
-      type: "Wrong Order",
-      description: "Approval happened after shipping",
-      frequency: 67,
-      impact: "Critical",
-      cases: ["Case-234", "Case-456"],
-      recommendation: "Add sequence validation rules"
-    },
-    {
-      type: "Missing Data",
-      description: "Customer information incomplete",
-      frequency: 89,
-      impact: "Medium",
-      cases: ["Case-789", "Case-012"],
-      recommendation: "Improve form validation"
-    },
-    {
-      type: "SLA Violation",
-      description: "Process exceeded time limits",
-      frequency: 41,
-      impact: "Medium",
-      cases: ["Case-345", "Case-678"],
-      recommendation: "Optimize resource allocation"
-    }
+  const violationData = [
+    { type: "Skipped Steps", count: 245, severity: "High", trend: "+12%" },
+    { type: "Wrong Sequence", count: 189, severity: "Medium", trend: "-5%" },
+    { type: "Unauthorized Actor", count: 67, severity: "High", trend: "+8%" },
+    { type: "Time Violations", count: 156, severity: "Medium", trend: "-15%" },
+    { type: "Missing Approvals", count: 34, severity: "Critical", trend: "+23%" }
   ];
 
-  const modelComparison = [
-    { model: "Reference Model v1.0", conformance: 87.3, deviations: 342, lastUpdated: "2024-01-15" },
-    { model: "Reference Model v2.0", conformance: 91.2, deviations: 234, lastUpdated: "2024-01-20" },
-    { model: "Best Practice Model", conformance: 85.7, deviations: 456, lastUpdated: "2024-01-10" }
+  const processSteps = [
+    { step: "Order Receipt", conformance: 98, violations: 12, compliant: true },
+    { step: "Credit Check", conformance: 85, violations: 89, compliant: true },
+    { step: "Inventory Check", conformance: 92, violations: 45, compliant: true },
+    { step: "Manager Approval", conformance: 67, violations: 234, compliant: false },
+    { step: "Order Processing", conformance: 89, violations: 78, compliant: true },
+    { step: "Quality Control", conformance: 76, violations: 134, compliant: false },
+    { step: "Shipping", conformance: 94, violations: 34, compliant: true },
+    { step: "Invoice Creation", conformance: 88, violations: 67, compliant: true }
+  ];
+
+  const conformanceBreakdown = [
+    { name: "Compliant", value: 1847, color: "#22c55e" },
+    { name: "Minor Violations", value: 423, color: "#f59e0b" },
+    { name: "Major Violations", value: 156, color: "#ef4444" },
+    { name: "Critical Violations", value: 34, color: "#dc2626" }
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Controls and Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" />
-              Conformance Overview
-            </CardTitle>
-            <CardDescription>
-              Real-time analysis of process conformance against reference models
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-1">
-                  {conformanceOverview.overallScore}%
-                </div>
-                <p className="text-sm text-muted-foreground">Overall Conformance</p>
-                <Progress value={conformanceOverview.overallScore} className="mt-2" />
+    <div 
+      className="space-y-6"
+      onMouseEnter={() => speakText("Process Conformance Checker. Monitor how well your actual processes follow the defined models and identify compliance violations. Track conformance metrics and investigate deviations to ensure process integrity.")}
+    >
+      {/* Controls */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Process Model</label>
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="order-process">Order Processing</SelectItem>
+                    <SelectItem value="invoice-approval">Invoice Approval</SelectItem>
+                    <SelectItem value="customer-onboarding">Customer Onboarding</SelectItem>
+                    <SelectItem value="support-ticket">Support Ticket</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
-              <div className="text-center">
-                <div className="text-3xl font-bold text-destructive mb-1">
-                  {conformanceOverview.totalDeviations}
-                </div>
-                <p className="text-sm text-muted-foreground">Total Deviations</p>
-                <Badge variant="destructive" className="mt-2">
-                  {conformanceOverview.criticalViolations} Critical
-                </Badge>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-1">
-                  {conformanceOverview.conformantCases.toLocaleString()}
-                </div>
-                <p className="text-sm text-muted-foreground">Conformant Cases</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  of {conformanceOverview.totalCases.toLocaleString()} total
-                </p>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Time Period</label>
+                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="last7days">Last 7 days</SelectItem>
+                    <SelectItem value="last30days">Last 30 days</SelectItem>
+                    <SelectItem value="last90days">Last 90 days</SelectItem>
+                    <SelectItem value="lastyear">Last year</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Conformance Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {conformanceMetrics.map((metric, index) => (
+          <Card key={index}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground">{metric.name}</h3>
+                <Badge variant={
+                  metric.status === "good" ? "default" :
+                  metric.status === "warning" ? "secondary" : "destructive"
+                }>
+                  {metric.status === "good" ? <CheckCircle className="h-3 w-3 mr-1" /> :
+                   metric.status === "warning" ? <AlertTriangle className="h-3 w-3 mr-1" /> :
+                   <XCircle className="h-3 w-3 mr-1" />}
+                  {metric.status}
+                </Badge>
+              </div>
+              <div className="text-2xl font-bold">{metric.value}%</div>
+              <div className="text-xs text-muted-foreground">Target: {metric.target}%</div>
+              <div className="w-full bg-muted rounded-full h-2 mt-2">
+                <div 
+                  className={`h-2 rounded-full ${
+                    metric.status === "good" ? "bg-green-500" :
+                    metric.status === "warning" ? "bg-yellow-500" : "bg-red-500"
+                  }`}
+                  style={{ width: `${metric.value}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Conformance Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Violations Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Conformance Violations
+            </CardTitle>
+            <CardDescription>Types and frequency of process violations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={violationData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="type" angle={-45} textAnchor="end" height={80} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#ef4444" name="Violations" />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
+        {/* Conformance Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Actions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Conformance Distribution
+            </CardTitle>
+            <CardDescription>Overall process compliance breakdown</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className="w-full" variant="outline">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Reference Model
-            </Button>
-            <Button className="w-full" variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              Run Conformance Check
-            </Button>
-            <Button className="w-full" variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={conformanceBreakdown}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={120}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {conformanceBreakdown.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detailed Analysis */}
-      <Tabs defaultValue="rules" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="rules">Compliance Rules</TabsTrigger>
-          <TabsTrigger value="violations">Violations</TabsTrigger>
-          <TabsTrigger value="models">Model Comparison</TabsTrigger>
-          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="rules">
-          <Card>
-            <CardHeader>
-              <CardTitle>Compliance Rules Analysis</CardTitle>
-              <CardDescription>
-                Monitor adherence to defined business rules and constraints
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {conformanceRules.map((rule) => (
-                  <div key={rule.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-medium">{rule.name}</h3>
-                        <Badge variant={rule.severity === "high" ? "destructive" : rule.severity === "medium" ? "secondary" : "outline"}>
-                          {rule.severity} priority
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{rule.compliance}%</span>
-                        <div className="w-20">
-                          <Progress value={rule.compliance} />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground mb-3">{rule.description}</p>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {rule.violations} violations detected
-                      </span>
-                      <Badge variant={rule.compliance > 90 ? "default" : rule.compliance > 80 ? "secondary" : "destructive"}>
-                        {rule.compliance > 90 ? "Good" : rule.compliance > 80 ? "Needs Attention" : "Critical"}
+      {/* Detailed Violations */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Violation Details
+          </CardTitle>
+          <CardDescription>Detailed breakdown of violations by type and severity</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Violation Type</th>
+                  <th className="text-right p-2">Count</th>
+                  <th className="text-right p-2">Severity</th>
+                  <th className="text-right p-2">Trend</th>
+                  <th className="text-right p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {violationData.map((violation, index) => (
+                  <tr key={index} className="border-b hover:bg-muted/50">
+                    <td className="p-2 font-medium">{violation.type}</td>
+                    <td className="p-2 text-right">{violation.count}</td>
+                    <td className="p-2 text-right">
+                      <Badge variant={
+                        violation.severity === "Critical" ? "destructive" :
+                        violation.severity === "High" ? "destructive" :
+                        violation.severity === "Medium" ? "secondary" : "outline"
+                      }>
+                        {violation.severity}
                       </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="violations">
-          <Card>
-            <CardHeader>
-              <CardTitle>Violation Analysis</CardTitle>
-              <CardDescription>
-                Detailed breakdown of conformance violations and their impact
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {violationDetails.map((violation, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium">{violation.type}</h3>
-                          <Badge variant={violation.impact === "Critical" ? "destructive" : violation.impact === "High" ? "secondary" : "outline"}>
-                            {violation.impact} Impact
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{violation.description}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold">{violation.frequency}</div>
-                        <div className="text-xs text-muted-foreground">occurrences</div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm font-medium">Affected Cases: </span>
-                        <span className="text-sm text-muted-foreground">
-                          {violation.cases.join(", ")}
-                        </span>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded border border-blue-200">
-                        <div className="flex items-center gap-2 mb-1">
-                          <CheckCircle className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-900">Recommendation</span>
-                        </div>
-                        <p className="text-sm text-blue-700">{violation.recommendation}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="models">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reference Model Comparison</CardTitle>
-              <CardDescription>
-                Compare conformance across different reference models
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {modelComparison.map((model, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-medium">{model.model}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Last updated: {model.lastUpdated}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <div className="text-lg font-bold">{model.conformance}%</div>
-                        <div className="text-xs text-muted-foreground">Conformance</div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <div className="text-lg font-bold">{model.deviations}</div>
-                        <div className="text-xs text-muted-foreground">Deviations</div>
-                      </div>
-                      
-                      <Button variant="outline" size="sm">
-                        Select
+                    </td>
+                    <td className="p-2 text-right">
+                      <span className={`text-sm ${
+                        violation.trend.startsWith('+') ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {violation.trend}
+                      </span>
+                    </td>
+                    <td className="p-2 text-right">
+                      <Button variant="outline" size="sm" className="mr-2">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
                       </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Process Step Conformance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5" />
+            Step-by-Step Conformance
+          </CardTitle>
+          <CardDescription>Conformance rates for each process step</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {processSteps.map((step, index) => (
+              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  {step.compliant ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                  <div>
+                    <div className="font-medium">{step.step}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {step.violations} violations detected
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="recommendations">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI-Powered Recommendations</CardTitle>
-              <CardDescription>
-                Intelligent suggestions to improve process conformance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span className="font-medium text-green-900">High Impact Improvement</span>
-                  </div>
-                  <p className="text-sm text-green-700 mb-3">
-                    Implement automated approval workflow for orders above $10K to reduce approval bypass violations by 85%
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-green-600">Expected Impact: +12% conformance</Badge>
-                    <Badge variant="outline">Implementation: 2 weeks</Badge>
-                  </div>
                 </div>
                 
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-900">Process Optimization</span>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="font-medium">{step.conformance}%</div>
+                    <div className="text-xs text-muted-foreground">conformance</div>
                   </div>
-                  <p className="text-sm text-blue-700 mb-3">
-                    Add validation checkpoints at key process transitions to catch data completeness issues early
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-600">Expected Impact: +8% conformance</Badge>
-                    <Badge variant="outline">Implementation: 1 week</Badge>
+                  <div className="w-24 bg-muted rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${
+                        step.conformance >= 90 ? "bg-green-500" :
+                        step.conformance >= 75 ? "bg-yellow-500" : "bg-red-500"
+                      }`}
+                      style={{ width: `${step.conformance}%` }}
+                    />
                   </div>
-                </div>
-                
-                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <span className="font-medium text-yellow-900">Training Recommendation</span>
-                  </div>
-                  <p className="text-sm text-yellow-700 mb-3">
-                    Conduct training sessions for teams with high violation rates to improve process adherence
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-yellow-600">Expected Impact: +5% conformance</Badge>
-                    <Badge variant="outline">Implementation: 3 weeks</Badge>
-                  </div>
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

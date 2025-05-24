@@ -1,480 +1,378 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useVoice } from "@/contexts/VoiceContext";
 import { 
   Zap, 
-  Target, 
   TrendingUp, 
   Clock, 
-  DollarSign, 
-  Users,
+  DollarSign,
+  Target,
   Lightbulb,
   CheckCircle,
   ArrowRight,
-  BarChart3
+  Play,
+  BarChart
 } from "lucide-react";
 
 export const ProcessOptimizationSuite: React.FC = () => {
+  const { speakText } = useVoice();
   const [selectedOptimization, setSelectedOptimization] = useState("automation");
 
   const optimizationOpportunities = [
     {
-      id: 1,
-      title: "Automate Invoice Processing",
-      description: "Implement RPA for invoice data extraction and validation",
-      impact: {
-        timeReduction: "65%",
-        costSaving: "$125K/year",
-        errorReduction: "90%"
-      },
+      id: "auto-approval",
+      title: "Automated Credit Approval",
+      description: "Implement ML-based credit scoring for orders under $10K",
+      impact: "High",
       effort: "Medium",
-      roi: "320%",
-      category: "automation"
-    },
-    {
-      id: 2,
-      title: "Parallel Approval Workflow",
-      description: "Enable parallel approvals for orders under $5K",
-      impact: {
-        timeReduction: "40%",
-        costSaving: "$85K/year",
-        errorReduction: "15%"
-      },
-      effort: "Low",
-      roi: "450%",
-      category: "workflow"
-    },
-    {
-      id: 3,
-      title: "Predictive Resource Allocation",
-      description: "Use AI to predict and allocate resources based on demand",
-      impact: {
-        timeReduction: "25%",
-        costSaving: "$200K/year",
-        errorReduction: "35%"
-      },
-      effort: "High",
-      roi: "280%",
-      category: "ai"
-    },
-    {
-      id: 4,
-      title: "Eliminate Redundant Steps",
-      description: "Remove duplicate quality checks in low-risk scenarios",
-      impact: {
-        timeReduction: "30%",
-        costSaving: "$60K/year",
-        errorReduction: "5%"
-      },
-      effort: "Low",
-      roi: "600%",
-      category: "simplification"
-    }
-  ];
-
-  const simulationResults = {
-    current: {
-      avgDuration: "3.2 days",
-      throughput: "1,250 cases/month",
-      cost: "$150 per case",
-      satisfaction: "78%"
-    },
-    optimized: {
-      avgDuration: "1.8 days",
-      throughput: "2,100 cases/month",
-      cost: "$95 per case",
-      satisfaction: "89%"
-    },
-    improvement: {
-      duration: "44%",
-      throughput: "68%",
-      cost: "37%",
-      satisfaction: "14%"
-    }
-  };
-
-  const implementationRoadmap = [
-    {
-      phase: "Phase 1: Quick Wins",
-      duration: "2-4 weeks",
-      initiatives: ["Parallel Approval Workflow", "Eliminate Redundant Steps"],
-      impact: "25% improvement",
+      timeReduction: "2.3 days",
+      costSaving: "$45K/year",
+      implementationTime: "6 weeks",
+      roi: "340%",
       status: "ready"
     },
     {
-      phase: "Phase 2: Automation",
-      duration: "6-8 weeks",
-      initiatives: ["Automate Invoice Processing", "Digital Document Management"],
-      impact: "45% improvement",
-      status: "planned"
+      id: "parallel-processing",
+      title: "Parallel Document Processing",
+      description: "Run document verification and compliance checks simultaneously",
+      impact: "Medium",
+      effort: "Low",
+      timeReduction: "1.2 days",
+      costSaving: "$28K/year",
+      implementationTime: "3 weeks",
+      roi: "280%",
+      status: "ready"
     },
     {
-      phase: "Phase 3: Intelligence",
-      duration: "12-16 weeks",
-      initiatives: ["Predictive Resource Allocation", "AI-Powered Decision Support"],
-      impact: "65% improvement",
-      status: "future"
+      id: "smart-routing",
+      title: "Intelligent Case Routing",
+      description: "Route cases to specialists based on complexity and workload",
+      impact: "Medium",
+      effort: "Medium",
+      timeReduction: "0.8 days",
+      costSaving: "$32K/year",
+      implementationTime: "4 weeks",
+      roi: "210%",
+      status: "planning"
+    },
+    {
+      id: "predictive-maintenance",
+      title: "Predictive Resource Planning",
+      description: "Forecast workload and adjust resources proactively",
+      impact: "High",
+      effort: "High",
+      timeReduction: "1.5 days",
+      costSaving: "$67K/year",
+      implementationTime: "12 weeks",
+      roi: "190%",
+      status: "research"
     }
   ];
 
-  const bottleneckAnalysis = [
-    {
-      activity: "Manual Approval Process",
-      currentTime: "4.2 hours",
-      waitTime: "3.8 hours",
-      optimization: "Implement automated pre-screening",
-      expectedReduction: "75%"
-    },
-    {
-      activity: "Document Verification",
-      currentTime: "2.1 hours",
-      waitTime: "1.5 hours",
-      optimization: "OCR and AI validation",
-      expectedReduction: "80%"
-    },
-    {
-      activity: "Quality Review",
-      currentTime: "1.8 hours",
-      waitTime: "0.9 hours",
-      optimization: "Risk-based sampling",
-      expectedReduction: "50%"
-    }
+  const simulationResults = [
+    { scenario: "Current State", throughput: 245, avgTime: 4.7, cost: 125, quality: 87 },
+    { scenario: "With Automation", throughput: 340, avgTime: 2.8, cost: 89, quality: 92 },
+    { scenario: "With Parallel Processing", throughput: 285, avgTime: 3.2, cost: 108, quality: 89 },
+    { scenario: "Combined Optimizations", throughput: 420, avgTime: 2.1, cost: 76, quality: 95 }
+  ];
+
+  const implementationPlan = [
+    { phase: "Phase 1", title: "Quick Wins", duration: "4 weeks", items: ["Parallel Processing", "Smart Routing"] },
+    { phase: "Phase 2", title: "Automation", duration: "8 weeks", items: ["Automated Approval", "Document Processing"] },
+    { phase: "Phase 3", title: "Advanced Analytics", duration: "12 weeks", items: ["Predictive Planning", "AI Insights"] }
   ];
 
   return (
-    <div className="space-y-6">
+    <div 
+      className="space-y-6"
+      onMouseEnter={() => speakText("Process Optimization Suite. Discover improvement opportunities, simulate changes, and implement optimizations. Use AI-powered recommendations to enhance efficiency, reduce costs, and improve quality.")}
+    >
       {/* Optimization Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Process Optimization Impact
-            </CardTitle>
-            <CardDescription>
-              Projected improvements from implementing optimization recommendations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Duration</span>
-                </div>
-                <div className="text-2xl font-bold text-blue-600">-{simulationResults.improvement.duration}</div>
-                <div className="text-xs text-muted-foreground">
-                  {simulationResults.current.avgDuration} → {simulationResults.optimized.avgDuration}
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium">Throughput</span>
-                </div>
-                <div className="text-2xl font-bold text-green-600">+{simulationResults.improvement.throughput}</div>
-                <div className="text-xs text-muted-foreground">
-                  {simulationResults.current.throughput} → {simulationResults.optimized.throughput}
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <DollarSign className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium">Cost</span>
-                </div>
-                <div className="text-2xl font-bold text-purple-600">-{simulationResults.improvement.cost}</div>
-                <div className="text-xs text-muted-foreground">
-                  {simulationResults.current.cost} → {simulationResults.optimized.cost}
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Users className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium">Satisfaction</span>
-                </div>
-                <div className="text-2xl font-bold text-orange-600">+{simulationResults.improvement.satisfaction}</div>
-                <div className="text-xs text-muted-foreground">
-                  {simulationResults.current.satisfaction} → {simulationResults.optimized.satisfaction}
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="h-4 w-4 text-yellow-500" />
+              <h3 className="font-medium text-sm">Potential Savings</h3>
             </div>
+            <div className="text-2xl font-bold">$172K</div>
+            <div className="text-xs text-muted-foreground">annually</div>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardHeader>
-            <CardTitle>Optimization Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">8.7</div>
-              <p className="text-sm text-muted-foreground mb-4">out of 10</p>
-              <Progress value={87} className="mb-4" />
-              <p className="text-xs text-muted-foreground">
-                Based on impact potential and implementation feasibility
-              </p>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-4 w-4 text-blue-500" />
+              <h3 className="font-medium text-sm">Time Reduction</h3>
             </div>
+            <div className="text-2xl font-bold">5.8 days</div>
+            <div className="text-xs text-muted-foreground">avg per case</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-green-500" />
+              <h3 className="font-medium text-sm">Efficiency Gain</h3>
+            </div>
+            <div className="text-2xl font-bold">+42%</div>
+            <div className="text-xs text-muted-foreground">throughput improvement</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="h-4 w-4 text-purple-500" />
+              <h3 className="font-medium text-sm">Quality Score</h3>
+            </div>
+            <div className="text-2xl font-bold">95%</div>
+            <div className="text-xs text-muted-foreground">projected quality</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detailed Analysis */}
-      <Tabs defaultValue="opportunities" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+      {/* Optimization Tabs */}
+      <Tabs value={selectedOptimization} onValueChange={setSelectedOptimization} className="w-full">
+        <TabsList>
+          <TabsTrigger value="automation">Opportunities</TabsTrigger>
           <TabsTrigger value="simulation">Simulation</TabsTrigger>
-          <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-          <TabsTrigger value="bottlenecks">Bottlenecks</TabsTrigger>
+          <TabsTrigger value="implementation">Implementation</TabsTrigger>
+          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="opportunities">
-          <Card>
-            <CardHeader>
-              <CardTitle>Optimization Opportunities</CardTitle>
-              <CardDescription>
-                AI-identified opportunities ranked by impact and feasibility
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {optimizationOpportunities.map((opportunity) => (
-                  <div key={opportunity.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium">{opportunity.title}</h3>
-                          <Badge variant="outline">{opportunity.category}</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{opportunity.description}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-green-600">{opportunity.roi} ROI</div>
-                        <Badge variant={opportunity.effort === "Low" ? "default" : opportunity.effort === "Medium" ? "secondary" : "destructive"}>
+        
+        <TabsContent value="automation">
+          <div className="space-y-4">
+            {optimizationOpportunities.map((opportunity) => (
+              <Card key={opportunity.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold">{opportunity.title}</h3>
+                        <Badge variant={
+                          opportunity.impact === "High" ? "default" :
+                          opportunity.impact === "Medium" ? "secondary" : "outline"
+                        }>
+                          {opportunity.impact} Impact
+                        </Badge>
+                        <Badge variant="outline">
                           {opportunity.effort} Effort
                         </Badge>
+                        <Badge variant={
+                          opportunity.status === "ready" ? "default" :
+                          opportunity.status === "planning" ? "secondary" : "outline"
+                        }>
+                          {opportunity.status}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-muted-foreground mb-4">{opportunity.description}</p>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                          <div className="text-sm text-muted-foreground">Time Reduction</div>
+                          <div className="font-semibold text-green-600">{opportunity.timeReduction}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-muted-foreground">Cost Saving</div>
+                          <div className="font-semibold text-green-600">{opportunity.costSaving}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-muted-foreground">Implementation</div>
+                          <div className="font-semibold">{opportunity.implementationTime}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-muted-foreground">ROI</div>
+                          <div className="font-semibold text-blue-600">{opportunity.roi}</div>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-4 mt-4">
-                      <div className="text-center p-3 bg-blue-50 rounded">
-                        <div className="text-lg font-bold text-blue-600">{opportunity.impact.timeReduction}</div>
-                        <div className="text-xs text-blue-700">Time Reduction</div>
-                      </div>
-                      <div className="text-center p-3 bg-green-50 rounded">
-                        <div className="text-lg font-bold text-green-600">{opportunity.impact.costSaving}</div>
-                        <div className="text-xs text-green-700">Annual Savings</div>
-                      </div>
-                      <div className="text-center p-3 bg-purple-50 rounded">
-                        <div className="text-lg font-bold text-purple-600">{opportunity.impact.errorReduction}</div>
-                        <div className="text-xs text-purple-700">Error Reduction</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-end mt-4 gap-2">
-                      <Button variant="outline" size="sm">View Details</Button>
-                      <Button size="sm">Start Implementation</Button>
+                    <div className="flex flex-col gap-2 ml-4">
+                      <Button variant="outline" size="sm">
+                        <BarChart className="h-4 w-4 mr-2" />
+                        Simulate
+                      </Button>
+                      <Button size="sm" disabled={opportunity.status !== "ready"}>
+                        <Play className="h-4 w-4 mr-2" />
+                        Implement
+                      </Button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
-
+        
         <TabsContent value="simulation">
           <Card>
             <CardHeader>
-              <CardTitle>Process Simulation</CardTitle>
-              <CardDescription>
-                What-if analysis showing the impact of proposed optimizations
-              </CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart className="h-5 w-5" />
+                Process Simulation Results
+              </CardTitle>
+              <CardDescription>Compare different optimization scenarios</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-3">Scenario</th>
+                      <th className="text-right p-3">Throughput/Month</th>
+                      <th className="text-right p-3">Avg Processing Time</th>
+                      <th className="text-right p-3">Cost per Case</th>
+                      <th className="text-right p-3">Quality Score</th>
+                      <th className="text-right p-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {simulationResults.map((result, index) => (
+                      <tr key={index} className="border-b hover:bg-muted/50">
+                        <td className="p-3 font-medium">{result.scenario}</td>
+                        <td className="p-3 text-right">{result.throughput}</td>
+                        <td className="p-3 text-right">{result.avgTime} days</td>
+                        <td className="p-3 text-right">${result.cost}</td>
+                        <td className="p-3 text-right">{result.quality}%</td>
+                        <td className="p-3 text-right">
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">Simulation Insights</h4>
+                <ul className="text-sm space-y-1">
+                  <li>• Combined optimizations show 71% improvement in throughput</li>
+                  <li>• Quality score increases by 9% with automated processes</li>
+                  <li>• Cost per case reduces by 39% with full implementation</li>
+                  <li>• ROI break-even expected in 8.3 months</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="implementation">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Implementation Roadmap
+              </CardTitle>
+              <CardDescription>Phased approach to process optimization</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-medium mb-4 flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4" />
-                      Current State
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Avg Duration</span>
-                        <span className="font-medium">{simulationResults.current.avgDuration}</span>
+                {implementationPlan.map((phase, index) => (
+                  <div key={index} className="relative">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        {index + 1}
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Throughput</span>
-                        <span className="font-medium">{simulationResults.current.throughput}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Cost per Case</span>
-                        <span className="font-medium">{simulationResults.current.cost}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Satisfaction</span>
-                        <span className="font-medium">{simulationResults.current.satisfaction}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold">{phase.phase}: {phase.title}</h3>
+                          <Badge variant="outline">{phase.duration}</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {phase.items.map((item, itemIndex) => (
+                            <div key={itemIndex} className="flex items-center gap-2 p-2 border rounded-md">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <span className="text-sm">{item}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
+                    {index < implementationPlan.length - 1 && (
+                      <div className="absolute left-4 top-8 w-0.5 h-6 bg-border"></div>
+                    )}
                   </div>
-                  
-                  <div className="p-4 border rounded-lg bg-green-50 border-green-200">
-                    <h3 className="font-medium mb-4 flex items-center gap-2 text-green-900">
-                      <Target className="h-4 w-4" />
-                      Optimized State
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-green-700">Avg Duration</span>
-                        <span className="font-medium text-green-900">{simulationResults.optimized.avgDuration}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-green-700">Throughput</span>
-                        <span className="font-medium text-green-900">{simulationResults.optimized.throughput}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-green-700">Cost per Case</span>
-                        <span className="font-medium text-green-900">{simulationResults.optimized.cost}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-green-700">Satisfaction</span>
-                        <span className="font-medium text-green-900">{simulationResults.optimized.satisfaction}</span>
-                      </div>
-                    </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 flex justify-between items-center">
+                <div className="text-sm text-muted-foreground">
+                  Total timeline: 24 weeks • Expected ROI: 280%
+                </div>
+                <Button>
+                  <Play className="h-4 w-4 mr-2" />
+                  Start Implementation
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="monitoring">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Optimization Monitoring
+              </CardTitle>
+              <CardDescription>Track the impact of implemented optimizations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2">Active Optimizations</h4>
+                    <div className="text-2xl font-bold text-green-600">3</div>
+                    <div className="text-sm text-muted-foreground">Currently running</div>
+                  </div>
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2">Realized Savings</h4>
+                    <div className="text-2xl font-bold text-green-600">$73K</div>
+                    <div className="text-sm text-muted-foreground">This quarter</div>
+                  </div>
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2">Performance Gain</h4>
+                    <div className="text-2xl font-bold text-blue-600">+24%</div>
+                    <div className="text-sm text-muted-foreground">vs baseline</div>
                   </div>
                 </div>
                 
-                <div className="text-center">
-                  <Button className="gap-2">
-                    <Lightbulb className="h-4 w-4" />
-                    Run Advanced Simulation
-                  </Button>
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-4">Recent Optimization Results</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">Parallel Document Processing</div>
+                        <div className="text-sm text-muted-foreground">Implemented 2 weeks ago</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-green-600">+18% efficiency</div>
+                        <div className="text-sm text-muted-foreground">$12K saved</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">Smart Case Routing</div>
+                        <div className="text-sm text-muted-foreground">Implemented 1 month ago</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-blue-600">+15% throughput</div>
+                        <div className="text-sm text-muted-foreground">$8K saved</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="roadmap">
-          <Card>
-            <CardHeader>
-              <CardTitle>Implementation Roadmap</CardTitle>
-              <CardDescription>
-                Phased approach to implementing optimization recommendations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {implementationRoadmap.map((phase, index) => (
-                  <div key={index} className="relative">
-                    {index < implementationRoadmap.length - 1 && (
-                      <div className="absolute left-6 top-12 w-0.5 h-20 bg-border" />
-                    )}
-                    
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        phase.status === "ready" ? "bg-green-100 text-green-600" :
-                        phase.status === "planned" ? "bg-blue-100 text-blue-600" :
-                        "bg-gray-100 text-gray-600"
-                      }`}>
-                        {phase.status === "ready" ? <CheckCircle className="h-5 w-5" /> :
-                         phase.status === "planned" ? <ArrowRight className="h-5 w-5" /> :
-                         <Clock className="h-5 w-5" />}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium">{phase.phase}</h3>
-                          <Badge variant={phase.status === "ready" ? "default" : phase.status === "planned" ? "secondary" : "outline"}>
-                            {phase.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Duration: </span>
-                            <span className="font-medium">{phase.duration}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Expected Impact: </span>
-                            <span className="font-medium">{phase.impact}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Initiatives: </span>
-                            <span className="font-medium">{phase.initiatives.length}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3">
-                          <div className="text-sm text-muted-foreground mb-1">Key Initiatives:</div>
-                          <div className="flex flex-wrap gap-1">
-                            {phase.initiatives.map((initiative, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">
-                                {initiative}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bottlenecks">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bottleneck Analysis</CardTitle>
-              <CardDescription>
-                Identify and optimize the most constraining activities in your process
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {bottleneckAnalysis.map((bottleneck, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium">{bottleneck.activity}</h3>
-                      <Badge variant="destructive">Bottleneck</Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div className="text-center p-2 bg-red-50 rounded">
-                        <div className="text-sm font-medium text-red-600">{bottleneck.currentTime}</div>
-                        <div className="text-xs text-red-700">Current Time</div>
-                      </div>
-                      <div className="text-center p-2 bg-yellow-50 rounded">
-                        <div className="text-sm font-medium text-yellow-600">{bottleneck.waitTime}</div>
-                        <div className="text-xs text-yellow-700">Wait Time</div>
-                      </div>
-                      <div className="text-center p-2 bg-green-50 rounded">
-                        <div className="text-sm font-medium text-green-600">{bottleneck.expectedReduction}</div>
-                        <div className="text-xs text-green-700">Reduction</div>
-                      </div>
-                      <div className="text-center p-2 bg-blue-50 rounded">
-                        <div className="text-sm font-medium text-blue-600">High</div>
-                        <div className="text-xs text-blue-700">Priority</div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3 bg-blue-50 rounded border border-blue-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Lightbulb className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-900">Optimization Strategy</span>
-                      </div>
-                      <p className="text-sm text-blue-700">{bottleneck.optimization}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>

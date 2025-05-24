@@ -1,59 +1,55 @@
 
 import React from "react";
-import { User, Clock, Tag, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { RepositoryItemType } from "@/types/repository";
+import { useVoice } from "@/contexts/VoiceContext";
 
 interface DetailsTabProps {
-  item: {
-    owner: string;
-    lastModified: string;
-    type: string;
-    status?: string;
-  };
+  item: RepositoryItemType;
 }
 
 export function DetailsTab({ item }: DetailsTabProps) {
+  const { speakText } = useVoice();
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <div className="text-sm font-medium flex items-center gap-2">
-            <User className="h-4 w-4 text-muted-foreground" />
-            Owner
-          </div>
-          <div className="text-sm">{item.owner}</div>
-        </div>
-        <div className="space-y-1">
-          <div className="text-sm font-medium flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            Last Modified
-          </div>
-          <div className="text-sm">{item.lastModified}</div>
-        </div>
-        {item.type !== "folder" && (
-          <>
-            <div className="space-y-1">
-              <div className="text-sm font-medium flex items-center gap-2">
-                <Tag className="h-4 w-4 text-muted-foreground" />
-                Type
-              </div>
-              <div className="text-sm">{item.type.toUpperCase()}</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-sm font-medium flex items-center gap-2">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                Status
-              </div>
-              <div className="text-sm">{item.status || "N/A"}</div>
-            </div>
-          </>
-        )}
+    <div 
+      className="space-y-4"
+      onMouseEnter={() => speakText(`Viewing details for ${item.name}. This section shows comprehensive information about the item including description, metadata, and classification.`)}
+    >
+      <div>
+        <h4 className="font-medium mb-2">Description</h4>
+        <p className="text-sm text-muted-foreground">{item.description}</p>
       </div>
-      
-      {item.type !== "folder" && (
-        <div className="mt-6 p-4 border rounded-md">
-          <p className="text-sm">Preview not available in this view.</p>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <h4 className="font-medium mb-2">Owner</h4>
+          <p className="text-sm">{item.owner}</p>
         </div>
-      )}
+        <div>
+          <h4 className="font-medium mb-2">Category</h4>
+          <p className="text-sm">{item.category}</p>
+        </div>
+        <div>
+          <h4 className="font-medium mb-2">Size</h4>
+          <p className="text-sm">{item.size}</p>
+        </div>
+        <div>
+          <h4 className="font-medium mb-2">Last Modified</h4>
+          <p className="text-sm">{new Date(item.lastModified).toLocaleString()}</p>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-2">Tags</h4>
+        <div className="flex flex-wrap gap-2">
+          {item.tags.map((tag, index) => (
+            <Badge key={index} variant="outline">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,28 @@
 
-export type RepositoryItemType = {
+export interface RepositoryItemType {
+  id: string;
   name: string;
-  type: "folder" | "bpmn" | "journey" | "dmn" | "document";
+  type: "process" | "model" | "template" | "framework" | "document";
+  description: string;
   owner: string;
   lastModified: string;
-  version?: string;
-  status?: "Draft" | "In Review" | "Approved" | "Published";
-};
+  category: string;
+  tags: string[];
+  version: string;
+  status: "active" | "draft" | "archived";
+  size: string;
+}
+
+export interface RepositoryStats {
+  totalItems: number;
+  processesByCategory: Record<string, number>;
+  recentActivity: ActivityItem[];
+}
+
+export interface ActivityItem {
+  id: string;
+  action: string;
+  item: string;
+  user: string;
+  timestamp: string;
+}

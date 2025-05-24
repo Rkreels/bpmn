@@ -1,45 +1,37 @@
 
 import React from "react";
-import { DialogTitle } from "@/components/ui/dialog";
-import { FileText, GitMerge, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RepositoryItemType } from "@/types/repository";
+import { FileText, Folder, Settings } from "lucide-react";
 
 interface ItemHeaderProps {
-  item: {
-    name: string;
-    type: string;
-    version?: string;
-    status?: string;
-  };
+  item: RepositoryItemType;
 }
 
 export function ItemHeader({ item }: ItemHeaderProps) {
-  const getIcon = () => {
-    switch (item.type) {
-      case "bpmn":
-        return <GitMerge className="h-6 w-6 text-enterprise-blue-600" />;
-      case "journey":
-        return <Users className="h-6 w-6 text-enterprise-blue-600" />;
-      case "dmn":
-        return <FileText className="h-6 w-6 text-status-warning" />;
-      default:
-        return <FileText className="h-6 w-6 text-enterprise-gray-600" />;
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "process": return <FileText className="h-6 w-6 text-blue-500" />;
+      case "model": return <Settings className="h-6 w-6 text-green-500" />;
+      case "template": return <Folder className="h-6 w-6 text-purple-500" />;
+      case "framework": return <Settings className="h-6 w-6 text-orange-500" />;
+      default: return <FileText className="h-6 w-6 text-gray-500" />;
     }
   };
 
   return (
-    <div className="flex flex-row items-center space-y-0 gap-3">
-      <div className="p-2 bg-muted/40 rounded-md">{getIcon()}</div>
+    <div className="flex items-center gap-3">
+      {getIcon(item.type)}
       <div className="flex-1">
-        <DialogTitle className="text-xl">{item.name}</DialogTitle>
+        <h2 className="text-xl font-semibold">{item.name}</h2>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-muted-foreground">
-            {item.type !== "folder" && item.type.toUpperCase()}
+          <Badge variant="outline">{item.type}</Badge>
+          <Badge variant={item.status === "active" ? "default" : "secondary"}>
+            {item.status}
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            Version {item.version}
           </span>
-          {item.version && (
-            <span className="text-xs bg-muted px-1.5 py-0.5 rounded">v{item.version}</span>
-          )}
-          {item.status && <Badge>{item.status}</Badge>}
         </div>
       </div>
     </div>

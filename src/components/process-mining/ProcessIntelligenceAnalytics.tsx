@@ -1,279 +1,311 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { useVoice } from "@/contexts/VoiceContext";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, PieChart, Pie, Cell, Area, AreaChart
+} from "recharts";
 import { 
   TrendingUp, 
-  TrendingDown, 
-  Activity, 
+  AlertCircle, 
   Clock, 
-  Users, 
-  AlertTriangle,
-  CheckCircle,
-  BarChart3,
-  PieChart,
-  LineChart
+  Activity,
+  DollarSign,
+  Users,
+  Target,
+  Zap
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, LineChart as RechartsLineChart, Line, Pie } from "recharts";
 
 export const ProcessIntelligenceAnalytics: React.FC = () => {
+  const { speakText } = useVoice();
+  const [selectedTimeframe, setSelectedTimeframe] = useState("last30days");
+
   const kpiData = [
-    { name: "Process Efficiency", value: 87, trend: "up", change: "+12%" },
-    { name: "Automation Rate", value: 64, trend: "up", change: "+8%" },
-    { name: "Compliance Score", value: 92, trend: "down", change: "-3%" },
-    { name: "Cost Reduction", value: 78, trend: "up", change: "+15%" }
+    { name: "Process Efficiency", value: 87, target: 90, status: "warning" },
+    { name: "SLA Compliance", value: 94, target: 95, status: "good" },
+    { name: "Cost per Case", value: 125, target: 110, status: "alert" },
+    { name: "Customer Satisfaction", value: 4.6, target: 4.5, status: "excellent" }
   ];
 
-  const processPerformanceData = [
-    { month: "Jan", avgDuration: 3.2, cases: 1240, efficiency: 82 },
-    { month: "Feb", avgDuration: 2.9, cases: 1350, efficiency: 85 },
-    { month: "Mar", avgDuration: 2.7, cases: 1420, efficiency: 88 },
-    { month: "Apr", avgDuration: 2.5, cases: 1380, efficiency: 90 },
-    { month: "May", avgDuration: 2.3, cases: 1450, efficiency: 92 },
-    { month: "Jun", avgDuration: 2.1, cases: 1520, efficiency: 94 }
+  const performanceTrends = [
+    { date: "Jan", efficiency: 82, compliance: 89, cost: 140, satisfaction: 4.2 },
+    { date: "Feb", efficiency: 84, compliance: 91, cost: 135, satisfaction: 4.3 },
+    { date: "Mar", efficiency: 86, compliance: 93, cost: 130, satisfaction: 4.4 },
+    { date: "Apr", efficiency: 87, compliance: 94, cost: 125, satisfaction: 4.6 },
+    { date: "May", efficiency: 87, compliance: 94, cost: 125, satisfaction: 4.6 }
+  ];
+
+  const processBreakdown = [
+    { name: "Order Processing", cases: 1250, avgTime: 2.3, efficiency: 92 },
+    { name: "Customer Onboarding", cases: 340, avgTime: 4.1, efficiency: 88 },
+    { name: "Issue Resolution", cases: 890, avgTime: 1.8, efficiency: 85 },
+    { name: "Invoice Processing", cases: 450, avgTime: 3.2, efficiency: 90 },
+    { name: "Product Returns", cases: 220, avgTime: 5.5, efficiency: 78 }
   ];
 
   const bottleneckData = [
-    { name: "Approval Queue", value: 35, color: "#ef4444" },
-    { name: "Document Review", value: 28, color: "#f59e0b" },
-    { name: "System Integration", value: 20, color: "#eab308" },
-    { name: "Manual Entry", value: 17, color: "#22c55e" }
-  ];
-
-  const processIssues = [
-    { type: "Critical", count: 12, description: "SLA violations detected", icon: AlertTriangle, color: "destructive" },
-    { type: "Warning", count: 28, description: "Performance degradation", icon: TrendingDown, color: "warning" },
-    { type: "Info", count: 45, description: "Optimization opportunities", icon: TrendingUp, color: "secondary" },
-    { type: "Resolved", count: 156, description: "Issues resolved this month", icon: CheckCircle, color: "success" }
+    { process: "Credit Approval", impact: "High", delay: "2.3 days", cases: 450 },
+    { process: "Manager Review", impact: "Medium", delay: "1.1 days", cases: 320 },
+    { process: "Document Verification", impact: "High", delay: "3.2 days", cases: 180 },
+    { process: "Quality Check", impact: "Low", delay: "0.8 days", cases: 890 }
   ];
 
   return (
-    <div className="space-y-6">
+    <div 
+      className="space-y-6"
+      onMouseEnter={() => speakText("Process Intelligence Analytics. This overview dashboard provides key insights into your process performance, bottlenecks, and optimization opportunities. Monitor KPIs, track trends, and identify areas for improvement.")}
+    >
       {/* KPI Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiData.map((kpi, index) => (
           <Card key={index}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{kpi.name}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-2xl font-bold">{kpi.value}%</span>
-                    <Badge variant={kpi.trend === "up" ? "default" : "destructive"} className="text-xs">
-                      {kpi.trend === "up" ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                      {kpi.change}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="w-16 h-16">
-                  <Progress value={kpi.value} className="rotate-90 w-16" />
-                </div>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground">{kpi.name}</h3>
+                <Badge variant={
+                  kpi.status === "excellent" ? "default" :
+                  kpi.status === "good" ? "secondary" :
+                  kpi.status === "warning" ? "outline" : "destructive"
+                }>
+                  {kpi.status}
+                </Badge>
+              </div>
+              <div className="text-2xl font-bold">{kpi.value}{kpi.name.includes("Cost") ? "$" : kpi.name.includes("Satisfaction") ? "/5" : "%"}</div>
+              <div className="text-xs text-muted-foreground">
+                Target: {kpi.target}{kpi.name.includes("Cost") ? "$" : kpi.name.includes("Satisfaction") ? "/5" : "%"}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Main Analytics Dashboard */}
+      {/* Main Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Process Performance Trends */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LineChart className="h-5 w-5" />
-              Process Performance Trends
-            </CardTitle>
-            <CardDescription>
-              Track key performance indicators over time
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="duration" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="duration">Duration</TabsTrigger>
-                <TabsTrigger value="volume">Volume</TabsTrigger>
-                <TabsTrigger value="efficiency">Efficiency</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="duration" className="mt-6">
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsLineChart data={processPerformanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="avgDuration" stroke="#8884d8" strokeWidth={2} />
-                  </RechartsLineChart>
-                </ResponsiveContainer>
-              </TabsContent>
-              
-              <TabsContent value="volume" className="mt-6">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={processPerformanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="cases" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </TabsContent>
-              
-              <TabsContent value="efficiency" className="mt-6">
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsLineChart data={processPerformanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="efficiency" stroke="#ffc658" strokeWidth={2} />
-                  </RechartsLineChart>
-                </ResponsiveContainer>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Process Bottlenecks */}
+        {/* Performance Trends */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              Process Bottlenecks
+              <TrendingUp className="h-5 w-5" />
+              Performance Trends
             </CardTitle>
-            <CardDescription>
-              Identify areas causing delays in your processes
-            </CardDescription>
+            <CardDescription>Key metrics over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <RechartsPieChart>
-                <Pie
-                  dataKey="value"
-                  data={bottleneckData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {bottleneckData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={performanceTrends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
                 <Tooltip />
-              </RechartsPieChart>
+                <Line type="monotone" dataKey="efficiency" stroke="#8884d8" name="Efficiency %" />
+                <Line type="monotone" dataKey="compliance" stroke="#82ca9d" name="Compliance %" />
+              </LineChart>
             </ResponsiveContainer>
-            
-            <div className="mt-4 space-y-2">
-              {bottleneckData.map((item, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span>{item.name}</span>
-                  </div>
-                  <span className="font-medium">{item.value}%</span>
-                </div>
-              ))}
-            </div>
           </CardContent>
         </Card>
 
-        {/* Process Issues & Alerts */}
+        {/* Process Breakdown */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Process Issues & Alerts
+              <Activity className="h-5 w-5" />
+              Process Performance
             </CardTitle>
-            <CardDescription>
-              Monitor and track process issues in real-time
-            </CardDescription>
+            <CardDescription>Performance by process type</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {processIssues.map((issue, index) => {
-                const Icon = issue.icon;
-                return (
-                  <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
-                    <div className={`p-2 rounded-full ${
-                      issue.color === "destructive" ? "bg-red-100 text-red-600" :
-                      issue.color === "warning" ? "bg-yellow-100 text-yellow-600" :
-                      issue.color === "success" ? "bg-green-100 text-green-600" :
-                      "bg-blue-100 text-blue-600"
-                    }`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{issue.type}</span>
-                        <Badge variant="outline">{issue.count}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{issue.description}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={processBreakdown}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="cases" fill="#8884d8" name="Cases" />
+                <Bar dataKey="efficiency" fill="#82ca9d" name="Efficiency %" />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Process Intelligence Insights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            AI-Powered Insights
-          </CardTitle>
-          <CardDescription>
-            Intelligent recommendations for process optimization
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-blue-900">Efficiency Opportunity</span>
+      {/* Detailed Analysis */}
+      <Tabs defaultValue="bottlenecks" className="w-full">
+        <TabsList>
+          <TabsTrigger value="bottlenecks">Bottlenecks</TabsTrigger>
+          <TabsTrigger value="optimization">Optimization</TabsTrigger>
+          <TabsTrigger value="insights">AI Insights</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="bottlenecks">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5" />
+                Process Bottlenecks
+              </CardTitle>
+              <CardDescription>Identified delays and constraints in your processes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Process Step</th>
+                      <th className="text-right p-2">Impact</th>
+                      <th className="text-right p-2">Avg Delay</th>
+                      <th className="text-right p-2">Affected Cases</th>
+                      <th className="text-right p-2">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bottleneckData.map((bottleneck, index) => (
+                      <tr key={index} className="border-b hover:bg-muted/50">
+                        <td className="p-2 font-medium">{bottleneck.process}</td>
+                        <td className="p-2 text-right">
+                          <Badge variant={
+                            bottleneck.impact === "High" ? "destructive" :
+                            bottleneck.impact === "Medium" ? "outline" : "secondary"
+                          }>
+                            {bottleneck.impact}
+                          </Badge>
+                        </td>
+                        <td className="p-2 text-right">{bottleneck.delay}</td>
+                        <td className="p-2 text-right">{bottleneck.cases}</td>
+                        <td className="p-2 text-right">
+                          <Button variant="outline" size="sm">
+                            Optimize
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <p className="text-sm text-blue-700">
-                Automate approval process to reduce average duration by 35%
-              </p>
-              <Badge className="mt-2 bg-blue-600">High Impact</Badge>
-            </div>
-            
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-green-600" />
-                <span className="font-medium text-green-900">Resource Optimization</span>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="optimization">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                Optimization Opportunities
+              </CardTitle>
+              <CardDescription>AI-powered recommendations for process improvement</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-2">Automate Credit Approval</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Implement automated credit scoring to reduce manual review time by 70%
+                  </p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-green-600">Potential savings: $45K/year</span>
+                    <span className="text-blue-600">Time reduction: 1.8 days</span>
+                    <Button variant="outline" size="sm">Implement</Button>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-2">Parallel Processing</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Run document verification and quality checks in parallel
+                  </p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-green-600">Potential savings: $28K/year</span>
+                    <span className="text-blue-600">Time reduction: 1.2 days</span>
+                    <Button variant="outline" size="sm">Implement</Button>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-2">Smart Routing</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Route high-priority cases automatically based on customer tier
+                  </p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-green-600">Potential savings: $32K/year</span>
+                    <span className="text-blue-600">SLA improvement: +8%</span>
+                    <Button variant="outline" size="sm">Implement</Button>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-green-700">
-                Redistribute workload to reduce bottlenecks in Q3
-              </p>
-              <Badge className="mt-2 bg-green-600">Medium Impact</Badge>
-            </div>
-            
-            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-yellow-600" />
-                <span className="font-medium text-yellow-900">Compliance Alert</span>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="insights">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                AI-Powered Insights
+              </CardTitle>
+              <CardDescription>Advanced analytics and predictive insights</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                      Performance Prediction
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Process efficiency likely to improve 5% next month based on current optimization efforts
+                    </p>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-orange-500" />
+                      Risk Alert
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Increased case volume detected - recommend scaling approval team by 2 people
+                    </p>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <Users className="h-4 w-4 text-blue-500" />
+                      Resource Optimization
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Sarah Chen handles 23% more cases efficiently - consider her best practices for training
+                    </p>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-purple-500" />
+                      Cost Impact
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Reducing manual approvals could save $156K annually while improving customer satisfaction
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4 bg-blue-50">
+                  <h4 className="font-medium mb-2">Weekly Insight</h4>
+                  <p className="text-sm">
+                    Your process performance has improved 12% over the last quarter. The main drivers are 
+                    automated document processing (40% contribution) and streamlined approval workflows (35% contribution). 
+                    Consider expanding automation to similar processes for additional gains.
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-yellow-700">
-                Review SLA thresholds for critical processes
-              </p>
-              <Badge className="mt-2 bg-yellow-600">Low Impact</Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

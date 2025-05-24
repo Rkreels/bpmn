@@ -3,208 +3,87 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ChevronRight, 
-  ChevronDown, 
-  Folder, 
-  FolderOpen, 
-  FileText,
-  Plus,
-  Move,
-  Edit,
-  Trash2,
-  Settings,
-  BarChart3
-} from "lucide-react";
+import { useVoice } from "@/contexts/VoiceContext";
+import { ChevronRight, ChevronDown, Folder, FileText, Settings } from "lucide-react";
 
 interface HierarchyNode {
   id: string;
   name: string;
   type: "folder" | "process" | "model";
   children?: HierarchyNode[];
-  isExpanded?: boolean;
-  metadata?: {
-    owner?: string;
-    lastModified?: string;
-    status?: string;
-    category?: string;
-    processCount?: number;
-  };
+  expanded?: boolean;
 }
 
-export const ProcessHierarchy: React.FC = () => {
-  const [hierarchy, setHierarchy] = useState<HierarchyNode[]>([
+export function ProcessHierarchy() {
+  const { speakText } = useVoice();
+  const [hierarchyData, setHierarchyData] = useState<HierarchyNode[]>([
     {
-      id: "core-processes",
+      id: "1",
       name: "Core Business Processes",
       type: "folder",
-      isExpanded: true,
-      metadata: { processCount: 12 },
+      expanded: true,
       children: [
         {
-          id: "order-management",
+          id: "1-1",
+          name: "Sales & Marketing",
+          type: "folder",
+          expanded: false,
+          children: [
+            { id: "1-1-1", name: "Lead Generation Process", type: "process" },
+            { id: "1-1-2", name: "Sales Qualification Model", type: "model" },
+            { id: "1-1-3", name: "Customer Onboarding", type: "process" }
+          ]
+        },
+        {
+          id: "1-2",
           name: "Order Management",
           type: "folder",
-          isExpanded: false,
-          metadata: { processCount: 5 },
+          expanded: false,
           children: [
-            {
-              id: "order-to-cash",
-              name: "Order to Cash Process",
-              type: "process",
-              metadata: {
-                owner: "Sarah Chen",
-                lastModified: "2 days ago",
-                status: "Published",
-                category: "Core Process"
-              }
-            },
-            {
-              id: "order-fulfillment",
-              name: "Order Fulfillment",
-              type: "process",
-              metadata: {
-                owner: "Mike Rodriguez",
-                lastModified: "1 week ago",
-                status: "In Review",
-                category: "Core Process"
-              }
-            }
-          ]
-        },
-        {
-          id: "customer-service",
-          name: "Customer Service",
-          type: "folder",
-          isExpanded: true,
-          metadata: { processCount: 4 },
-          children: [
-            {
-              id: "complaint-handling",
-              name: "Complaint Handling Process",
-              type: "process",
-              metadata: {
-                owner: "Lisa Wang",
-                lastModified: "3 days ago",
-                status: "Published",
-                category: "Customer Service"
-              }
-            },
-            {
-              id: "customer-onboarding",
-              name: "Customer Onboarding",
-              type: "process",
-              metadata: {
-                owner: "David Park",
-                lastModified: "1 day ago",
-                status: "Draft",
-                category: "Customer Service"
-              }
-            }
+            { id: "1-2-1", name: "Order Processing", type: "process" },
+            { id: "1-2-2", name: "Inventory Management", type: "process" },
+            { id: "1-2-3", name: "Fulfillment Process", type: "process" }
           ]
         }
       ]
     },
     {
-      id: "support-processes",
+      id: "2",
       name: "Support Processes",
       type: "folder",
-      isExpanded: false,
-      metadata: { processCount: 8 },
+      expanded: true,
       children: [
         {
-          id: "hr-processes",
+          id: "2-1",
           name: "Human Resources",
           type: "folder",
-          isExpanded: false,
-          metadata: { processCount: 6 },
+          expanded: false,
           children: [
-            {
-              id: "employee-onboarding",
-              name: "Employee Onboarding",
-              type: "process",
-              metadata: {
-                owner: "HR Department",
-                lastModified: "1 week ago",
-                status: "Published",
-                category: "HR Process"
-              }
-            },
-            {
-              id: "performance-review",
-              name: "Performance Review Process",
-              type: "process",
-              metadata: {
-                owner: "HR Department",
-                lastModified: "2 weeks ago",
-                status: "Published",
-                category: "HR Process"
-              }
-            }
+            { id: "2-1-1", name: "Employee Onboarding", type: "process" },
+            { id: "2-1-2", name: "Performance Review", type: "process" },
+            { id: "2-1-3", name: "Leave Management", type: "process" }
           ]
         },
         {
-          id: "it-processes",
-          name: "IT Operations",
+          id: "2-2",
+          name: "Finance & Accounting",
           type: "folder",
-          isExpanded: false,
-          metadata: { processCount: 2 },
+          expanded: false,
           children: [
-            {
-              id: "incident-management",
-              name: "Incident Management",
-              type: "process",
-              metadata: {
-                owner: "IT Department",
-                lastModified: "5 days ago",
-                status: "Published",
-                category: "IT Process"
-              }
-            }
+            { id: "2-2-1", name: "Invoice Processing", type: "process" },
+            { id: "2-2-2", name: "Expense Approval", type: "process" },
+            { id: "2-2-3", name: "Financial Reporting", type: "model" }
           ]
-        }
-      ]
-    },
-    {
-      id: "compliance-processes",
-      name: "Compliance & Governance",
-      type: "folder",
-      isExpanded: false,
-      metadata: { processCount: 5 },
-      children: [
-        {
-          id: "audit-process",
-          name: "Internal Audit Process",
-          type: "process",
-          metadata: {
-            owner: "Compliance Team",
-            lastModified: "1 week ago",
-            status: "Published",
-            category: "Compliance"
-          }
-        },
-        {
-          id: "risk-assessment",
-          name: "Risk Assessment",
-          type: "process",
-          metadata: {
-            owner: "Risk Management",
-            lastModified: "3 days ago",
-            status: "In Review",
-            category: "Risk Management"
-          }
         }
       ]
     }
   ]);
 
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-
-  const toggleExpanded = (nodeId: string) => {
+  const toggleNode = (nodeId: string) => {
     const updateNode = (nodes: HierarchyNode[]): HierarchyNode[] => {
       return nodes.map(node => {
         if (node.id === nodeId) {
-          return { ...node, isExpanded: !node.isExpanded };
+          return { ...node, expanded: !node.expanded };
         }
         if (node.children) {
           return { ...node, children: updateNode(node.children) };
@@ -212,114 +91,58 @@ export const ProcessHierarchy: React.FC = () => {
         return node;
       });
     };
-    setHierarchy(updateNode(hierarchy));
+
+    setHierarchyData(updateNode(hierarchyData));
   };
 
-  const getStatusBadge = (status?: string) => {
-    if (!status) return null;
-    
-    const variants = {
-      "Published": "default",
-      "In Review": "secondary",
-      "Draft": "outline",
-      "Archived": "destructive"
-    } as const;
-    
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || "outline"} className="text-xs">
-        {status}
-      </Badge>
-    );
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "folder": return <Folder className="h-4 w-4 text-blue-500" />;
+      case "process": return <FileText className="h-4 w-4 text-green-500" />;
+      case "model": return <Settings className="h-4 w-4 text-purple-500" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
   };
 
-  const renderNode = (node: HierarchyNode, level: number = 0) => {
-    const isSelected = selectedNode === node.id;
+  const renderHierarchyNode = (node: HierarchyNode, level: number = 0) => {
     const hasChildren = node.children && node.children.length > 0;
-    
+    const isExpanded = node.expanded;
+
     return (
       <div key={node.id} className="select-none">
-        <div
-          className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted/50 ${
-            isSelected ? "bg-primary/10 border border-primary/20" : ""
-          }`}
+        <div 
+          className={`flex items-center gap-2 p-2 hover:bg-muted/50 rounded cursor-pointer`}
           style={{ paddingLeft: `${level * 20 + 8}px` }}
-          onClick={() => setSelectedNode(node.id)}
+          onClick={() => {
+            if (hasChildren) {
+              toggleNode(node.id);
+            }
+            speakText(`${node.type === 'folder' ? 'Folder' : node.type} ${node.name}. ${hasChildren ? (isExpanded ? 'Click to collapse' : 'Click to expand') : 'Process item'}.`);
+          }}
+          onMouseEnter={() => speakText(`${node.name}. ${node.type === 'folder' ? 'Contains sub-processes and models' : 'Individual process or model'}.`)}
         >
-          {/* Expand/Collapse Button */}
           {hasChildren ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpanded(node.id);
-              }}
-            >
-              {node.isExpanded ? (
-                <ChevronDown className="h-3 w-3" />
-              ) : (
-                <ChevronRight className="h-3 w-3" />
-              )}
-            </Button>
+            isExpanded ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )
           ) : (
             <div className="w-4" />
           )}
-
-          {/* Icon */}
-          <div className="flex-shrink-0">
-            {node.type === "folder" ? (
-              node.isExpanded ? (
-                <FolderOpen className="h-4 w-4 text-blue-500" />
-              ) : (
-                <Folder className="h-4 w-4 text-blue-500" />
-              )
-            ) : (
-              <FileText className="h-4 w-4 text-gray-500" />
-            )}
-          </div>
-
-          {/* Name and Metadata */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-medium truncate">{node.name}</span>
-              {node.type === "folder" && node.metadata?.processCount && (
-                <Badge variant="outline" className="text-xs">
-                  {node.metadata.processCount}
-                </Badge>
-              )}
-              {getStatusBadge(node.metadata?.status)}
-            </div>
-            {node.metadata && node.type === "process" && (
-              <div className="text-xs text-muted-foreground mt-1">
-                {node.metadata.owner} • {node.metadata.lastModified}
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          {isSelected && (
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Plus className="h-3 w-3" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Edit className="h-3 w-3" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Move className="h-3 w-3" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
+          
+          {getIcon(node.type)}
+          
+          <span className="font-medium text-sm">{node.name}</span>
+          
+          <Badge variant="outline" className="text-xs ml-auto">
+            {node.type}
+          </Badge>
         </div>
-
-        {/* Children */}
-        {hasChildren && node.isExpanded && (
+        
+        {hasChildren && isExpanded && (
           <div>
-            {node.children!.map(child => renderNode(child, level + 1))}
+            {node.children!.map(child => renderHierarchyNode(child, level + 1))}
           </div>
         )}
       </div>
@@ -327,49 +150,31 @@ export const ProcessHierarchy: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card onMouseEnter={() => speakText("Process hierarchy view. This shows your processes organized in a tree structure by business domain and category. Expand folders to explore sub-processes and models.")}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Process Hierarchy
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Plus className="h-3 w-3 mr-2" />
-              Add Folder
-            </Button>
-            <Button variant="outline" size="sm">
-              <Settings className="h-3 w-3 mr-2" />
-              Manage
-            </Button>
-          </div>
-        </div>
+        <CardTitle>Process Hierarchy</CardTitle>
       </CardHeader>
-      
       <CardContent>
-        <div className="space-y-1 max-h-96 overflow-y-auto">
-          {hierarchy.map(node => renderNode(node))}
+        <div className="space-y-1">
+          {hierarchyData.map(node => renderHierarchyNode(node))}
         </div>
-
-        {/* Quick Stats */}
-        <div className="mt-4 pt-4 border-t">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold">25</div>
-              <div className="text-xs text-muted-foreground">Total Processes</div>
+        
+        <div className="mt-6 pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Process hierarchy helps organize and navigate your process library
             </div>
-            <div>
-              <div className="text-2xl font-bold">8</div>
-              <div className="text-xs text-muted-foreground">Categories</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">12</div>
-              <div className="text-xs text-muted-foreground">Contributors</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                Expand All
+              </Button>
+              <Button variant="outline" size="sm">
+                Collapse All
+              </Button>
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
   );
-};
+}
