@@ -5,8 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useToast } from "@/hooks/use-toast";
 import { CustomerJourneyCanvas } from "./CustomerJourneyCanvas";
 import { PersonaManagement } from "./PersonaManagement";
+import { TouchpointManager } from "./TouchpointManager";
+import { JourneyAnalytics } from "./JourneyAnalytics";
+import { JourneyLibrary } from "./JourneyLibrary";
 import { 
   User, 
   Map, 
@@ -14,11 +18,14 @@ import {
   BarChart3,
   Plus,
   Download,
-  Share2
+  Share2,
+  FileText,
+  Settings
 } from "lucide-react";
 
 export const JourneyModelerDashboard: React.FC = () => {
   const { speakText } = useVoice();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("journeys");
 
   const journeyMetrics = [
@@ -27,6 +34,22 @@ export const JourneyModelerDashboard: React.FC = () => {
     { label: "Touchpoints Mapped", value: "156", change: "+24", trend: "up" },
     { label: "Journey Completion", value: "87%", change: "+5%", trend: "up" }
   ];
+
+  const handleNewJourney = () => {
+    toast({
+      title: "Creating New Journey",
+      description: "Opening journey builder..."
+    });
+    speakText("Creating a new customer journey. Journey mapping helps visualize the complete customer experience from initial awareness through advocacy.");
+  };
+
+  const handleExport = () => {
+    toast({
+      title: "Export Started",
+      description: "Preparing journey maps for export..."
+    });
+    speakText("Exporting journey maps. This includes all touchpoints, personas, and analytics data for stakeholder sharing.");
+  };
 
   return (
     <div 
@@ -41,7 +64,7 @@ export const JourneyModelerDashboard: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -49,7 +72,7 @@ export const JourneyModelerDashboard: React.FC = () => {
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
-          <Button>
+          <Button onClick={handleNewJourney}>
             <Plus className="h-4 w-4 mr-2" />
             New Journey
           </Button>
@@ -77,7 +100,7 @@ export const JourneyModelerDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="journeys" className="flex items-center gap-2">
             <Map className="h-4 w-4" />
             Journeys
@@ -94,6 +117,10 @@ export const JourneyModelerDashboard: React.FC = () => {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </TabsTrigger>
+          <TabsTrigger value="library" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Library
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="journeys" className="mt-6">
@@ -105,35 +132,15 @@ export const JourneyModelerDashboard: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="touchpoints" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Touchpoint Management</CardTitle>
-              <CardDescription>Manage all customer touchpoints across channels</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Target className="h-12 w-12 mx-auto mb-4" />
-                <p>Touchpoint management interface will be displayed here</p>
-                <p className="text-sm">Map and optimize every customer interaction point</p>
-              </div>
-            </CardContent>
-          </Card>
+          <TouchpointManager />
         </TabsContent>
         
         <TabsContent value="analytics" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Journey Analytics</CardTitle>
-              <CardDescription>Analyze customer journey performance and optimization opportunities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                <p>Journey analytics dashboard will be displayed here</p>
-                <p className="text-sm">Track conversion rates, drop-offs, and satisfaction metrics</p>
-              </div>
-            </CardContent>
-          </Card>
+          <JourneyAnalytics />
+        </TabsContent>
+        
+        <TabsContent value="library" className="mt-6">
+          <JourneyLibrary />
         </TabsContent>
       </Tabs>
     </div>
