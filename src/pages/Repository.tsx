@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { RepositoryContent } from "@/components/repository/RepositoryContent";
 import { AdvancedSearch } from "@/components/repository/AdvancedSearch";
 import { ProcessHierarchy } from "@/components/repository/ProcessHierarchy";
+import { useRepository } from "@/hooks/useRepository";
 import { 
   Database, 
   Search, 
@@ -25,6 +25,15 @@ import {
 
 export default function Repository() {
   const [activeTab, setActiveTab] = useState("browse");
+  const {
+    viewMode,
+    filteredItems,
+    handleViewItem,
+    handleEditItem,
+    handleRenameItem,
+    handleShareItem,
+    handleDownloadItem
+  } = useRepository();
 
   const repositoryMetrics = [
     { label: "Total Assets", value: "156", change: "+12", trend: "up" },
@@ -150,13 +159,29 @@ export default function Repository() {
               </TabsList>
               
               <TabsContent value="browse" className="mt-6">
-                <RepositoryContent />
+                <RepositoryContent
+                  items={filteredItems}
+                  viewMode={viewMode}
+                  onViewItem={handleViewItem}
+                  onEditItem={handleEditItem}
+                  onRenameItem={handleRenameItem}
+                  onShareItem={handleShareItem}
+                  onDownloadItem={handleDownloadItem}
+                />
               </TabsContent>
               
               <TabsContent value="search" className="mt-6">
                 <AdvancedSearch />
                 <div className="mt-6">
-                  <RepositoryContent />
+                  <RepositoryContent
+                    items={filteredItems}
+                    viewMode={viewMode}
+                    onViewItem={handleViewItem}
+                    onEditItem={handleEditItem}
+                    onRenameItem={handleRenameItem}
+                    onShareItem={handleShareItem}
+                    onDownloadItem={handleDownloadItem}
+                  />
                 </div>
               </TabsContent>
               
