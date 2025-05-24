@@ -1,6 +1,8 @@
 
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import { VoiceProvider } from "@/contexts/VoiceContext";
+import { VoiceTrainerProvider } from "@/contexts/VoiceTrainerContext";
 import { VoiceTrainerToggle } from "@/components/voice/VoiceTrainerToggle";
 
 // Import pages
@@ -19,24 +21,28 @@ import NotFound from "@/pages/NotFound";
 
 function App() {
   return (
-    <div className="min-h-screen bg-background">
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/process-manager" element={<ProcessManager />} />
-        <Route path="/journey-modeler" element={<JourneyModeler />} />
-        <Route path="/collaboration-hub" element={<CollaborationHub />} />
-        <Route path="/repository" element={<Repository />} />
-        <Route path="/process-intelligence" element={<ProcessIntelligence />} />
-        <Route path="/process-mining" element={<ProcessMining />} />
-        <Route path="/transformation-cockpit" element={<TransformationCockpit />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <VoiceTrainerToggle />
-      <Toaster />
-    </div>
+    <VoiceProvider>
+      <VoiceTrainerProvider>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/process-manager" element={<ProcessManager />} />
+            <Route path="/journey-modeler" element={<JourneyModeler />} />
+            <Route path="/collaboration-hub" element={<CollaborationHub />} />
+            <Route path="/repository" element={<Repository />} />
+            <Route path="/process-intelligence" element={<ProcessIntelligence />} />
+            <Route path="/process-mining" element={<ProcessMining />} />
+            <Route path="/transformation-cockpit" element={<TransformationCockpit />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <VoiceTrainerToggle />
+          <Toaster />
+        </div>
+      </VoiceTrainerProvider>
+    </VoiceProvider>
   );
 }
 

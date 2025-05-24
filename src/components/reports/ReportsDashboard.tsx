@@ -1,153 +1,253 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useToast } from "@/hooks/use-toast";
+import { ReportActions } from "./ReportActions";
 import { 
+  BarChart3, 
   FileText, 
-  Download, 
-  Calendar,
+  Calendar, 
+  Download,
+  Search,
+  Filter,
   TrendingUp,
-  BarChart3,
-  PieChart
+  Clock,
+  Users
 } from "lucide-react";
+
+interface Report {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  schedule: string;
+  format: string;
+  recipients: string[];
+  lastGenerated: string;
+  status: string;
+}
 
 export const ReportsDashboard: React.FC = () => {
   const { speakText } = useVoice();
-  const [activeTab, setActiveTab] = useState("overview");
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  
+  const [reports, setReports] = useState<Report[]>([
+    {
+      id: "1",
+      name: "Weekly Performance Summary",
+      type: "Performance",
+      description: "Comprehensive performance analysis of all active processes",
+      schedule: "Weekly",
+      format: "PDF",
+      recipients: ["john@company.com", "jane@company.com"],
+      lastGenerated: "2 days ago",
+      status: "Active"
+    },
+    {
+      id: "2",
+      name: "Compliance Audit Report",
+      type: "Compliance",
+      description: "Monthly compliance check against regulatory requirements",
+      schedule: "Monthly",
+      format: "Excel",
+      recipients: ["compliance@company.com"],
+      lastGenerated: "1 week ago",
+      status: "Active"
+    },
+    {
+      id: "3",
+      name: "Process Bottleneck Analysis",
+      type: "Bottleneck",
+      description: "Identification and analysis of process bottlenecks",
+      schedule: "Bi-weekly",
+      format: "PowerPoint",
+      recipients: ["ops@company.com"],
+      lastGenerated: "3 days ago",
+      status: "Paused"
+    }
+  ]);
 
-  const reportMetrics = [
-    { label: "Total Reports", value: "156", change: "+12", trend: "up" },
-    { label: "Scheduled Reports", value: "23", change: "+5", trend: "up" },
-    { label: "Downloads This Month", value: "1,234", change: "+18%", trend: "up" },
-    { label: "Active Dashboards", value: "45", change: "+7", trend: "up" }
+  const filteredReports = reports.filter(report => {
+    const matchesSearch = report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         report.type.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === "all" || 
+                      (activeTab === "active" && report.status === "Active") ||
+                      (activeTab === "scheduled" && report.schedule !== "On-Demand") ||
+                      (activeTab === "recent" && ["1 day ago", "2 days ago", "3 days ago"].includes(report.lastGenerated));
+    return matchesSearch && matchesTab;
+  });
+
+  const handleCreateReport = (reportData: Report) => {
+    setReports(prev => [...prev, reportData]);
+    speakText(`New report ${reportData.name} has been created`);
+  };
+
+  const handleUpdateReport = (reportData: Report) => {
+    setReports(prev => prev.map(report => report.id === reportData.id ? reportData : report));
+    speakText(`Report ${reportData.name} has been updated`);
+  };
+
+  const handleDeleteReport = (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    setReports(prev => prev.filter(report => report.id !== reportId));
+    if (report) {
+      speakText(`Report ${report.name} has been deleted`);
+    }
+  };
+
+  const handleGenerateReport = (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    if (report) {
+      // Update last generated time
+      setReports(prev => prev.map(r => 
+        r.id === reportId ? { ...r, lastGenerated: "Just now" } : r
+      ));
+      toast({
+        title: "Report Generated",
+        description: `${report.name} has been generated successfully.`
+      });
+      speakText(`Report ${report.name} has been generated and is ready for download`);
+    }
+  };
+
+  const stats = [
+    { label: "Total Reports", value: reports.length, icon: <FileText className="h-6 w-6 text-blue-500" /> },
+    { label: "Active Reports", value: reports.filter(r => r.status === "Active").length, icon: <TrendingUp className="h-6 w-6 text-green-500" /> },
+    { label: "Scheduled Reports", value: reports.filter(r => r.schedule !== "On-Demand").length, icon: <Clock className="h-6 w-6 text-orange-500" /> },
+    { label: "Recipients", value: new Set(reports.flatMap(r => r.recipients)).size, icon: <Users className="h-6 w-6 text-purple-500" /> }
   ];
 
   return (
     <div 
       className="space-y-6"
-      onMouseEnter={() => speakText("Reports and Analytics Dashboard. Generate comprehensive reports and insights from your process data.")}
+      onMouseEnter={() => speakText("Reports and Analytics Dashboard. Generate automated reports, schedule deliveries, and analyze process performance data.")}
     >
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Generate insights from your process data</p>
+          <p className="text-muted-foreground">Generate and manage automated process reports</p>
         </div>
         
         <div className="flex items-center gap-2">
           <Button variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
           </Button>
-          <Button>
-            <FileText className="h-4 w-4 mr-2" />
-            New Report
-          </Button>
+          <ReportActions
+            mode="create"
+            onSave={handleCreateReport}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {reportMetrics.map((metric, index) => (
+        {stats.map((stat, index) => (
           <Card key={index}>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {stat.icon}
                 <div>
-                  <p className="text-sm text-muted-foreground">{metric.label}</p>
-                  <p className="text-2xl font-bold">{metric.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-2xl font-bold">{stat.value}</p>
                 </div>
-                <Badge variant={metric.trend === "up" ? "default" : "secondary"} className="text-xs">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  {metric.change}
-                </Badge>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-          <TabsTrigger value="builder">Report Builder</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Recent Reports
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {["Process Performance Summary", "Compliance Audit Report", "Customer Journey Analysis"].map((report, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded">
-                      <div>
-                        <p className="font-medium">{report}</p>
-                        <p className="text-sm text-muted-foreground">Generated 2 hours ago</p>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5" />
-                  Popular Templates
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {["Executive Dashboard", "Process Metrics", "Compliance Report"].map((template, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded">
-                      <div>
-                        <p className="font-medium">{template}</p>
-                        <p className="text-sm text-muted-foreground">Used 15 times this month</p>
-                      </div>
-                      <Button variant="ghost" size="sm">Use Template</Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Report Library</CardTitle>
+              <CardDescription>Manage and generate process reports</CardDescription>
+            </div>
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search reports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="scheduled" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Scheduled Reports</CardTitle>
-              <CardDescription>Manage your automated report generation</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">No scheduled reports configured yet.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="builder" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Report Builder</CardTitle>
-              <CardDescription>Create custom reports with drag-and-drop interface</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Report builder interface coming soon.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all">All Reports</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
+              <TabsTrigger value="recent">Recent</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value={activeTab} className="mt-4">
+              <div className="space-y-4">
+                {filteredReports.map((report) => (
+                  <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <BarChart3 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium">{report.name}</h3>
+                          <Badge variant="outline" className="text-xs">
+                            {report.type}
+                          </Badge>
+                          <Badge variant={report.status === "Active" ? "default" : "secondary"} className="text-xs">
+                            {report.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{report.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {report.schedule}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            {report.format}
+                          </span>
+                          <span>Last generated: {report.lastGenerated}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <ReportActions
+                        mode="edit"
+                        report={report}
+                        onSave={handleUpdateReport}
+                        onDelete={handleDeleteReport}
+                        onGenerate={handleGenerateReport}
+                        onShare={(id) => toast({ title: "Share Report", description: "Sharing options opened." })}
+                      />
+                    </div>
+                  </div>
+                ))}
+                
+                {filteredReports.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p>No reports found matching your criteria.</p>
+                    <p className="text-sm">Try adjusting your search or create a new report.</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
