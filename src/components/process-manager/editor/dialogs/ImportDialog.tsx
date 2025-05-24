@@ -14,7 +14,7 @@ interface ImportDialogProps {
   onOpenChange: (open: boolean) => void;
   importSource: string;
   setImportSource: React.Dispatch<React.SetStateAction<string>>;
-  onImportConfirm: () => void;
+  onImportConfirm: (xml: string) => void;
 }
 
 export const ImportDialog: React.FC<ImportDialogProps> = ({
@@ -24,6 +24,10 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
   setImportSource,
   onImportConfirm
 }) => {
+  const handleImport = () => {
+    onImportConfirm(importSource);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -40,7 +44,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={onImportConfirm}>Import</Button>
+          <Button onClick={handleImport}>Import</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
