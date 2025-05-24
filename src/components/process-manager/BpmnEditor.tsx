@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useBpmnEditorState } from "./editor/hooks/useBpmnEditorState";
 import { useBpmnEditorActions } from "./editor/hooks/useBpmnEditorActions";
@@ -104,7 +103,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onUndo={actions.handleUndo}
         onRedo={actions.handleRedo}
         onToggleSnapToGrid={actions.handleToggleSnapToGrid}
-        onImportClick={actions.handleImportClick}
+        onImportClick={() => actions.handleImportClick()}
       />
       
       {/* Element Properties Dialog */}
