@@ -1,20 +1,88 @@
-
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
 import { RepositoryItemType } from "@/types/repository";
 
-// Sample repository data
+// Sample repository data - updated to match RepositoryItemType interface
 const initialRepositoryItems: RepositoryItemType[] = [
-  { name: "Customer Processes", type: "folder", owner: "John Doe", lastModified: "Yesterday" },
-  { name: "Finance", type: "folder", owner: "System Admin", lastModified: "1 week ago" },
-  { name: "HR Processes", type: "folder", owner: "Sarah Miller", lastModified: "2 days ago" },
-  { name: "Order to Cash", type: "bpmn", owner: "John Doe", lastModified: "Today", version: "2.3", status: "Published" },
-  { name: "Customer Onboarding", type: "journey", owner: "Lisa Johnson", lastModified: "Yesterday", version: "1.0", status: "In Review" },
-  { name: "Procurement", type: "bpmn", owner: "Michael Chen", lastModified: "3 days ago", version: "3.1", status: "Draft" },
-  { name: "Shipping Rules", type: "dmn", owner: "Robert Taylor", lastModified: "Last week", version: "1.2", status: "Approved" },
-  { name: "Return Process", type: "bpmn", owner: "Jennifer Adams", lastModified: "2 weeks ago", version: "2.0", status: "Published" },
-  { name: "Process Documentation", type: "document", owner: "Sarah Miller", lastModified: "1 month ago" },
+  { 
+    id: "1",
+    name: "Customer Onboarding Process", 
+    type: "process", 
+    description: "Comprehensive customer onboarding workflow including verification and setup steps",
+    owner: "Sarah Chen", 
+    lastModified: "2024-01-20",
+    category: "Customer Management",
+    tags: ["onboarding", "customer", "workflow"],
+    version: "2.1",
+    status: "active",
+    size: "2.3 MB"
+  },
+  { 
+    id: "2",
+    name: "Invoice Processing Model", 
+    type: "model", 
+    description: "Automated invoice processing model with validation and approval workflows",
+    owner: "Mike Rodriguez", 
+    lastModified: "2024-01-18",
+    category: "Finance",
+    tags: ["finance", "automation", "approval"],
+    version: "3.1",
+    status: "active",
+    size: "1.8 MB"
+  },
+  { 
+    id: "3",
+    name: "Employee Onboarding Template", 
+    type: "template", 
+    description: "Standard template for new employee onboarding processes",
+    owner: "Lisa Wang", 
+    lastModified: "2024-01-15",
+    category: "HR",
+    tags: ["hr", "template", "onboarding"],
+    version: "1.0",
+    status: "draft",
+    size: "0.8 MB"
+  },
+  { 
+    id: "4",
+    name: "Order to Cash Framework", 
+    type: "framework", 
+    description: "Complete order-to-cash process framework with best practices",
+    owner: "John Doe", 
+    lastModified: "2024-01-22",
+    category: "Sales",
+    tags: ["sales", "framework", "order-management"],
+    version: "2.3",
+    status: "active",
+    size: "3.2 MB"
+  },
+  { 
+    id: "5",
+    name: "Procurement Process", 
+    type: "process", 
+    description: "End-to-end procurement process including vendor management",
+    owner: "Michael Chen", 
+    lastModified: "2024-01-10",
+    category: "Procurement",
+    tags: ["procurement", "vendor", "approval"],
+    version: "1.5",
+    status: "archived",
+    size: "2.1 MB"
+  },
+  { 
+    id: "6",
+    name: "Risk Assessment Document", 
+    type: "document", 
+    description: "Comprehensive risk assessment documentation and guidelines",
+    owner: "Jennifer Adams", 
+    lastModified: "2024-01-12",
+    category: "Compliance",
+    tags: ["risk", "compliance", "documentation"],
+    version: "1.0",
+    status: "active",
+    size: "1.2 MB"
+  }
 ];
 
 export function useRepository() {
@@ -73,15 +141,21 @@ export function useRepository() {
         speakText(`File ${file.name} has been uploaded successfully.`);
         
         // Add the uploaded file to the repository
-        const fileType = file.name.endsWith('.bpmn') ? 'bpmn' : 
-                        file.name.endsWith('.dmn') ? 'dmn' : 'document';
+        const fileType = file.name.endsWith('.bpmn') ? 'process' : 
+                        file.name.endsWith('.dmn') ? 'model' : 'document';
         
         const newItem: RepositoryItemType = {
+          id: Date.now().toString(),
           name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
           type: fileType,
+          description: `Uploaded ${fileType} file`,
           owner: "Current User",
-          lastModified: "Just now",
-          ...(fileType !== 'document' ? { version: "1.0", status: "Draft" } : {})
+          lastModified: new Date().toISOString().split('T')[0],
+          category: "Uploads",
+          tags: ["uploaded", fileType],
+          version: "1.0", 
+          status: "draft",
+          size: `${(file.size / 1024 / 1024).toFixed(1)} MB`
         };
         
         setRepositoryItems(prev => [newItem, ...prev]);
@@ -112,20 +186,26 @@ export function useRepository() {
     if (!name) return;
     
     const typeMap = {
-      "new-bpmn": "bpmn",
-      "new-journey": "journey",
-      "new-dmn": "dmn",
-      "new-folder": "folder",
+      "new-bpmn": "process",
+      "new-journey": "process",
+      "new-dmn": "model",
+      "new-folder": "template",
     } as const;
     
     if (dialogState.type) {
-      const type = typeMap[dialogState.type];
+      const type = typeMap[dialogState.type] as RepositoryItemType['type'];
       const newItem: RepositoryItemType = {
+        id: Date.now().toString(),
         name,
         type,
+        description: `New ${type} created`,
         owner: "Current User",
-        lastModified: "Just now",
-        ...(type !== 'folder' ? { version: "1.0", status: "Draft" } : {}),
+        lastModified: new Date().toISOString().split('T')[0],
+        category: "New Items",
+        tags: ["new", type],
+        version: "1.0", 
+        status: "draft",
+        size: "0.1 MB"
       };
       
       setRepositoryItems(prev => [newItem, ...prev]);

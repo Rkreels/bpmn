@@ -35,6 +35,7 @@ export function GridView({ item, onClick, onEdit, onRename, onShare, onDownload 
       case "model": return <Settings className="h-8 w-8 text-green-500" />;
       case "template": return <Folder className="h-8 w-8 text-purple-500" />;
       case "framework": return <Settings className="h-8 w-8 text-orange-500" />;
+      case "document": return <FileText className="h-8 w-8 text-gray-500" />;
       default: return <FileText className="h-8 w-8 text-gray-500" />;
     }
   };
@@ -43,6 +44,9 @@ export function GridView({ item, onClick, onEdit, onRename, onShare, onDownload 
     onClick(item);
     speakText(`Opening ${item.name}. This is a ${item.type} owned by ${item.owner}. ${item.description}`);
   };
+
+  // Safely handle tags array
+  const tags = item.tags || [];
 
   return (
     <Card 
@@ -119,14 +123,14 @@ export function GridView({ item, onClick, onEdit, onRename, onShare, onDownload 
           </div>
           
           <div className="flex flex-wrap gap-1">
-            {item.tags.slice(0, 2).map((tag, index) => (
+            {tags.length > 0 && tags.slice(0, 2).map((tag, index) => (
               <Badge key={index} variant="outline" className="text-xs">
                 {tag}
               </Badge>
             ))}
-            {item.tags.length > 2 && (
+            {tags.length > 2 && (
               <Badge variant="outline" className="text-xs">
-                +{item.tags.length - 2} more
+                +{tags.length - 2} more
               </Badge>
             )}
           </div>
