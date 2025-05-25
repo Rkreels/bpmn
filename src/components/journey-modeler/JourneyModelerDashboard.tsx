@@ -20,7 +20,6 @@ import {
   Download,
   Share2,
   FileText,
-  Settings,
   TrendingUp,
   Users,
   Activity
@@ -75,10 +74,13 @@ export const JourneyModelerDashboard: React.FC = () => {
     });
     speakText("Creating a new customer journey. Journey mapping helps visualize the complete customer experience from initial awareness through advocacy.");
     
-    // Simulate async operation
     setTimeout(() => {
       setIsLoading(false);
       setActiveTab("journeys");
+      toast({
+        title: "Journey Created",
+        description: "New journey template has been created."
+      });
     }, 1000);
   };
 
@@ -90,7 +92,6 @@ export const JourneyModelerDashboard: React.FC = () => {
     });
     speakText("Exporting journey maps. This includes all touchpoints, personas, and analytics data for stakeholder sharing.");
     
-    // Simulate export process
     setTimeout(() => {
       setIsLoading(false);
       toast({
@@ -121,15 +122,12 @@ export const JourneyModelerDashboard: React.FC = () => {
   };
 
   return (
-    <div 
-      className="space-y-6 animate-fade-in"
-      onMouseEnter={() => speakText("Journey Modeler. Design and optimize customer experiences across all touchpoints. Create journey maps, manage personas, and analyze customer interactions to improve satisfaction and conversion.")}
-    >
+    <div className="w-full min-h-screen p-4 md:p-6 space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Journey Modeler</h1>
-          <p className="text-muted-foreground">Design exceptional customer experiences</p>
+      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+        <div className="space-y-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Journey Modeler</h1>
+          <p className="text-muted-foreground text-sm md:text-base">Design exceptional customer experiences</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
@@ -137,7 +135,8 @@ export const JourneyModelerDashboard: React.FC = () => {
             variant="outline" 
             onClick={handleExport}
             disabled={isLoading}
-            className="hover-scale"
+            className="hover-scale text-xs md:text-sm"
+            size="sm"
           >
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -145,7 +144,8 @@ export const JourneyModelerDashboard: React.FC = () => {
           <Button 
             variant="outline" 
             onClick={handleShare}
-            className="hover-scale"
+            className="hover-scale text-xs md:text-sm"
+            size="sm"
           >
             <Share2 className="h-4 w-4 mr-2" />
             Share
@@ -153,7 +153,8 @@ export const JourneyModelerDashboard: React.FC = () => {
           <Button 
             onClick={handleNewJourney}
             disabled={isLoading}
-            className="hover-scale"
+            className="hover-scale text-xs md:text-sm"
+            size="sm"
           >
             <Plus className="h-4 w-4 mr-2" />
             {isLoading ? "Creating..." : "New Journey"}
@@ -162,22 +163,22 @@ export const JourneyModelerDashboard: React.FC = () => {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {journeyMetrics.map((metric, index) => {
           const IconComponent = metric.icon;
           return (
             <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer hover-scale">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <IconComponent className="h-4 w-4 text-primary" />
-                      <p className="text-sm text-muted-foreground">{metric.label}</p>
+                      <IconComponent className="h-4 w-4 text-primary flex-shrink-0" />
+                      <p className="text-xs md:text-sm text-muted-foreground truncate">{metric.label}</p>
                     </div>
-                    <p className="text-2xl font-bold">{metric.value}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{metric.description}</p>
+                    <p className="text-xl md:text-2xl font-bold">{metric.value}</p>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{metric.description}</p>
                   </div>
-                  <Badge variant="default" className="text-xs">
+                  <Badge variant="default" className="text-xs ml-2 flex-shrink-0">
                     {metric.change}
                   </Badge>
                 </div>
@@ -189,48 +190,52 @@ export const JourneyModelerDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
-          <TabsTrigger value="journeys" className="flex items-center gap-2 p-3">
-            <Map className="h-4 w-4" />
-            <span className="hidden sm:inline">Journeys</span>
-          </TabsTrigger>
-          <TabsTrigger value="personas" className="flex items-center gap-2 p-3">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Personas</span>
-          </TabsTrigger>
-          <TabsTrigger value="touchpoints" className="flex items-center gap-2 p-3">
-            <Target className="h-4 w-4" />
-            <span className="hidden sm:inline">Touchpoints</span>
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2 p-3">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Analytics</span>
-          </TabsTrigger>
-          <TabsTrigger value="library" className="flex items-center gap-2 p-3">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Library</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList className="grid w-full min-w-[600px] grid-cols-5 h-auto">
+            <TabsTrigger value="journeys" className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm">
+              <Map className="h-4 w-4" />
+              <span className="hidden sm:inline">Journeys</span>
+            </TabsTrigger>
+            <TabsTrigger value="personas" className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Personas</span>
+            </TabsTrigger>
+            <TabsTrigger value="touchpoints" className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm">
+              <Target className="h-4 w-4" />
+              <span className="hidden sm:inline">Touchpoints</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="library" className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Library</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
-        <TabsContent value="journeys" className="mt-6">
-          <CustomerJourneyCanvas />
-        </TabsContent>
-        
-        <TabsContent value="personas" className="mt-6">
-          <PersonaManagement />
-        </TabsContent>
-        
-        <TabsContent value="touchpoints" className="mt-6">
-          <TouchpointManager />
-        </TabsContent>
-        
-        <TabsContent value="analytics" className="mt-6">
-          <JourneyAnalytics />
-        </TabsContent>
-        
-        <TabsContent value="library" className="mt-6">
-          <JourneyLibrary />
-        </TabsContent>
+        <div className="mt-6 w-full">
+          <TabsContent value="journeys" className="mt-0 w-full">
+            <CustomerJourneyCanvas />
+          </TabsContent>
+          
+          <TabsContent value="personas" className="mt-0 w-full">
+            <PersonaManagement />
+          </TabsContent>
+          
+          <TabsContent value="touchpoints" className="mt-0 w-full">
+            <TouchpointManager />
+          </TabsContent>
+          
+          <TabsContent value="analytics" className="mt-0 w-full">
+            <JourneyAnalytics />
+          </TabsContent>
+          
+          <TabsContent value="library" className="mt-0 w-full">
+            <JourneyLibrary />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );

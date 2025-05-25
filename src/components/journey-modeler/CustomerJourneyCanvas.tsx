@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   User, 
   Heart, 
@@ -40,6 +40,7 @@ interface JourneyStage {
 
 export const CustomerJourneyCanvas: React.FC = () => {
   const [selectedPersona, setSelectedPersona] = useState("business-user");
+  const { toast } = useToast();
 
   const journeyStages: JourneyStage[] = [
     {
@@ -167,6 +168,49 @@ export const CustomerJourneyCanvas: React.FC = () => {
     }
   ];
 
+  const handlePersonaChange = (persona: string) => {
+    setSelectedPersona(persona);
+    toast({
+      title: "Persona Changed",
+      description: `Switched to ${persona.replace('-', ' ')} persona view`
+    });
+  };
+
+  const handleManagePersonas = () => {
+    toast({
+      title: "Manage Personas",
+      description: "Opening persona management interface..."
+    });
+  };
+
+  const handleAddStage = () => {
+    toast({
+      title: "Add Stage",
+      description: "Creating new journey stage..."
+    });
+  };
+
+  const handleAddTouchpoint = (stageId: string) => {
+    toast({
+      title: "Add Touchpoint",
+      description: `Adding new touchpoint to ${stageId} stage`
+    });
+  };
+
+  const handleEditStage = (stageId: string) => {
+    toast({
+      title: "Edit Stage",
+      description: `Editing ${stageId} stage`
+    });
+  };
+
+  const handleDeleteStage = (stageId: string) => {
+    toast({
+      title: "Delete Stage",
+      description: `Deleting ${stageId} stage`
+    });
+  };
+
   const getEmotionIcon = (emotion: TouchPoint["emotion"]) => {
     switch (emotion) {
       case "very-negative": return <Frown className="h-4 w-4 text-red-600" />;
@@ -190,28 +234,37 @@ export const CustomerJourneyCanvas: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Customer Journey Map</h2>
-          <p className="text-muted-foreground">Visualize and optimize the customer experience</p>
+      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+        <div className="space-y-2">
+          <h2 className="text-xl md:text-2xl font-bold">Customer Journey Map</h2>
+          <p className="text-muted-foreground text-sm md:text-base">Visualize and optimize the customer experience</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select 
             value={selectedPersona} 
-            onChange={(e) => setSelectedPersona(e.target.value)}
-            className="px-3 py-2 border rounded-md"
+            onChange={(e) => handlePersonaChange(e.target.value)}
+            className="px-3 py-2 border rounded-md text-xs md:text-sm"
           >
             <option value="business-user">Business User</option>
             <option value="technical-user">Technical User</option>
             <option value="decision-maker">Decision Maker</option>
           </select>
-          <Button variant="outline">
+          <Button 
+            variant="outline" 
+            onClick={handleManagePersonas}
+            size="sm"
+            className="text-xs md:text-sm"
+          >
             <User className="h-4 w-4 mr-2" />
             Manage Personas
           </Button>
-          <Button>
+          <Button 
+            onClick={handleAddStage}
+            size="sm"
+            className="text-xs md:text-sm"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Stage
           </Button>
@@ -219,22 +272,32 @@ export const CustomerJourneyCanvas: React.FC = () => {
       </div>
 
       {/* Journey Stages */}
-      <div className="relative">
-        <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="relative w-full">
+        <div className="flex gap-4 overflow-x-auto pb-4 min-h-[400px]">
           {journeyStages.map((stage, stageIndex) => (
-            <div key={stage.id} className="flex-shrink-0 w-80">
+            <div key={stage.id} className="flex-shrink-0 w-72 md:w-80">
               <Card className="h-full">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{stage.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">{stage.description}</p>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base md:text-lg truncate">{stage.name}</CardTitle>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">{stage.description}</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => handleEditStage(stage.id)}
+                      >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => handleDeleteStage(stage.id)}
+                      >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -242,13 +305,13 @@ export const CustomerJourneyCanvas: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {stage.touchPoints.map((touchPoint) => (
-                    <div key={touchPoint.id} className="p-3 border rounded-lg hover:bg-muted/50">
+                    <div key={touchPoint.id} className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           {getChannelIcon(touchPoint.channel)}
-                          <span className="font-medium text-sm">{touchPoint.name}</span>
+                          <span className="font-medium text-sm truncate">{touchPoint.name}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 ml-2">
                           {getEmotionIcon(touchPoint.emotion)}
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
@@ -268,7 +331,7 @@ export const CustomerJourneyCanvas: React.FC = () => {
                             {touchPoint.painPoints.map((pain, index) => (
                               <li key={index} className="flex items-start gap-1">
                                 <span className="text-red-400">•</span>
-                                {pain}
+                                <span className="line-clamp-2">{pain}</span>
                               </li>
                             ))}
                           </ul>
@@ -282,7 +345,7 @@ export const CustomerJourneyCanvas: React.FC = () => {
                             {touchPoint.opportunities.map((opportunity, index) => (
                               <li key={index} className="flex items-start gap-1">
                                 <span className="text-green-400">•</span>
-                                {opportunity}
+                                <span className="line-clamp-2">{opportunity}</span>
                               </li>
                             ))}
                           </ul>
@@ -291,7 +354,12 @@ export const CustomerJourneyCanvas: React.FC = () => {
                     </div>
                   ))}
                   
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-xs"
+                    onClick={() => handleAddTouchpoint(stage.id)}
+                  >
                     <Plus className="h-3 w-3 mr-2" />
                     Add Touchpoint
                   </Button>
@@ -300,51 +368,46 @@ export const CustomerJourneyCanvas: React.FC = () => {
             </div>
           ))}
         </div>
-
-        {/* Journey Flow Arrows */}
-        <div className="absolute top-24 left-0 right-0 flex items-center justify-between px-4 pointer-events-none">
-          {journeyStages.slice(0, -1).map((_, index) => (
-            <div key={index} className="flex-1 flex justify-end pr-4">
-              <div className="w-8 h-0.5 bg-primary"></div>
-              <div className="w-0 h-0 border-l-4 border-l-primary border-t-2 border-b-2 border-t-transparent border-b-transparent"></div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* Emotion Line Chart */}
-      <Card>
+      {/* Emotional Journey Chart */}
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <Heart className="h-5 w-5" />
             Emotional Journey
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-32 flex items-end gap-8 relative">
-            {journeyStages.map((stage, index) => {
-              const avgEmotion = stage.touchPoints.reduce((acc, tp) => {
-                const emotionValue = {
-                  "very-negative": 1,
-                  "negative": 2,
-                  "neutral": 3,
-                  "positive": 4,
-                  "very-positive": 5
-                }[tp.emotion];
-                return acc + emotionValue;
-              }, 0) / stage.touchPoints.length;
-              
-              const height = (avgEmotion / 5) * 100;
-              
-              return (
-                <div key={stage.id} className="flex-1 flex flex-col items-center">
-                  <div className="w-full bg-muted rounded-t" style={{ height: `${height}%` }}>
-                    <div className="w-full bg-primary rounded-t" style={{ height: "100%" }}></div>
+          <div className="h-32 flex items-end gap-2 md:gap-8 relative overflow-x-auto">
+            <div className="flex gap-2 md:gap-8 min-w-max">
+              {journeyStages.map((stage, index) => {
+                const avgEmotion = stage.touchPoints.reduce((acc, tp) => {
+                  const emotionValue = {
+                    "very-negative": 1,
+                    "negative": 2,
+                    "neutral": 3,
+                    "positive": 4,
+                    "very-positive": 5
+                  }[tp.emotion];
+                  return acc + emotionValue;
+                }, 0) / stage.touchPoints.length;
+                
+                const height = (avgEmotion / 5) * 100;
+                
+                return (
+                  <div key={stage.id} className="flex-shrink-0 flex flex-col items-center w-16 md:w-20">
+                    <div className="w-full bg-muted rounded-t relative" style={{ height: "100px" }}>
+                      <div 
+                        className="w-full bg-primary rounded-t transition-all duration-300" 
+                        style={{ height: `${height}%`, position: "absolute", bottom: 0 }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-center mt-2 font-medium px-1">{stage.name}</div>
                   </div>
-                  <div className="text-xs text-center mt-2 font-medium">{stage.name}</div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground mt-4">
             <span>Very Negative</span>
