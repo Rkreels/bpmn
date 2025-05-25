@@ -1,8 +1,14 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useVoice } from "@/contexts/VoiceContext";
+import { useJourneyData, TouchPoint } from "@/hooks/useJourneyData";
+import { CreateStageDialog } from "./dialogs/CreateStageDialog";
+import { CreateTouchpointDialog } from "./dialogs/CreateTouchpointDialog";
 import { 
   User, 
   Heart, 
@@ -21,194 +27,51 @@ import {
   Trash2
 } from "lucide-react";
 
-interface TouchPoint {
-  id: string;
-  name: string;
-  channel: string;
-  emotion: "very-negative" | "negative" | "neutral" | "positive" | "very-positive";
-  duration: string;
-  painPoints: string[];
-  opportunities: string[];
-}
-
-interface JourneyStage {
-  id: string;
-  name: string;
-  description: string;
-  touchPoints: TouchPoint[];
-}
-
 export const CustomerJourneyCanvas: React.FC = () => {
-  const [selectedPersona, setSelectedPersona] = useState("business-user");
+  const { journeys, personas, updateJourney, deleteStage } = useJourneyData();
+  const { speakText } = useVoice();
   const { toast } = useToast();
+  const [selectedPersona, setSelectedPersona] = useState<string>(personas[0]?.id || "");
+  const [selectedJourney, setSelectedJourney] = useState<string>(journeys[0]?.id || "");
 
-  const journeyStages: JourneyStage[] = [
-    {
-      id: "awareness",
-      name: "Awareness",
-      description: "Customer becomes aware of the need",
-      touchPoints: [
-        {
-          id: "search",
-          name: "Online Search",
-          channel: "Website",
-          emotion: "neutral",
-          duration: "5 min",
-          painPoints: ["Too many options", "Unclear information"],
-          opportunities: ["Better SEO", "Clear value proposition"]
-        },
-        {
-          id: "social",
-          name: "Social Media",
-          channel: "Social",
-          emotion: "positive",
-          duration: "2 min",
-          painPoints: [],
-          opportunities: ["Engaging content", "Community building"]
-        }
-      ]
-    },
-    {
-      id: "consideration",
-      name: "Consideration",
-      description: "Customer evaluates options",
-      touchPoints: [
-        {
-          id: "demo",
-          name: "Product Demo",
-          channel: "Sales Call",
-          emotion: "very-positive",
-          duration: "30 min",
-          painPoints: [],
-          opportunities: ["Personalized demos", "Follow-up materials"]
-        },
-        {
-          id: "pricing",
-          name: "Pricing Review",
-          channel: "Website",
-          emotion: "negative",
-          duration: "10 min",
-          painPoints: ["Complex pricing", "Hidden costs"],
-          opportunities: ["Transparent pricing", "Calculator tool"]
-        }
-      ]
-    },
-    {
-      id: "purchase",
-      name: "Purchase",
-      description: "Customer makes the decision",
-      touchPoints: [
-        {
-          id: "checkout",
-          name: "Checkout Process",
-          channel: "Website",
-          emotion: "neutral",
-          duration: "15 min",
-          painPoints: ["Too many steps", "Security concerns"],
-          opportunities: ["Streamlined flow", "Trust signals"]
-        }
-      ]
-    },
-    {
-      id: "onboarding",
-      name: "Onboarding",
-      description: "Customer gets started",
-      touchPoints: [
-        {
-          id: "welcome",
-          name: "Welcome Email",
-          channel: "Email",
-          emotion: "positive",
-          duration: "2 min",
-          painPoints: [],
-          opportunities: ["Personalization", "Quick wins"]
-        },
-        {
-          id: "setup",
-          name: "Account Setup",
-          channel: "Platform",
-          emotion: "negative",
-          duration: "45 min",
-          painPoints: ["Complex setup", "Lack of guidance"],
-          opportunities: ["Guided setup", "Progress indicators"]
-        }
-      ]
-    },
-    {
-      id: "usage",
-      name: "Usage",
-      description: "Customer uses the product",
-      touchPoints: [
-        {
-          id: "daily-use",
-          name: "Daily Usage",
-          channel: "Platform",
-          emotion: "positive",
-          duration: "60 min",
-          painPoints: ["Performance issues", "Feature discovery"],
-          opportunities: ["Performance optimization", "In-app guidance"]
-        }
-      ]
-    },
-    {
-      id: "advocacy",
-      name: "Advocacy",
-      description: "Customer becomes an advocate",
-      touchPoints: [
-        {
-          id: "referral",
-          name: "Referral Program",
-          channel: "Email",
-          emotion: "very-positive",
-          duration: "5 min",
-          painPoints: [],
-          opportunities: ["Incentive optimization", "Easy sharing"]
-        }
-      ]
-    }
-  ];
+  const currentJourney = journeys.find(j => j.id === selectedJourney);
+  const currentPersona = personas.find(p => p.id === selectedPersona);
 
-  const handlePersonaChange = (persona: string) => {
-    setSelectedPersona(persona);
+  const handlePersonaChange = (personaId: string) => {
+    setSelectedPersona(personaId);
+    const persona = personas.find(p => p.id === personaId);
     toast({
       title: "Persona Changed",
-      description: `Switched to ${persona.replace('-', ' ')} persona view`
+      description: `Switched to ${persona?.name || 'Unknown'} persona view`
     });
+    speakText(`Switched to ${persona?.name} persona. This ${persona?.role} persona will help you understand the specific needs and pain points throughout their customer journey.`);
   };
 
-  const handleManagePersonas = () => {
+  const handleJourneyChange = (journeyId: string) => {
+    setSelectedJourney(journeyId);
+    const journey = journeys.find(j => j.id === journeyId);
     toast({
-      title: "Manage Personas",
-      description: "Opening persona management interface..."
+      title: "Journey Changed",
+      description: `Now viewing ${journey?.name || 'Unknown'} journey`
     });
-  };
-
-  const handleAddStage = () => {
-    toast({
-      title: "Add Stage",
-      description: "Creating new journey stage..."
-    });
-  };
-
-  const handleAddTouchpoint = (stageId: string) => {
-    toast({
-      title: "Add Touchpoint",
-      description: `Adding new touchpoint to ${stageId} stage`
-    });
-  };
-
-  const handleEditStage = (stageId: string) => {
-    toast({
-      title: "Edit Stage",
-      description: `Editing ${stageId} stage`
-    });
+    speakText(`Now viewing ${journey?.name} customer journey. This journey contains ${journey?.stages.length || 0} stages and helps visualize the complete customer experience.`);
   };
 
   const handleDeleteStage = (stageId: string) => {
-    toast({
-      title: "Delete Stage",
-      description: `Deleting ${stageId} stage`
-    });
+    if (!currentJourney) return;
+    
+    const stage = currentJourney.stages.find(s => s.id === stageId);
+    if (stage && stage.touchpoints.length > 0) {
+      toast({
+        title: "Cannot Delete Stage",
+        description: "Remove all touchpoints before deleting this stage.",
+        variant: "destructive"
+      });
+      speakText("Cannot delete this stage because it contains touchpoints. Please remove all touchpoints first, then try deleting the stage again.");
+      return;
+    }
+    
+    deleteStage(currentJourney.id, stageId);
   };
 
   const getEmotionIcon = (emotion: TouchPoint["emotion"]) => {
@@ -233,8 +96,21 @@ export const CustomerJourneyCanvas: React.FC = () => {
     }
   };
 
+  if (!currentJourney) {
+    return (
+      <div className="w-full text-center py-12">
+        <Map className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <p className="text-lg font-medium">No Journey Selected</p>
+        <p className="text-muted-foreground">Create a new journey to start mapping customer experiences</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full space-y-6">
+    <div 
+      className="w-full space-y-6"
+      onMouseEnter={() => speakText(`Customer Journey Canvas for ${currentJourney.name}. This interactive canvas allows you to visualize and optimize the complete customer experience across all touchpoints and stages.`)}
+    >
       {/* Header */}
       <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div className="space-y-2">
@@ -242,39 +118,73 @@ export const CustomerJourneyCanvas: React.FC = () => {
           <p className="text-muted-foreground text-sm md:text-base">Visualize and optimize the customer experience</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <select 
-            value={selectedPersona} 
-            onChange={(e) => handlePersonaChange(e.target.value)}
-            className="px-3 py-2 border rounded-md text-xs md:text-sm"
-          >
-            <option value="business-user">Business User</option>
-            <option value="technical-user">Technical User</option>
-            <option value="decision-maker">Decision Maker</option>
-          </select>
-          <Button 
-            variant="outline" 
-            onClick={handleManagePersonas}
-            size="sm"
-            className="text-xs md:text-sm"
-          >
-            <User className="h-4 w-4 mr-2" />
-            Manage Personas
-          </Button>
-          <Button 
-            onClick={handleAddStage}
-            size="sm"
-            className="text-xs md:text-sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Stage
-          </Button>
+          <Select value={selectedJourney} onValueChange={handleJourneyChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select journey" />
+            </SelectTrigger>
+            <SelectContent>
+              {journeys.map((journey) => (
+                <SelectItem key={journey.id} value={journey.id}>
+                  {journey.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={selectedPersona} onValueChange={handlePersonaChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select persona" />
+            </SelectTrigger>
+            <SelectContent>
+              {personas.map((persona) => (
+                <SelectItem key={persona.id} value={persona.id}>
+                  {persona.name} - {persona.role}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <CreateStageDialog 
+            journeyId={currentJourney.id}
+            trigger={
+              <Button size="sm" className="text-xs md:text-sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Stage
+              </Button>
+            }
+          />
         </div>
       </div>
+
+      {/* Journey Info */}
+      {currentPersona && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <User className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold">{currentPersona.name}</h3>
+                <p className="text-sm text-muted-foreground">{currentPersona.role} • {currentPersona.department}</p>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {currentPersona.techSavviness} tech savvy
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {currentPersona.decisionInfluence} influence
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Journey Stages */}
       <div className="relative w-full">
         <div className="flex gap-4 overflow-x-auto pb-4 min-h-[400px]">
-          {journeyStages.map((stage, stageIndex) => (
+          {currentJourney.stages.sort((a, b) => a.order - b.order).map((stage, stageIndex) => (
             <div key={stage.id} className="flex-shrink-0 w-72 md:w-80">
               <Card className="h-full">
                 <CardHeader className="pb-3">
@@ -288,7 +198,13 @@ export const CustomerJourneyCanvas: React.FC = () => {
                         variant="ghost" 
                         size="icon" 
                         className="h-6 w-6"
-                        onClick={() => handleEditStage(stage.id)}
+                        onClick={() => {
+                          toast({
+                            title: "Edit Stage",
+                            description: `Editing ${stage.name} stage`
+                          });
+                          speakText(`Opening edit dialog for ${stage.name} stage. You can modify the stage name, description, and order in the customer journey sequence.`);
+                        }}
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -304,7 +220,7 @@ export const CustomerJourneyCanvas: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {stage.touchPoints.map((touchPoint) => (
+                  {stage.touchpoints.map((touchPoint) => (
                     <div key={touchPoint.id} className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -354,15 +270,16 @@ export const CustomerJourneyCanvas: React.FC = () => {
                     </div>
                   ))}
                   
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full text-xs"
-                    onClick={() => handleAddTouchpoint(stage.id)}
-                  >
-                    <Plus className="h-3 w-3 mr-2" />
-                    Add Touchpoint
-                  </Button>
+                  <CreateTouchpointDialog 
+                    journeyId={currentJourney.id}
+                    stageId={stage.id}
+                    trigger={
+                      <Button variant="outline" size="sm" className="w-full text-xs">
+                        <Plus className="h-3 w-3 mr-2" />
+                        Add Touchpoint
+                      </Button>
+                    }
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -381,17 +298,19 @@ export const CustomerJourneyCanvas: React.FC = () => {
         <CardContent>
           <div className="h-32 flex items-end gap-2 md:gap-8 relative overflow-x-auto">
             <div className="flex gap-2 md:gap-8 min-w-max">
-              {journeyStages.map((stage, index) => {
-                const avgEmotion = stage.touchPoints.reduce((acc, tp) => {
-                  const emotionValue = {
-                    "very-negative": 1,
-                    "negative": 2,
-                    "neutral": 3,
-                    "positive": 4,
-                    "very-positive": 5
-                  }[tp.emotion];
-                  return acc + emotionValue;
-                }, 0) / stage.touchPoints.length;
+              {currentJourney.stages.sort((a, b) => a.order - b.order).map((stage, index) => {
+                const avgEmotion = stage.touchpoints.length > 0 
+                  ? stage.touchpoints.reduce((acc, tp) => {
+                      const emotionValue = {
+                        "very-negative": 1,
+                        "negative": 2,
+                        "neutral": 3,
+                        "positive": 4,
+                        "very-positive": 5
+                      }[tp.emotion];
+                      return acc + emotionValue;
+                    }, 0) / stage.touchpoints.length
+                  : 3;
                 
                 const height = (avgEmotion / 5) * 100;
                 

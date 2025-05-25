@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { useJourneyData } from "@/hooks/useJourneyData";
 import { CustomerJourneyCanvas } from "./CustomerJourneyCanvas";
 import { PersonaManagement } from "./PersonaManagement";
 import { TouchpointManager } from "./TouchpointManager";
 import { JourneyAnalytics } from "./JourneyAnalytics";
 import { JourneyLibrary } from "./JourneyLibrary";
+import { CreateJourneyDialog } from "./dialogs/CreateJourneyDialog";
 import { 
   User, 
   Map, 
@@ -28,21 +30,23 @@ import {
 export const JourneyModelerDashboard: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
+  const { journeys, personas, exportJourneyData, shareJourney } = useJourneyData();
   const [activeTab, setActiveTab] = useState("journeys");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Calculate dynamic metrics
   const journeyMetrics = [
     { 
       label: "Active Journeys", 
-      value: "12", 
-      change: "+2", 
+      value: journeys.filter(j => j.status === "active").length.toString(), 
+      change: `+${journeys.filter(j => j.status === "draft").length}`, 
       trend: "up",
       icon: Map,
       description: "Currently mapped customer journeys"
     },
     { 
       label: "Customer Personas", 
-      value: "8", 
+      value: personas.length.toString(), 
       change: "+1", 
       trend: "up",
       icon: Users,
@@ -50,7 +54,10 @@ export const JourneyModelerDashboard: React.FC = () => {
     },
     { 
       label: "Touchpoints Mapped", 
-      value: "156", 
+      value: journeys.reduce((acc, journey) => 
+        acc + journey.stages.reduce((stageAcc, stage) => 
+          stageAcc + stage.touchpoints.length, 0), 0
+      ).toString(), 
       change: "+24", 
       trend: "up",
       icon: Target,
@@ -66,47 +73,34 @@ export const JourneyModelerDashboard: React.FC = () => {
     }
   ];
 
-  const handleNewJourney = async () => {
-    setIsLoading(true);
-    toast({
-      title: "Creating New Journey",
-      description: "Opening journey builder..."
-    });
-    speakText("Creating a new customer journey. Journey mapping helps visualize the complete customer experience from initial awareness through advocacy.");
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      setActiveTab("journeys");
-      toast({
-        title: "Journey Created",
-        description: "New journey template has been created."
-      });
-    }, 1000);
-  };
-
   const handleExport = async () => {
     setIsLoading(true);
     toast({
       title: "Export Started",
       description: "Preparing journey maps for export..."
     });
-    speakText("Exporting journey maps. This includes all touchpoints, personas, and analytics data for stakeholder sharing.");
+    speakText("Exporting journey maps. This includes all touchpoints, personas, and analytics data for stakeholder sharing and backup purposes.");
     
     setTimeout(() => {
+      exportJourneyData('json');
       setIsLoading(false);
-      toast({
-        title: "Export Complete",
-        description: "Journey maps have been exported successfully."
-      });
-    }, 2000);
+    }, 1000);
   };
 
   const handleShare = () => {
-    toast({
-      title: "Share Journey",
-      description: "Sharing options opened"
-    });
-    speakText("Opening sharing options for your journey maps.");
+    if (journeys.length === 0) {
+      toast({
+        title: "No Journeys to Share",
+        description: "Create a journey first before sharing.",
+        variant: "destructive"
+      });
+      speakText("No customer journeys available to share. Please create a journey first using the New Journey button.");
+      return;
+    }
+
+    const mainJourney = journeys[0];
+    shareJourney(mainJourney.id, 'link');
+    speakText(`Sharing journey ${mainJourney.name}. Stakeholders will be able to view the complete customer journey map with all touchpoints and insights.`);
   };
 
   const handleTabChange = (value: string) => {
@@ -118,7 +112,18 @@ export const JourneyModelerDashboard: React.FC = () => {
       analytics: "Journey Analytics",
       library: "Journey Library"
     };
-    speakText(`Switched to ${tabNames[value as keyof typeof tabNames]}`);
+    speakText(`Switched to ${tabNames[value as keyof typeof tabNames]}. ${getTabDescription(value)}`);
+  };
+
+  const getTabDescription = (tab: string) => {
+    const descriptions = {
+      journeys: "Here you can visualize and edit customer journey maps with stages and touchpoints.",
+      personas: "Manage customer personas that represent your target audience segments.",
+      touchpoints: "Track and optimize all customer interaction points across channels.",
+      analytics: "Analyze journey performance metrics and identify improvement opportunities.",
+      library: "Browse and use pre-built journey templates to accelerate your mapping process."
+    };
+    return descriptions[tab as keyof typeof descriptions] || "";
   };
 
   return (
@@ -150,15 +155,22 @@ export const JourneyModelerDashboard: React.FC = () => {
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
-          <Button 
-            onClick={handleNewJourney}
-            disabled={isLoading}
-            className="hover-scale text-xs md:text-sm"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {isLoading ? "Creating..." : "New Journey"}
-          </Button>
+          <CreateJourneyDialog 
+            trigger={
+              <Button 
+                disabled={isLoading}
+                className="hover-scale text-xs md:text-sm"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {isLoading ? "Creating..." : "New Journey"}
+              </Button>
+            }
+            onJourneyCreated={(journeyId) => {
+              console.log('New journey created:', journeyId);
+              speakText("Journey created successfully. You can now start adding stages and touchpoints to map the complete customer experience.");
+            }}
+          />
         </div>
       </div>
 
