@@ -3,10 +3,12 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
-import { Plus, Upload, Download, Play, RefreshCw, Database } from "lucide-react";
+import { Plus, Upload, Download, Play, RefreshCw, Database, Users, Calendar } from "lucide-react";
 
 interface ProcessMiningActionsProps {
   onNewProject: () => void;
@@ -28,14 +30,26 @@ export const ProcessMiningActions: React.FC<ProcessMiningActionsProps> = ({
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [projectName, setProjectName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [projectData, setProjectData] = useState({
+    name: "",
+    description: "",
+    department: "",
+    owner: "",
+    startDate: "",
+    endDate: "",
+    objectives: "",
+    expectedOutcomes: "",
+    stakeholders: "",
+    dataSource: "",
+    processScope: ""
+  });
 
   const handleNewProject = async () => {
-    if (!projectName.trim()) {
+    if (!projectData.name.trim() || !projectData.department || !projectData.owner) {
       toast({
         title: "Validation Error",
-        description: "Please enter a project name.",
+        description: "Please fill in all required fields (Name, Department, Owner).",
         variant: "destructive"
       });
       return;
@@ -48,11 +62,23 @@ export const ProcessMiningActions: React.FC<ProcessMiningActionsProps> = ({
       
       toast({
         title: "Project Created",
-        description: `Process mining project "${projectName}" has been created.`
+        description: `Process mining project "${projectData.name}" has been created successfully.`
       });
       
-      speakText(`New process mining project ${projectName} has been created successfully`);
-      setProjectName("");
+      speakText(`New process mining project ${projectData.name} has been created successfully`);
+      setProjectData({
+        name: "",
+        description: "",
+        department: "",
+        owner: "",
+        startDate: "",
+        endDate: "",
+        objectives: "",
+        expectedOutcomes: "",
+        stakeholders: "",
+        dataSource: "",
+        processScope: ""
+      });
       setIsProjectDialogOpen(false);
     } catch (error) {
       toast({
@@ -164,22 +190,145 @@ export const ProcessMiningActions: React.FC<ProcessMiningActionsProps> = ({
             New Project
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
+            <DialogTitle>Create New Process Mining Project</DialogTitle>
             <DialogDescription>
-              Set up a new process mining project to analyze your business processes.
+              Set up a comprehensive process mining project to analyze your business processes.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="projectName">Project Name *</Label>
+                <Input
+                  id="projectName"
+                  value={projectData.name}
+                  onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Customer Onboarding Analysis"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="department">Department *</Label>
+                <Select value={projectData.department} onValueChange={(value) => setProjectData(prev => ({ ...prev, department: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sales">Sales</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                    <SelectItem value="operations">Operations</SelectItem>
+                    <SelectItem value="hr">Human Resources</SelectItem>
+                    <SelectItem value="it">IT</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
             <div className="grid gap-2">
-              <Label htmlFor="projectName">Project Name</Label>
-              <Input
-                id="projectName"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g., Customer Onboarding Analysis"
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={projectData.description}
+                onChange={(e) => setProjectData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe the purpose and goals of this analysis..."
               />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="owner">Project Owner *</Label>
+                <Input
+                  id="owner"
+                  value={projectData.owner}
+                  onChange={(e) => setProjectData(prev => ({ ...prev, owner: e.target.value }))}
+                  placeholder="e.g., John Smith"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="stakeholders">Key Stakeholders</Label>
+                <Input
+                  id="stakeholders"
+                  value={projectData.stakeholders}
+                  onChange={(e) => setProjectData(prev => ({ ...prev, stakeholders: e.target.value }))}
+                  placeholder="e.g., Sarah Chen, Mike Rodriguez"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={projectData.startDate}
+                  onChange={(e) => setProjectData(prev => ({ ...prev, startDate: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="endDate">Expected End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={projectData.endDate}
+                  onChange={(e) => setProjectData(prev => ({ ...prev, endDate: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="objectives">Project Objectives</Label>
+              <Textarea
+                id="objectives"
+                value={projectData.objectives}
+                onChange={(e) => setProjectData(prev => ({ ...prev, objectives: e.target.value }))}
+                placeholder="What do you want to achieve with this analysis?"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="expectedOutcomes">Expected Outcomes</Label>
+              <Textarea
+                id="expectedOutcomes"
+                value={projectData.expectedOutcomes}
+                onChange={(e) => setProjectData(prev => ({ ...prev, expectedOutcomes: e.target.value }))}
+                placeholder="What results do you expect from this project?"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="dataSource">Primary Data Source</Label>
+                <Select value={projectData.dataSource} onValueChange={(value) => setProjectData(prev => ({ ...prev, dataSource: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select data source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="erp">ERP System</SelectItem>
+                    <SelectItem value="crm">CRM System</SelectItem>
+                    <SelectItem value="workflow">Workflow Management</SelectItem>
+                    <SelectItem value="database">Database Export</SelectItem>
+                    <SelectItem value="csv">CSV Files</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="processScope">Process Scope</Label>
+                <Select value={projectData.processScope} onValueChange={(value) => setProjectData(prev => ({ ...prev, processScope: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select scope" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="end-to-end">End-to-End Process</SelectItem>
+                    <SelectItem value="department">Department Level</SelectItem>
+                    <SelectItem value="function">Specific Function</SelectItem>
+                    <SelectItem value="cross-functional">Cross-Functional</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,16 +23,22 @@ interface TransformationActionsProps {
   onCreateInitiative: (initiative: Initiative) => void;
   onGenerateReport: () => void;
   onDownloadData: () => void;
+  onPlanningClick: () => void;
+  onConfigureClick: () => void;
 }
 
 export const TransformationActions: React.FC<TransformationActionsProps> = ({
   onCreateInitiative,
   onGenerateReport,
-  onDownloadData
+  onDownloadData,
+  onPlanningClick,
+  onConfigureClick
 }) => {
   const { toast } = useToast();
   const { speakText } = useVoice();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isPlanningOpen, setIsPlanningOpen] = useState(false);
+  const [isConfigureOpen, setIsConfigureOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -86,6 +91,18 @@ export const TransformationActions: React.FC<TransformationActionsProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePlanning = () => {
+    setIsPlanningOpen(true);
+    onPlanningClick();
+    speakText("Opening transformation planning tools to create roadmaps and timelines.");
+  };
+
+  const handleConfigure = () => {
+    setIsConfigureOpen(true);
+    onConfigureClick();
+    speakText("Opening transformation configuration panel");
   };
 
   const handleGenerateReport = async () => {
@@ -181,6 +198,116 @@ Mobile Experience Upgrade,At Risk,$150K,Q2 2024,40%`;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <Dialog open={isPlanningOpen} onOpenChange={setIsPlanningOpen}>
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline"
+            onClick={handlePlanning}
+            className="hover-scale text-xs md:text-sm"
+            size="sm"
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Planning
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transformation Planning</DialogTitle>
+            <DialogDescription>
+              Create roadmaps and timelines for your transformation initiatives.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="planName">Plan Name</Label>
+              <Input id="planName" placeholder="e.g., Digital Transformation Roadmap" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="planDescription">Description</Label>
+              <Textarea id="planDescription" placeholder="Describe your transformation plan..." />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input id="startDate" type="date" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input id="endDate" type="date" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPlanningOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "Planning Created", description: "Transformation plan has been created successfully." });
+              setIsPlanningOpen(false);
+            }}>Create Plan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isConfigureOpen} onOpenChange={setIsConfigureOpen}>
+        <DialogTrigger asChild>
+          <Button 
+            onClick={handleConfigure}
+            className="hover-scale text-xs md:text-sm"
+            size="sm"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Configure
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transformation Configuration</DialogTitle>
+            <DialogDescription>
+              Configure settings for your transformation initiatives.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="orgName">Organization Name</Label>
+              <Input id="orgName" placeholder="Your organization name" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="defaultBudget">Default Budget Range</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select budget range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="50k-100k">$50K - $100K</SelectItem>
+                  <SelectItem value="100k-500k">$100K - $500K</SelectItem>
+                  <SelectItem value="500k-1m">$500K - $1M</SelectItem>
+                  <SelectItem value="1m+">$1M+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="approvalWorkflow">Approval Workflow</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select workflow" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manager">Manager Approval</SelectItem>
+                  <SelectItem value="committee">Committee Review</SelectItem>
+                  <SelectItem value="board">Board Approval</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConfigureOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "Configuration Saved", description: "Transformation settings have been updated." });
+              setIsConfigureOpen(false);
+            }}>Save Configuration</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <Button 
         variant="outline"
         onClick={() => speakText("Opening transformation planning tools to create roadmaps and timelines.")}

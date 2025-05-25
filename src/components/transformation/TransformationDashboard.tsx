@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -72,6 +71,22 @@ export const TransformationDashboard: React.FC = () => {
     });
   };
 
+  const handlePlanningClick = () => {
+    console.log("Planning functionality opened");
+    toast({
+      title: "Planning Tools",
+      description: "Transformation planning tools are now accessible."
+    });
+  };
+
+  const handleConfigureClick = () => {
+    console.log("Configure functionality opened");
+    toast({
+      title: "Configuration Panel",
+      description: "Transformation configuration panel is now open."
+    });
+  };
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     const tabMessages = {
@@ -129,6 +144,8 @@ export const TransformationDashboard: React.FC = () => {
           onCreateInitiative={handleCreateInitiative}
           onGenerateReport={handleGenerateReport}
           onDownloadData={handleDownloadData}
+          onPlanningClick={handlePlanningClick}
+          onConfigureClick={handleConfigureClick}
         />
       </div>
 

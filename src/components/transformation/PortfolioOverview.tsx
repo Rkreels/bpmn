@@ -1,9 +1,13 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Target, 
   Calendar, 
@@ -12,13 +16,15 @@ import {
   Plus,
   Filter,
   Eye,
-  Edit
+  Edit,
+  Search,
+  X
 } from "lucide-react";
 
 export const PortfolioOverview: React.FC = () => {
   const { speakText } = useVoice();
-
-  const initiatives = [
+  const { toast } = useToast();
+  const [initiatives, setInitiatives] = useState([
     {
       id: "init-001",
       name: "Customer Experience Transformation",
@@ -55,7 +61,87 @@ export const PortfolioOverview: React.FC = () => {
       dueDate: "2024-05-31",
       category: "analytics"
     }
-  ];
+  ]);
+
+  const [filteredInitiatives, setFilteredInitiatives] = useState(initiatives);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedInitiative, setSelectedInitiative] = useState<any>(null);
+  const [filterCriteria, setFilterCriteria] = useState({
+    status: "",
+    priority: "",
+    category: "",
+    search: ""
+  });
+
+  const applyFilters = () => {
+    let filtered = initiatives;
+
+    if (filterCriteria.status) {
+      filtered = filtered.filter(init => init.status === filterCriteria.status);
+    }
+    if (filterCriteria.priority) {
+      filtered = filtered.filter(init => init.priority === filterCriteria.priority);
+    }
+    if (filterCriteria.category) {
+      filtered = filtered.filter(init => init.category === filterCriteria.category);
+    }
+    if (filterCriteria.search) {
+      filtered = filtered.filter(init => 
+        init.name.toLowerCase().includes(filterCriteria.search.toLowerCase()) ||
+        init.owner.toLowerCase().includes(filterCriteria.search.toLowerCase())
+      );
+    }
+
+    setFilteredInitiatives(filtered);
+    toast({
+      title: "Filters Applied",
+      description: `Showing ${filtered.length} of ${initiatives.length} initiatives`
+    });
+  };
+
+  const clearFilters = () => {
+    setFilterCriteria({ status: "", priority: "", category: "", search: "" });
+    setFilteredInitiatives(initiatives);
+    toast({
+      title: "Filters Cleared",
+      description: "Showing all initiatives"
+    });
+  };
+
+  const handleView = (initiative: any) => {
+    setSelectedInitiative(initiative);
+    setIsViewOpen(true);
+    speakText(`Viewing details for ${initiative.name}`);
+  };
+
+  const handleEdit = (initiative: any) => {
+    setSelectedInitiative(initiative);
+    setIsEditOpen(true);
+    speakText(`Editing ${initiative.name}`);
+  };
+
+  const handleSaveEdit = () => {
+    if (selectedInitiative) {
+      setInitiatives(prev => 
+        prev.map(init => 
+          init.id === selectedInitiative.id ? selectedInitiative : init
+        )
+      );
+      setFilteredInitiatives(prev => 
+        prev.map(init => 
+          init.id === selectedInitiative.id ? selectedInitiative : init
+        )
+      );
+      toast({
+        title: "Initiative Updated",
+        description: `${selectedInitiative.name} has been updated successfully.`
+      });
+      setIsEditOpen(false);
+      setSelectedInitiative(null);
+    }
+  };
 
   return (
     <div 
@@ -70,10 +156,84 @@ export const PortfolioOverview: React.FC = () => {
               <CardDescription>Active transformation initiatives and their progress</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+              <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Filter Initiatives</DialogTitle>
+                    <DialogDescription>
+                      Filter initiatives by status, priority, category, or search terms.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="search">Search</Label>
+                      <Input
+                        id="search"
+                        placeholder="Search by name or owner..."
+                        value={filterCriteria.search}
+                        onChange={(e) => setFilterCriteria(prev => ({ ...prev, search: e.target.value }))}
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Status</Label>
+                        <Select value={filterCriteria.status} onValueChange={(value) => setFilterCriteria(prev => ({ ...prev, status: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All</SelectItem>
+                            <SelectItem value="planning">Planning</SelectItem>
+                            <SelectItem value="in-progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Priority</Label>
+                        <Select value={filterCriteria.priority} onValueChange={(value) => setFilterCriteria(prev => ({ ...prev, priority: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="low">Low</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Category</Label>
+                        <Select value={filterCriteria.category} onValueChange={(value) => setFilterCriteria(prev => ({ ...prev, category: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All</SelectItem>
+                            <SelectItem value="customer-experience">Customer Experience</SelectItem>
+                            <SelectItem value="automation">Automation</SelectItem>
+                            <SelectItem value="analytics">Analytics</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={clearFilters}>Clear All</Button>
+                    <Button onClick={() => {
+                      applyFilters();
+                      setIsFilterOpen(false);
+                    }}>Apply Filters</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 New Initiative
@@ -83,7 +243,7 @@ export const PortfolioOverview: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {initiatives.map((initiative) => (
+            {filteredInitiatives.map((initiative) => (
               <div key={initiative.id} className="border rounded-lg p-4 hover:bg-muted/50">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
@@ -137,11 +297,11 @@ export const PortfolioOverview: React.FC = () => {
                   </div>
                   
                   <div className="flex gap-2 ml-4">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleView(initiative)}>
                       <Eye className="h-4 w-4 mr-2" />
                       View
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(initiative)}>
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
@@ -152,6 +312,135 @@ export const PortfolioOverview: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* View Initiative Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Initiative Details</DialogTitle>
+            <DialogDescription>Complete information about this transformation initiative</DialogDescription>
+          </DialogHeader>
+          {selectedInitiative && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Name</Label>
+                  <p className="text-lg">{selectedInitiative.name}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <Badge className="mt-1">{selectedInitiative.status}</Badge>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Budget</Label>
+                  <p>{selectedInitiative.budget}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Spent</Label>
+                  <p>{selectedInitiative.spent}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Progress</Label>
+                  <p>{selectedInitiative.progress}%</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Owner</Label>
+                  <p>{selectedInitiative.owner}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Due Date</Label>
+                  <p>{new Date(selectedInitiative.dueDate).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsViewOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Initiative Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Initiative</DialogTitle>
+            <DialogDescription>Update initiative information</DialogDescription>
+          </DialogHeader>
+          {selectedInitiative && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="editName">Name</Label>
+                <Input
+                  id="editName"
+                  value={selectedInitiative.name}
+                  onChange={(e) => setSelectedInitiative(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Status</Label>
+                  <Select 
+                    value={selectedInitiative.status} 
+                    onValueChange={(value) => setSelectedInitiative(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Priority</Label>
+                  <Select 
+                    value={selectedInitiative.priority} 
+                    onValueChange={(value) => setSelectedInitiative(prev => ({ ...prev, priority: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="editBudget">Budget</Label>
+                  <Input
+                    id="editBudget"
+                    value={selectedInitiative.budget}
+                    onChange={(e) => setSelectedInitiative(prev => ({ ...prev, budget: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="editOwner">Owner</Label>
+                  <Input
+                    id="editOwner"
+                    value={selectedInitiative.owner}
+                    onChange={(e) => setSelectedInitiative(prev => ({ ...prev, owner: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

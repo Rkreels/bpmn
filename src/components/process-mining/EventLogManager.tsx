@@ -3,8 +3,11 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Database, 
   Upload, 
@@ -16,14 +19,28 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Activity
+  Activity,
+  Eye,
+  X
 } from "lucide-react";
 
 export const EventLogManager: React.FC = () => {
   const { speakText } = useVoice();
+  const { toast } = useToast();
   const [selectedLog, setSelectedLog] = useState("order-processing");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isViewLogOpen, setIsViewLogOpen] = useState(false);
+  const [selectedLogForView, setSelectedLogForView] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCriteria, setFilterCriteria] = useState({
+    status: "",
+    source: "",
+    timeframe: ""
+  });
 
-  const eventLogs = [
+  const [eventLogs, setEventLogs] = useState([
     {
       id: "order-processing",
       name: "Order Processing Events",
@@ -33,7 +50,9 @@ export const EventLogManager: React.FC = () => {
       timeframe: "Last 6 months",
       status: "active",
       lastUpdate: "2024-01-15T10:30:00Z",
-      size: "2.3 GB"
+      size: "2.3 GB",
+      format: "CSV",
+      quality: 94
     },
     {
       id: "customer-support",
@@ -44,7 +63,9 @@ export const EventLogManager: React.FC = () => {
       timeframe: "Last 3 months",
       status: "active",
       lastUpdate: "2024-01-14T15:45:00Z",
-      size: "1.8 GB"
+      size: "1.8 GB",
+      format: "JSON",
+      quality: 87
     },
     {
       id: "invoice-processing",
@@ -55,7 +76,9 @@ export const EventLogManager: React.FC = () => {
       timeframe: "Last 12 months",
       status: "importing",
       lastUpdate: "2024-01-13T09:20:00Z",
-      size: "1.2 GB"
+      size: "1.2 GB",
+      format: "XES",
+      quality: 92
     },
     {
       id: "hr-onboarding",
@@ -66,9 +89,13 @@ export const EventLogManager: React.FC = () => {
       timeframe: "Last 6 months",
       status: "error",
       lastUpdate: "2024-01-12T14:10:00Z",
-      size: "456 MB"
+      size: "456 MB",
+      format: "CSV",
+      quality: 76
     }
-  ];
+  ]);
+
+  const [filteredLogs, setFilteredLogs] = useState(eventLogs);
 
   const dataQualityMetrics = [
     { metric: "Data Completeness", value: 94, status: "good" },
@@ -84,6 +111,131 @@ export const EventLogManager: React.FC = () => {
     { timestamp: "2024-01-15 14:26:15", case: "ORD-123457", activity: "Order Received", resource: "System", duration: "0.1s" },
     { timestamp: "2024-01-15 14:26:45", case: "ORD-123456", activity: "Inventory Check", resource: "System", duration: "30s" }
   ];
+
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredLogs(eventLogs);
+      return;
+    }
+    
+    const filtered = eventLogs.filter(log => 
+      log.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.source.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    setFilteredLogs(filtered);
+    toast({
+      title: "Search Applied",
+      description: `Found ${filtered.length} matching event logs`
+    });
+    setIsSearchOpen(false);
+  };
+
+  const handleFilter = () => {
+    let filtered = eventLogs;
+
+    if (filterCriteria.status) {
+      filtered = filtered.filter(log => log.status === filterCriteria.status);
+    }
+    if (filterCriteria.source) {
+      filtered = filtered.filter(log => log.source.toLowerCase().includes(filterCriteria.source.toLowerCase()));
+    }
+    if (filterCriteria.timeframe) {
+      filtered = filtered.filter(log => log.timeframe.includes(filterCriteria.timeframe));
+    }
+
+    setFilteredLogs(filtered);
+    toast({
+      title: "Filters Applied",
+      description: `Showing ${filtered.length} of ${eventLogs.length} event logs`
+    });
+    setIsFilterOpen(false);
+  };
+
+  const handleRefresh = () => {
+    toast({
+      title: "Refreshing Data",
+      description: "Updating event log information..."
+    });
+    
+    setTimeout(() => {
+      // Simulate data refresh
+      setEventLogs(prev => prev.map(log => ({
+        ...log,
+        lastUpdate: new Date().toISOString()
+      })));
+      setFilteredLogs(prev => prev.map(log => ({
+        ...log,
+        lastUpdate: new Date().toISOString()
+      })));
+      
+      toast({
+        title: "Data Refreshed",
+        description: "Event log information has been updated successfully."
+      });
+    }, 2000);
+  };
+
+  const handleImportLog = () => {
+    setIsImportOpen(true);
+    speakText("Opening event log import dialog");
+  };
+
+  const handleViewLog = (log: any) => {
+    setSelectedLogForView(log);
+    setIsViewLogOpen(true);
+    speakText(`Viewing details for ${log.name}`);
+  };
+
+  const handleDownload = (log: any) => {
+    toast({
+      title: "Download Started",
+      description: `Downloading ${log.name}...`
+    });
+    
+    // Simulate file download
+    setTimeout(() => {
+      const data = {
+        logName: log.name,
+        events: log.events,
+        cases: log.cases,
+        exportDate: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${log.name.replace(/\s+/g, '-').toLowerCase()}-export.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Complete",
+        description: `${log.name} has been downloaded successfully.`
+      });
+    }, 1500);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "active": return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "importing": return <Clock className="h-4 w-4 text-blue-500" />;
+      case "error": return <AlertCircle className="h-4 w-4 text-red-500" />;
+      default: return <Activity className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active": return "bg-green-100 text-green-800";
+      case "importing": return "bg-blue-100 text-blue-800";
+      case "error": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <div 
@@ -102,22 +254,134 @@ export const EventLogManager: React.FC = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline">
+              <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Search className="h-4 w-4 mr-2" />
+                    Search
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Search Event Logs</DialogTitle>
+                    <DialogDescription>Search by log name or data source</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <Input
+                      placeholder="Enter search term..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsSearchOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSearch}>Search</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Filter Event Logs</DialogTitle>
+                    <DialogDescription>Filter logs by status, source, or timeframe</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <label className="text-sm font-medium">Status</label>
+                      <select 
+                        className="w-full p-2 border rounded-md"
+                        value={filterCriteria.status}
+                        onChange={(e) => setFilterCriteria(prev => ({ ...prev, status: e.target.value }))}
+                      >
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="importing">Importing</option>
+                        <option value="error">Error</option>
+                      </select>
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="text-sm font-medium">Source</label>
+                      <Input
+                        placeholder="Filter by source..."
+                        value={filterCriteria.source}
+                        onChange={(e) => setFilterCriteria(prev => ({ ...prev, source: e.target.value }))}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="text-sm font-medium">Timeframe</label>
+                      <select 
+                        className="w-full p-2 border rounded-md"
+                        value={filterCriteria.timeframe}
+                        onChange={(e) => setFilterCriteria(prev => ({ ...prev, timeframe: e.target.value }))}
+                      >
+                        <option value="">All Timeframes</option>
+                        <option value="3 months">Last 3 months</option>
+                        <option value="6 months">Last 6 months</option>
+                        <option value="12 months">Last 12 months</option>
+                      </select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => {
+                      setFilterCriteria({ status: "", source: "", timeframe: "" });
+                      setFilteredLogs(eventLogs);
+                      setIsFilterOpen(false);
+                    }}>Clear</Button>
+                    <Button onClick={handleFilter}>Apply Filters</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Button variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
-              <Button>
-                <Upload className="h-4 w-4 mr-2" />
-                Import Log
-              </Button>
+
+              <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={handleImportLog}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import Log
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Import Event Log</DialogTitle>
+                    <DialogDescription>Upload a new event log for process mining analysis</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <label className="text-sm font-medium">Log Name</label>
+                      <Input placeholder="e.g., Purchase Order Process" />
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="text-sm font-medium">Data Source</label>
+                      <Input placeholder="e.g., SAP ERP" />
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="text-sm font-medium">File</label>
+                      <Input type="file" accept=".csv,.xes,.json" />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsImportOpen(false)}>Cancel</Button>
+                    <Button onClick={() => {
+                      toast({
+                        title: "Import Started",
+                        description: "Event log import has been initiated."
+                      });
+                      setIsImportOpen(false);
+                    }}>Import Log</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </CardContent>
@@ -180,45 +444,40 @@ export const EventLogManager: React.FC = () => {
                       <th className="text-left p-3">Source</th>
                       <th className="text-right p-3">Events</th>
                       <th className="text-right p-3">Cases</th>
-                      <th className="text-right p-3">Timeframe</th>
-                      <th className="text-right p-3">Status</th>
-                      <th className="text-right p-3">Size</th>
-                      <th className="text-right p-3">Actions</th>
+                      <th className="text-center p-3">Status</th>
+                      <th className="text-center p-3">Quality</th>
+                      <th className="text-center p-3">Size</th>
+                      <th className="text-center p-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {eventLogs.map((log) => (
+                    {filteredLogs.map((log) => (
                       <tr key={log.id} className="border-b hover:bg-muted/50">
                         <td className="p-3">
                           <div>
                             <div className="font-medium">{log.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              Updated {new Date(log.lastUpdate).toLocaleDateString()}
-                            </div>
+                            <div className="text-sm text-muted-foreground">{log.timeframe}</div>
                           </div>
                         </td>
                         <td className="p-3">{log.source}</td>
                         <td className="p-3 text-right">{log.events.toLocaleString()}</td>
                         <td className="p-3 text-right">{log.cases.toLocaleString()}</td>
-                        <td className="p-3 text-right">{log.timeframe}</td>
-                        <td className="p-3 text-right">
-                          <Badge variant={
-                            log.status === "active" ? "default" :
-                            log.status === "importing" ? "secondary" : "destructive"
-                          }>
-                            {log.status === "active" && <CheckCircle className="h-3 w-3 mr-1" />}
-                            {log.status === "importing" && <Clock className="h-3 w-3 mr-1" />}
-                            {log.status === "error" && <AlertCircle className="h-3 w-3 mr-1" />}
-                            {log.status}
-                          </Badge>
+                        <td className="p-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {getStatusIcon(log.status)}
+                            <Badge className={getStatusColor(log.status)}>
+                              {log.status}
+                            </Badge>
+                          </div>
                         </td>
-                        <td className="p-3 text-right">{log.size}</td>
-                        <td className="p-3 text-right">
-                          <div className="flex gap-1">
-                            <Button variant="outline" size="sm">
-                              <FileText className="h-4 w-4" />
+                        <td className="p-3 text-center">{log.quality}%</td>
+                        <td className="p-3 text-center">{log.size}</td>
+                        <td className="p-3 text-center">
+                          <div className="flex gap-1 justify-center">
+                            <Button variant="outline" size="sm" onClick={() => handleViewLog(log)}>
+                              <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => handleDownload(log)}>
                               <Download className="h-4 w-4" />
                             </Button>
                           </div>
@@ -235,60 +494,15 @@ export const EventLogManager: React.FC = () => {
         <TabsContent value="connections">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Data Source Connections
-              </CardTitle>
-              <CardDescription>Configure and manage connections to your business systems</CardDescription>
+              <CardTitle>Data Connections</CardTitle>
+              <CardDescription>Configure and manage connections to your data sources</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">SAP ERP</h4>
-                    <Badge variant="default">Connected</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Real-time connection to SAP for order and finance processes
-                  </p>
-                  <div className="text-xs text-muted-foreground">
-                    Last sync: 2 minutes ago
-                  </div>
-                </div>
-                
-                <div className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">ServiceNow</h4>
-                    <Badge variant="default">Connected</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Customer support tickets and incident management
-                  </p>
-                  <div className="text-xs text-muted-foreground">
-                    Last sync: 15 minutes ago
-                  </div>
-                </div>
-                
-                <div className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">Workday</h4>
-                    <Badge variant="secondary">Disconnected</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    HR processes and employee onboarding
-                  </p>
-                  <div className="text-xs text-muted-foreground">
-                    Configure connection
-                  </div>
-                </div>
-                
-                <div className="border-2 border-dashed rounded-lg p-4 hover:bg-muted/50 cursor-pointer flex items-center justify-center">
-                  <div className="text-center">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <div className="font-medium">Add Connection</div>
-                    <div className="text-sm text-muted-foreground">Connect new data source</div>
-                  </div>
-                </div>
+              <div className="text-center py-8">
+                <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Data Connections</h3>
+                <p className="text-muted-foreground mb-4">Set up connections to automatically import event logs</p>
+                <Button>Add Data Connection</Button>
               </div>
             </CardContent>
           </Card>
@@ -297,74 +511,89 @@ export const EventLogManager: React.FC = () => {
         <TabsContent value="monitoring">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Live Event Monitoring
-              </CardTitle>
-              <CardDescription>Real-time stream of incoming events</CardDescription>
+              <CardTitle>Live Event Monitoring</CardTitle>
+              <CardDescription>Real-time view of incoming process events</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium">Live stream active</span>
-                  <Badge variant="outline">142 events/min</Badge>
-                </div>
-                <Button variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Pause Stream
-                </Button>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Timestamp</th>
-                      <th className="text-left p-2">Case ID</th>
-                      <th className="text-left p-2">Activity</th>
-                      <th className="text-left p-2">Resource</th>
-                      <th className="text-right p-2">Duration</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentEvents.map((event, index) => (
-                      <tr key={index} className="border-b hover:bg-muted/50 font-mono text-xs">
-                        <td className="p-2">{event.timestamp}</td>
-                        <td className="p-2">{event.case}</td>
-                        <td className="p-2">{event.activity}</td>
-                        <td className="p-2">{event.resource}</td>
-                        <td className="p-2 text-right">{event.duration}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm">
-                <div className="grid grid-cols-4 gap-4 text-center">
-                  <div>
-                    <div className="font-semibold">1,247</div>
-                    <div className="text-muted-foreground">Events today</div>
+              <div className="space-y-2">
+                {recentEvents.map((event, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 border rounded">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-mono">{event.timestamp}</span>
+                      <span className="font-medium">{event.case}</span>
+                      <span>{event.activity}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">{event.resource}</span>
+                      <Badge variant="outline">{event.duration}</Badge>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-semibold">156</div>
-                    <div className="text-muted-foreground">Active cases</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold">98.7%</div>
-                    <div className="text-muted-foreground">Data quality</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold">2.3s</div>
-                    <div className="text-muted-foreground">Avg latency</div>
-                  </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* View Log Details Dialog */}
+      <Dialog open={isViewLogOpen} onOpenChange={setIsViewLogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Event Log Details</DialogTitle>
+            <DialogDescription>Comprehensive information about this event log</DialogDescription>
+          </DialogHeader>
+          {selectedLogForView && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Log Name</label>
+                  <p className="text-lg">{selectedLogForView.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Data Source</label>
+                  <p>{selectedLogForView.source}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Total Events</label>
+                  <p className="text-xl font-bold">{selectedLogForView.events.toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Total Cases</label>
+                  <p className="text-xl font-bold">{selectedLogForView.cases.toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Data Quality</label>
+                  <p className="text-xl font-bold">{selectedLogForView.quality}%</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">File Size</label>
+                  <p>{selectedLogForView.size}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Format</label>
+                  <p>{selectedLogForView.format}</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Last Updated</label>
+                <p>{new Date(selectedLogForView.lastUpdate).toLocaleString()}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewLogOpen(false)}>Close</Button>
+            <Button onClick={() => {
+              if (selectedLogForView) {
+                handleDownload(selectedLogForView);
+              }
+            }}>Download Log</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
