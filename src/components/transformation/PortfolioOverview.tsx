@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,22 +70,22 @@ export const PortfolioOverview: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedInitiative, setSelectedInitiative] = useState<any>(null);
   const [filterCriteria, setFilterCriteria] = useState({
-    status: "",
-    priority: "",
-    category: "",
+    status: "all",
+    priority: "all",
+    category: "all",
     search: ""
   });
 
   const applyFilters = () => {
     let filtered = initiatives;
 
-    if (filterCriteria.status) {
+    if (filterCriteria.status && filterCriteria.status !== "all") {
       filtered = filtered.filter(init => init.status === filterCriteria.status);
     }
-    if (filterCriteria.priority) {
+    if (filterCriteria.priority && filterCriteria.priority !== "all") {
       filtered = filtered.filter(init => init.priority === filterCriteria.priority);
     }
-    if (filterCriteria.category) {
+    if (filterCriteria.category && filterCriteria.category !== "all") {
       filtered = filtered.filter(init => init.category === filterCriteria.category);
     }
     if (filterCriteria.search) {
@@ -102,7 +103,7 @@ export const PortfolioOverview: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setFilterCriteria({ status: "", priority: "", category: "", search: "" });
+    setFilterCriteria({ status: "all", priority: "all", category: "all", search: "" });
     setFilteredInitiatives(initiatives);
     toast({
       title: "Filters Cleared",
@@ -188,7 +189,7 @@ export const PortfolioOverview: React.FC = () => {
                             <SelectValue placeholder="All" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All</SelectItem>
+                            <SelectItem value="all">All</SelectItem>
                             <SelectItem value="planning">Planning</SelectItem>
                             <SelectItem value="in-progress">In Progress</SelectItem>
                             <SelectItem value="completed">Completed</SelectItem>
@@ -202,7 +203,7 @@ export const PortfolioOverview: React.FC = () => {
                             <SelectValue placeholder="All" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All</SelectItem>
+                            <SelectItem value="all">All</SelectItem>
                             <SelectItem value="high">High</SelectItem>
                             <SelectItem value="medium">Medium</SelectItem>
                             <SelectItem value="low">Low</SelectItem>
@@ -216,7 +217,7 @@ export const PortfolioOverview: React.FC = () => {
                             <SelectValue placeholder="All" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All</SelectItem>
+                            <SelectItem value="all">All</SelectItem>
                             <SelectItem value="customer-experience">Customer Experience</SelectItem>
                             <SelectItem value="automation">Automation</SelectItem>
                             <SelectItem value="analytics">Analytics</SelectItem>
