@@ -29,8 +29,8 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     channel: "",
-    type: "digital" as const,
-    emotion: "neutral" as const,
+    type: "digital" as "digital" | "physical" | "human",
+    emotion: "neutral" as TouchPoint["emotion"],
     duration: "",
     painPoints: "",
     opportunities: ""
@@ -88,6 +88,14 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
     speakText(`New touchpoint ${formData.name} has been added to the journey stage. This ${formData.type} touchpoint via ${formData.channel} will help track customer interactions and identify optimization opportunities.`);
   };
 
+  const handleTypeChange = (value: string) => {
+    setFormData({ ...formData, type: value as "digital" | "physical" | "human" });
+  };
+
+  const handleEmotionChange = (value: string) => {
+    setFormData({ ...formData, emotion: value as TouchPoint["emotion"] });
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -132,9 +140,7 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
               <Label htmlFor="type">Type</Label>
               <Select 
                 value={formData.type} 
-                onValueChange={(value: "digital" | "physical" | "human") => 
-                  setFormData({ ...formData, type: value })
-                }
+                onValueChange={handleTypeChange}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -151,9 +157,7 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
               <Label htmlFor="emotion">Emotion</Label>
               <Select 
                 value={formData.emotion} 
-                onValueChange={(value: TouchPoint["emotion"]) => 
-                  setFormData({ ...formData, emotion: value })
-                }
+                onValueChange={handleEmotionChange}
               >
                 <SelectTrigger>
                   <SelectValue />

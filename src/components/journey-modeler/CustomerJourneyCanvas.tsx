@@ -99,7 +99,7 @@ export const CustomerJourneyCanvas: React.FC = () => {
   if (!currentJourney) {
     return (
       <div className="w-full text-center py-12">
-        <Map className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <p className="text-lg font-medium">No Journey Selected</p>
         <p className="text-muted-foreground">Create a new journey to start mapping customer experiences</p>
       </div>

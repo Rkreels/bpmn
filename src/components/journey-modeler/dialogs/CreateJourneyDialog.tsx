@@ -26,7 +26,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
     name: "",
     description: "",
     personaId: "",
-    status: "draft" as const
+    status: "draft" as "draft" | "active" | "archived"
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,6 +54,10 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
     onJourneyCreated?.(newJourney.id);
     
     speakText(`New customer journey ${formData.name} has been created successfully. You can now start adding stages and touchpoints to map the complete customer experience.`);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setFormData({ ...formData, status: value as "draft" | "active" | "archived" });
   };
 
   return (
@@ -117,9 +121,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
             <Label htmlFor="status">Status</Label>
             <Select 
               value={formData.status} 
-              onValueChange={(value: "draft" | "active" | "archived") => 
-                setFormData({ ...formData, status: value })
-              }
+              onValueChange={handleStatusChange}
             >
               <SelectTrigger>
                 <SelectValue />
