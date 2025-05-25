@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  MarkAsRead
+  CheckCircle2
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useVoice } from "@/contexts/VoiceContext";
