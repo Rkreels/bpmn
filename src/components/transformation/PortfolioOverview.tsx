@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { NewInitiativeDialog } from "./NewInitiativeDialog";
 import { 
   Target, 
   Calendar, 
@@ -19,7 +19,8 @@ import {
   Eye,
   Edit,
   Search,
-  X
+  X,
+  Download
 } from "lucide-react";
 
 export const PortfolioOverview: React.FC = () => {
@@ -68,6 +69,7 @@ export const PortfolioOverview: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isNewInitiativeOpen, setIsNewInitiativeOpen] = useState(false);
   const [selectedInitiative, setSelectedInitiative] = useState<any>(null);
   const [filterCriteria, setFilterCriteria] = useState({
     status: "all",
@@ -142,6 +144,38 @@ export const PortfolioOverview: React.FC = () => {
       setIsEditOpen(false);
       setSelectedInitiative(null);
     }
+  };
+
+  const handleCreateInitiative = (newInitiative: any) => {
+    setInitiatives(prev => [...prev, newInitiative]);
+    setFilteredInitiatives(prev => [...prev, newInitiative]);
+    toast({
+      title: "Initiative Created",
+      description: `${newInitiative.name} has been added to your portfolio.`
+    });
+  };
+
+  const handleExportData = () => {
+    const dataToExport = {
+      initiatives: filteredInitiatives,
+      exportDate: new Date().toISOString(),
+      totalInitiatives: filteredInitiatives.length
+    };
+    
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'portfolio-initiatives.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data Exported",
+      description: "Portfolio data has been downloaded successfully."
+    });
   };
 
   return (
@@ -227,15 +261,40 @@ export const PortfolioOverview: React.FC = () => {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={clearFilters}>Clear All</Button>
+                    <Button variant="outline" onClick={() => {
+                      setFilterCriteria({ status: "all", priority: "all", category: "all", search: "" });
+                      setFilteredInitiatives(initiatives);
+                    }}>Clear All</Button>
                     <Button onClick={() => {
-                      applyFilters();
+                      let filtered = initiatives;
+                      if (filterCriteria.status && filterCriteria.status !== "all") {
+                        filtered = filtered.filter(init => init.status === filterCriteria.status);
+                      }
+                      if (filterCriteria.priority && filterCriteria.priority !== "all") {
+                        filtered = filtered.filter(init => init.priority === filterCriteria.priority);
+                      }
+                      if (filterCriteria.category && filterCriteria.category !== "all") {
+                        filtered = filtered.filter(init => init.category === filterCriteria.category);
+                      }
+                      if (filterCriteria.search) {
+                        filtered = filtered.filter(init => 
+                          init.name.toLowerCase().includes(filterCriteria.search.toLowerCase()) ||
+                          init.owner.toLowerCase().includes(filterCriteria.search.toLowerCase())
+                        );
+                      }
+                      setFilteredInitiatives(filtered);
                       setIsFilterOpen(false);
                     }}>Apply Filters</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              <Button>
+              
+              <Button variant="outline" onClick={handleExportData}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              
+              <Button onClick={() => setIsNewInitiativeOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Initiative
               </Button>
@@ -442,6 +501,12 @@ export const PortfolioOverview: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <NewInitiativeDialog 
+        open={isNewInitiativeOpen} 
+        onOpenChange={setIsNewInitiativeOpen}
+        onCreateInitiative={handleCreateInitiative}
+      />
     </div>
   );
 };
