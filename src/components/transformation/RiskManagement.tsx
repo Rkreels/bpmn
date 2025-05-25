@@ -3,90 +3,157 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { RiskDetailsDialog } from "./RiskDetailsDialog";
 import { 
   AlertTriangle, 
-  Eye, 
-  TrendingUp,
+  TrendingUp, 
   Shield,
-  Clock,
-  DollarSign
+  Eye,
+  Plus,
+  Filter,
+  Download
 } from "lucide-react";
+
+interface Risk {
+  id: string;
+  title: string;
+  description: string;
+  severity: "high" | "medium" | "low";
+  probability: number;
+  impact: string;
+  mitigation: string;
+  owner: string;
+  status: "open" | "mitigated" | "closed";
+  dueDate: string;
+  affectedInitiatives: string[];
+}
 
 export const RiskManagement: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
-  const [selectedRisk, setSelectedRisk] = useState<any>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [selectedRisk, setSelectedRisk] = useState<Risk | null>(null);
+  const [isRiskDetailsOpen, setIsRiskDetailsOpen] = useState(false);
 
-  const risks = [
+  const [risks] = useState<Risk[]>([
     {
       id: "risk-001",
       title: "Budget Overrun Risk",
-      severity: "High",
-      impact: "High",
-      probability: "Medium",
-      category: "Financial",
-      description: "Project costs exceeding allocated budget by 20%",
-      mitigation: "Implement strict budget monitoring and approval processes",
+      description: "Potential for project costs to exceed allocated budget due to scope creep and resource constraints.",
+      severity: "high",
+      probability: 75,
+      impact: "Could result in $200K+ budget overrun, project delays, and reduced ROI. May affect multiple transformation initiatives.",
+      mitigation: "Implement strict change control processes, weekly budget reviews, and contingency planning. Establish clear scope boundaries and stakeholder approval processes.",
       owner: "Sarah Chen",
-      status: "Open",
-      dueDate: "2024-02-15"
+      status: "open",
+      dueDate: "2024-06-15",
+      affectedInitiatives: ["Customer Experience Transformation", "Process Automation Suite"]
     },
     {
       id: "risk-002",
       title: "Resource Availability",
-      severity: "Medium",
-      impact: "Medium",
-      probability: "High",
-      category: "Resource",
-      description: "Key technical resources may not be available during critical phases",
-      mitigation: "Cross-train team members and establish backup resource pool",
+      description: "Key technical resources may not be available during critical project phases.",
+      severity: "medium",
+      probability: 60,
+      impact: "Potential 2-3 week delays, increased dependency on external contractors, higher costs.",
+      mitigation: "Cross-train team members, establish backup resource pool, engage contractors early for critical skills.",
       owner: "Mike Rodriguez",
-      status: "Mitigating",
-      dueDate: "2024-01-30"
+      status: "mitigated",
+      dueDate: "2024-05-30",
+      affectedInitiatives: ["Data Analytics Platform"]
     },
     {
       id: "risk-003",
       title: "Technology Integration",
-      severity: "High",
-      impact: "High",
-      probability: "Low",
-      category: "Technical",
-      description: "Legacy systems may not integrate properly with new platforms",
-      mitigation: "Conduct thorough integration testing and develop fallback plans",
+      description: "Legacy system integration challenges may impact project timeline and functionality.",
+      severity: "medium",
+      probability: 45,
+      impact: "Integration delays, potential data migration issues, reduced system performance.",
+      mitigation: "Conduct thorough technical assessment, implement phased integration approach, establish fallback procedures.",
       owner: "Lisa Wang",
-      status: "Open",
-      dueDate: "2024-03-01"
+      status: "open",
+      dueDate: "2024-07-01",
+      affectedInitiatives: ["Customer Experience Transformation", "Data Analytics Platform"]
+    }
+  ]);
+
+  const riskMetrics = [
+    {
+      label: "High Risk Items",
+      value: risks.filter(r => r.severity === "high").length.toString(),
+      total: risks.length,
+      icon: AlertTriangle,
+      color: "text-red-500"
+    },
+    {
+      label: "Open Risks",
+      value: risks.filter(r => r.status === "open").length.toString(),
+      total: risks.length,
+      icon: Shield,
+      color: "text-orange-500"
+    },
+    {
+      label: "Average Probability",
+      value: `${Math.round(risks.reduce((acc, r) => acc + r.probability, 0) / risks.length)}%`,
+      total: 100,
+      icon: TrendingUp,
+      color: "text-blue-500"
     }
   ];
 
-  const handleViewDetails = (risk: any) => {
+  const handleViewRisk = (risk: Risk) => {
     setSelectedRisk(risk);
-    setIsViewOpen(true);
-    speakText(`Viewing details for ${risk.title}`);
+    setIsRiskDetailsOpen(true);
+    speakText(`Viewing details for ${risk.title}. This is a ${risk.severity} severity risk with ${risk.probability}% probability.`);
+  };
+
+  const handleAddRisk = () => {
     toast({
-      title: "Risk Details",
-      description: `Opening detailed view for ${risk.title}`
+      title: "Add New Risk",
+      description: "Risk creation dialog would open here."
+    });
+    speakText("Opening risk creation form.");
+  };
+
+  const handleExportRisks = () => {
+    const dataToExport = {
+      risks,
+      exportDate: new Date().toISOString(),
+      totalRisks: risks.length
+    };
+    
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'risk-register.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Risks Exported",
+      description: "Risk register has been downloaded successfully."
     });
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "High": return "bg-red-100 text-red-800";
-      case "Medium": return "bg-yellow-100 text-yellow-800";
-      case "Low": return "bg-green-100 text-green-800";
+      case "high": return "bg-red-100 text-red-800";
+      case "medium": return "bg-yellow-100 text-yellow-800";
+      case "low": return "bg-green-100 text-green-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Open": return "bg-red-100 text-red-800";
-      case "Mitigating": return "bg-yellow-100 text-yellow-800";
-      case "Closed": return "bg-green-100 text-green-800";
+      case "open": return "bg-red-100 text-red-800";
+      case "mitigated": return "bg-yellow-100 text-yellow-800";
+      case "closed": return "bg-green-100 text-green-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -94,197 +161,126 @@ export const RiskManagement: React.FC = () => {
   return (
     <div 
       className="space-y-6"
-      onMouseEnter={() => speakText("Risk Management. Identify, assess, and mitigate risks across your transformation portfolio. Monitor risk levels and ensure proactive risk management.")}
+      onMouseEnter={() => speakText("Risk Management Dashboard. Monitor and mitigate transformation risks. Track risk severity, probability, and mitigation strategies across all initiatives.")}
     >
-      {/* Risk Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <h3 className="font-medium text-sm">High Risk</h3>
-            </div>
-            <div className="text-2xl font-bold">2</div>
-            <div className="text-xs text-muted-foreground">Requires immediate attention</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="h-4 w-4 text-yellow-500" />
-              <h3 className="font-medium text-sm">Medium Risk</h3>
-            </div>
-            <div className="text-2xl font-bold">1</div>
-            <div className="text-xs text-muted-foreground">Monitor closely</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="h-4 w-4 text-green-500" />
-              <h3 className="font-medium text-sm">Low Risk</h3>
-            </div>
-            <div className="text-2xl font-bold">0</div>
-            <div className="text-xs text-muted-foreground">Under control</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-blue-500" />
-              <h3 className="font-medium text-sm">Risk Score</h3>
-            </div>
-            <div className="text-2xl font-bold">7.2</div>
-            <div className="text-xs text-muted-foreground">Out of 10</div>
-          </CardContent>
-        </Card>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Risk Management</h2>
+          <p className="text-muted-foreground">Monitor and mitigate transformation risks</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportRisks}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button onClick={handleAddRisk}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Risk
+          </Button>
+        </div>
+      </div>
+
+      {/* Risk Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {riskMetrics.map((metric, index) => {
+          const IconComponent = metric.icon;
+          return (
+            <Card key={index}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <IconComponent className={`h-8 w-8 ${metric.color}`} />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">{metric.label}</p>
+                    <p className="text-2xl font-bold">{metric.value}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Risk Register */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Risk Register
-          </CardTitle>
-          <CardDescription>Active risks and their mitigation strategies</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Risk Register</CardTitle>
+              <CardDescription>Active risks across transformation initiatives</CardDescription>
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-3">Risk</th>
-                  <th className="text-left p-3">Category</th>
-                  <th className="text-center p-3">Severity</th>
-                  <th className="text-center p-3">Status</th>
-                  <th className="text-left p-3">Owner</th>
-                  <th className="text-center p-3">Due Date</th>
-                  <th className="text-center p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {risks.map((risk) => (
-                  <tr key={risk.id} className="border-b hover:bg-muted/50">
-                    <td className="p-3">
-                      <div>
-                        <div className="font-medium">{risk.title}</div>
-                        <div className="text-sm text-muted-foreground">{risk.description}</div>
-                      </div>
-                    </td>
-                    <td className="p-3">{risk.category}</td>
-                    <td className="p-3 text-center">
+          <div className="space-y-4">
+            {risks.map((risk) => (
+              <div key={risk.id} className="border rounded-lg p-4 hover:bg-muted/50">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold">{risk.title}</h3>
                       <Badge className={getSeverityColor(risk.severity)}>
-                        {risk.severity}
+                        {risk.severity.toUpperCase()}
                       </Badge>
-                    </td>
-                    <td className="p-3 text-center">
                       <Badge className={getStatusColor(risk.status)}>
-                        {risk.status}
+                        {risk.status.toUpperCase()}
                       </Badge>
-                    </td>
-                    <td className="p-3">{risk.owner}</td>
-                    <td className="p-3 text-center">{new Date(risk.dueDate).toLocaleDateString()}</td>
-                    <td className="p-3 text-center">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewDetails(risk)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-3">{risk.description}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                      <div>
+                        <div className="text-sm text-muted-foreground">Probability</div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={risk.probability} className="flex-1" />
+                          <span className="text-sm font-medium">{risk.probability}%</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Owner</div>
+                        <div className="font-medium">{risk.owner}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Due Date</div>
+                        <div className="font-medium">{new Date(risk.dueDate).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Affected Initiatives</div>
+                      <div className="flex flex-wrap gap-1">
+                        {risk.affectedInitiatives.map((initiative, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {initiative}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 ml-4">
+                    <Button variant="outline" size="sm" onClick={() => handleViewRisk(risk)}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Risk Details Dialog */}
-      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Risk Details</DialogTitle>
-            <DialogDescription>Comprehensive risk information and mitigation strategy</DialogDescription>
-          </DialogHeader>
-          {selectedRisk && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <h3 className="font-semibold text-lg">{selectedRisk.title}</h3>
-                <p className="text-muted-foreground">{selectedRisk.description}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Category</label>
-                  <p>{selectedRisk.category}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Owner</label>
-                  <p>{selectedRisk.owner}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Severity</label>
-                  <Badge className={getSeverityColor(selectedRisk.severity)}>
-                    {selectedRisk.severity}
-                  </Badge>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Impact</label>
-                  <Badge className={getSeverityColor(selectedRisk.impact)}>
-                    {selectedRisk.impact}
-                  </Badge>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Probability</label>
-                  <Badge className={getSeverityColor(selectedRisk.probability)}>
-                    {selectedRisk.probability}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Mitigation Strategy</label>
-                <p className="bg-muted p-3 rounded-md">{selectedRisk.mitigation}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Status</label>
-                  <Badge className={getStatusColor(selectedRisk.status)}>
-                    {selectedRisk.status}
-                  </Badge>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Due Date</label>
-                  <p>{new Date(selectedRisk.dueDate).toLocaleDateString()}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewOpen(false)}>Close</Button>
-            <Button onClick={() => {
-              toast({
-                title: "Risk Updated",
-                description: "Risk mitigation actions have been updated."
-              });
-              setIsViewOpen(false);
-            }}>
-              Update Risk
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RiskDetailsDialog 
+        risk={selectedRisk}
+        open={isRiskDetailsOpen}
+        onOpenChange={setIsRiskDetailsOpen}
+      />
     </div>
   );
 };

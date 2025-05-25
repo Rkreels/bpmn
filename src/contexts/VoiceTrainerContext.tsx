@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useVoice } from "./VoiceContext";
 import { useLocation } from "react-router-dom";
@@ -44,6 +43,82 @@ interface Tutorial {
 
 // Define tutorials for different modules
 const tutorials: Tutorial[] = [
+  {
+    id: "transformation-cockpit-intro",
+    name: "Transformation Cockpit Introduction", 
+    description: "Learn how to manage digital transformation initiatives",
+    pageUrl: "/transformation-cockpit",
+    steps: [
+      {
+        id: "welcome",
+        text: "Welcome to the Transformation Cockpit! This is your central command center for managing digital transformation initiatives. Track portfolio value, monitor progress, and ensure successful delivery.",
+        elementSelector: ".transformation-dashboard"
+      },
+      {
+        id: "metrics",
+        text: "These key metrics show your transformation portfolio performance: total value, active initiatives, value delivered year-to-date, and transformation ROI.",
+        elementSelector: ".metrics-grid"
+      },
+      {
+        id: "actions",
+        text: "Use these action buttons to create new initiatives, generate reports, configure settings, and manage your transformation portfolio.",
+        elementSelector: ".transformation-actions"
+      },
+      {
+        id: "initiatives",
+        text: "This section displays your recent transformation initiatives with their status, progress, budget, and timeline information.",
+        elementSelector: ".initiatives-section"
+      },
+      {
+        id: "tabs",
+        text: "Navigate between different views: Portfolio overview for initiative management, Value realization for ROI tracking, Change management for organizational adoption, Risk management for mitigation strategies, and Resource planning for allocation optimization.",
+        elementSelector: ".tabs-navigation"
+      },
+      {
+        id: "portfolio",
+        text: "The Portfolio tab allows you to filter, view, edit, and create transformation initiatives. You can also export data and track progress across all programs.",
+        elementSelector: ".portfolio-overview"
+      }
+    ]
+  },
+  {
+    id: "process-mining-intro",
+    name: "Process Mining Introduction",
+    description: "Learn how to analyze and optimize business processes",
+    pageUrl: "/process-mining", 
+    steps: [
+      {
+        id: "welcome",
+        text: "Welcome to Process Mining! This module helps you discover, analyze, and optimize your business processes using real data from your systems.",
+        elementSelector: ".process-mining-dashboard"
+      },
+      {
+        id: "actions",
+        text: "These actions let you create new mining projects, upload event data, start analysis, and export results for your process optimization initiatives.",
+        elementSelector: ".process-mining-actions"
+      },
+      {
+        id: "stats",
+        text: "Monitor key process mining statistics: number of processes analyzed, event logs processed, bottlenecks identified, and optimization potential.",
+        elementSelector: ".mining-stats"
+      },
+      {
+        id: "explorer",
+        text: "The Process Explorer visualizes your actual process flows discovered from event logs, showing variants, frequencies, and performance metrics.",
+        elementSelector: ".process-explorer"
+      },
+      {
+        id: "bottlenecks",
+        text: "Bottleneck analysis identifies process activities causing delays and inefficiencies, with recommendations for optimization and potential savings.",
+        elementSelector: ".bottleneck-analysis"
+      },
+      {
+        id: "conformance",
+        text: "Conformance checking compares your actual process execution against reference models to identify deviations and compliance issues.",
+        elementSelector: ".conformance-checker"
+      }
+    ]
+  },
   {
     id: "process-manager-intro",
     name: "Process Manager Introduction",
@@ -190,28 +265,40 @@ export const VoiceTrainerProvider: React.FC<VoiceTrainerProviderProps> = ({ chil
     return steps[currentStepIndex] || null;
   };
 
-  // Speak a step
+  // Speak a step with enhanced explanations
   const speakStep = (step: TutorialStep | null) => {
     if (!step || isPaused) return;
+    
+    // Enhanced text with more detailed explanations
+    let enhancedText = step.text;
+    
+    // Add contextual information based on step ID
+    if (step.id === "metrics") {
+      enhancedText += " These metrics are updated in real-time and provide insights into your transformation progress and financial impact.";
+    } else if (step.id === "portfolio") {
+      enhancedText += " You can filter initiatives by status, priority, or category. Click on any initiative to view detailed information or make edits.";
+    } else if (step.id === "bottlenecks") {
+      enhancedText += " Each bottleneck shows the average wait time, impact score, frequency, and potential monthly savings from optimization.";
+    }
     
     if (window.speechSynthesis && preferredVoice.current) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
       // Create a new speech utterance
-      const utterance = new SpeechSynthesisUtterance(step.text);
+      const utterance = new SpeechSynthesisUtterance(enhancedText);
       
       // Set the preferred voice
       utterance.voice = preferredVoice.current;
-      utterance.rate = 1.0;
-      utterance.pitch = 1.1; // Slightly higher pitch for a more natural female voice
+      utterance.rate = 0.9; // Slightly slower for better comprehension
+      utterance.pitch = 1.1;
       utterance.volume = 1.0;
       
       // Speak the text
       window.speechSynthesis.speak(utterance);
     } else {
       // Fall back to the regular voice function
-      speakText(step.text);
+      speakText(enhancedText);
     }
   };
 

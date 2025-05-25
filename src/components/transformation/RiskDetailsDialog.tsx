@@ -4,185 +4,162 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Clock, DollarSign, Users, TrendingDown } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, Clock, TrendingUp, Users, DollarSign } from "lucide-react";
 
-interface RiskDetailsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  risk: any;
+interface Risk {
+  id: string;
+  title: string;
+  description: string;
+  severity: "high" | "medium" | "low";
+  probability: number;
+  impact: string;
+  mitigation: string;
+  owner: string;
+  status: "open" | "mitigated" | "closed";
+  dueDate: string;
+  affectedInitiatives: string[];
 }
 
-export const RiskDetailsDialog: React.FC<RiskDetailsDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  risk 
+interface RiskDetailsDialogProps {
+  risk: Risk | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const RiskDetailsDialog: React.FC<RiskDetailsDialogProps> = ({
+  risk,
+  open,
+  onOpenChange
 }) => {
   if (!risk) return null;
 
-  const mitigationActions = [
-    { action: "Increase team size", status: "In Progress", progress: 60, owner: "John Smith" },
-    { action: "Implement backup system", status: "Planned", progress: 0, owner: "Sarah Wilson" },
-    { action: "Stakeholder alignment meeting", status: "Completed", progress: 100, owner: "Mike Johnson" }
-  ];
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case "high": return "bg-red-100 text-red-800";
+      case "medium": return "bg-yellow-100 text-yellow-800";
+      case "low": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "open": return "bg-red-100 text-red-800";
+      case "mitigated": return "bg-yellow-100 text-yellow-800";
+      case "closed": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            Risk Details: {risk.title}
+            <AlertTriangle className="h-5 w-5 text-orange-500" />
+            Risk Details
           </DialogTitle>
-          <DialogDescription>Comprehensive risk analysis and mitigation plan</DialogDescription>
+          <DialogDescription>Comprehensive risk information and mitigation strategies</DialogDescription>
         </DialogHeader>
-        
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="impact">Impact Analysis</TabsTrigger>
-            <TabsTrigger value="mitigation">Mitigation</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Risk Category</h4>
-                  <Badge variant="outline">{risk.category}</Badge>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Severity</h4>
-                  <Badge variant={risk.severity === "High" ? "destructive" : risk.severity === "Medium" ? "secondary" : "outline"}>
-                    {risk.severity}
-                  </Badge>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Probability</h4>
-                  <div className="flex items-center gap-2">
-                    <Progress value={risk.probability} className="flex-1" />
-                    <span className="text-sm">{risk.probability}%</span>
-                  </div>
-                </div>
+
+        <div className="space-y-6">
+          {/* Risk Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">{risk.title}</CardTitle>
+              <div className="flex gap-2">
+                <Badge className={getSeverityColor(risk.severity)}>
+                  {risk.severity.toUpperCase()} SEVERITY
+                </Badge>
+                <Badge className={getStatusColor(risk.status)}>
+                  {risk.status.toUpperCase()}
+                </Badge>
               </div>
-              <div className="space-y-4">
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">{risk.description}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-semibold mb-2">Affected Initiatives</h4>
-                  <div className="space-y-1">
-                    <div className="text-sm">Customer Experience Transformation</div>
-                    <div className="text-sm">Process Automation Suite</div>
+                  <label className="text-sm font-medium">Probability</label>
+                  <div className="mt-1">
+                    <Progress value={risk.probability} className="w-full" />
+                    <span className="text-sm text-muted-foreground">{risk.probability}%</span>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">Risk Owner</h4>
-                  <div className="text-sm">{risk.owner}</div>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Last Updated</h4>
-                  <div className="text-sm">{risk.lastUpdated}</div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Description</h4>
-              <p className="text-sm text-muted-foreground">
-                {risk.description || "This risk involves potential delays in project delivery due to resource constraints and changing requirements. Early identification and proactive management are crucial for successful mitigation."}
-              </p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="impact" className="space-y-4">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <Clock className="h-8 w-8 text-blue-500" />
-                  <div>
-                    <h4 className="font-semibold">Timeline Impact</h4>
-                    <p className="text-sm text-muted-foreground">Potential 2-3 week delay</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <DollarSign className="h-8 w-8 text-green-500" />
-                  <div>
-                    <h4 className="font-semibold">Budget Impact</h4>
-                    <p className="text-sm text-muted-foreground">Additional $50K - $75K</p>
+                  <label className="text-sm font-medium">Risk Owner</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Users className="h-4 w-4" />
+                    <span>{risk.owner}</span>
                   </div>
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <Users className="h-8 w-8 text-purple-500" />
-                  <div>
-                    <h4 className="font-semibold">Resource Impact</h4>
-                    <p className="text-sm text-muted-foreground">Need 3 additional team members</p>
+            </CardContent>
+          </Card>
+
+          {/* Impact Analysis */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Impact Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{risk.impact}</p>
+            </CardContent>
+          </Card>
+
+          {/* Mitigation Strategy */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Mitigation Strategy</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{risk.mitigation}</p>
+            </CardContent>
+          </Card>
+
+          {/* Affected Initiatives */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Affected Initiatives</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {risk.affectedInitiatives.map((initiative, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                    <DollarSign className="h-4 w-4 text-blue-500" />
+                    <span>{initiative}</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <TrendingDown className="h-8 w-8 text-red-500" />
-                  <div>
-                    <h4 className="font-semibold">Quality Impact</h4>
-                    <p className="text-sm text-muted-foreground">Potential scope reduction</p>
-                  </div>
-                </div>
+                ))}
               </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="mitigation" className="space-y-4">
-            <h4 className="font-semibold">Mitigation Actions</h4>
-            <div className="space-y-3">
-              {mitigationActions.map((action, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h5 className="font-medium">{action.action}</h5>
-                    <Badge variant={
-                      action.status === "Completed" ? "default" :
-                      action.status === "In Progress" ? "secondary" : "outline"
-                    }>
-                      {action.status}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <Progress value={action.progress} className="h-2" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">{action.progress}%</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground mt-2">
-                    Owner: {action.owner}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="timeline" className="space-y-4">
-            <h4 className="font-semibold">Risk Timeline</h4>
-            <div className="space-y-3">
-              <div className="flex items-center gap-4 p-3 border-l-4 border-red-500 bg-red-50">
-                <div className="text-sm font-medium">Day 1</div>
-                <div className="text-sm">Risk identified during stakeholder review</div>
-              </div>
-              <div className="flex items-center gap-4 p-3 border-l-4 border-yellow-500 bg-yellow-50">
-                <div className="text-sm font-medium">Day 3</div>
-                <div className="text-sm">Initial mitigation plan developed</div>
-              </div>
-              <div className="flex items-center gap-4 p-3 border-l-4 border-blue-500 bg-blue-50">
-                <div className="text-sm font-medium">Day 7</div>
-                <div className="text-sm">Mitigation actions initiated</div>
-              </div>
-              <div className="flex items-center gap-4 p-3 border-l-4 border-green-500 bg-green-50">
-                <div className="text-sm font-medium">Day 14</div>
-                <div className="text-sm">Progress review scheduled</div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
+            </CardContent>
+          </Card>
+
+          {/* Timeline */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p><strong>Due Date:</strong> {new Date(risk.dueDate).toLocaleDateString()}</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-          <Button>Update Risk</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          <Button>
+            Update Risk
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
