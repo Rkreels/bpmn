@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ResourceUtilization } from "./ResourceUtilization";
 import { 
   Clock, 
   TrendingUp, 
@@ -320,19 +320,7 @@ export const ProcessPerformanceDashboard: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="resources">
-          <Card>
-            <CardHeader>
-              <CardTitle>Resource Utilization</CardTitle>
-              <CardDescription>Monitor how resources are being utilized across processes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4" />
-                <p>Resource utilization analytics will be displayed here</p>
-                <p className="text-sm">Including team workload, capacity planning, and resource optimization recommendations</p>
-              </div>
-            </CardContent>
-          </Card>
+          <ResourceUtilization />
         </TabsContent>
       </Tabs>
     </div>

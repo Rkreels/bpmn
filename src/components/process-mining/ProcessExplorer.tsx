@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useToast } from "@/hooks/use-toast";
+import { ProcessFilterDialog } from "./ProcessFilterDialog";
+import { ProcessSimulation } from "./ProcessSimulation";
 import { 
   GitBranch, 
   Activity, 
@@ -20,10 +22,29 @@ import {
   Play
 } from "lucide-react";
 
+interface FilterCriteria {
+  timeRange: string;
+  activities: string[];
+  performance: string;
+  frequency: { min: number; max: number };
+  duration: { min: number; max: number };
+  variants: string[];
+}
+
 export const ProcessExplorer: React.FC = () => {
   const { speakText } = useVoice();
+  const { toast } = useToast();
   const [selectedProcess, setSelectedProcess] = useState("order-to-cash");
   const [selectedView, setSelectedView] = useState("flowchart");
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterCriteria>({
+    timeRange: "all",
+    activities: [],
+    performance: "all",
+    frequency: { min: 0, max: 1000 },
+    duration: { min: 0, max: 48 },
+    variants: []
+  });
 
   const processVariants = [
     { 
@@ -73,6 +94,50 @@ export const ProcessExplorer: React.FC = () => {
     { id: "step-10", name: "Invoice Sent", frequency: "70%", avgTime: "0.3h", bottleneck: false }
   ];
 
+  const handleApplyFilters = (filters: FilterCriteria) => {
+    setActiveFilters(filters);
+    toast({
+      title: "Filters Applied",
+      description: "Process data has been filtered according to your criteria"
+    });
+    console.log("Applied filters:", filters);
+  };
+
+  const handleExportData = () => {
+    const exportData = {
+      process: selectedProcess,
+      view: selectedView,
+      filters: activeFilters,
+      variants: processVariants,
+      steps: processSteps,
+      exportDate: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `process-explorer-${selectedProcess}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data Exported",
+      description: "Process exploration data has been downloaded"
+    });
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (activeFilters.timeRange !== "all") count++;
+    if (activeFilters.performance !== "all") count++;
+    if (activeFilters.activities.length > 0) count++;
+    if (activeFilters.variants.length > 0) count++;
+    return count;
+  };
+
   return (
     <div 
       className="space-y-6"
@@ -108,151 +173,208 @@ export const ProcessExplorer: React.FC = () => {
                     <SelectItem value="flowchart">Flowchart</SelectItem>
                     <SelectItem value="variants">Variants</SelectItem>
                     <SelectItem value="performance">Performance</SelectItem>
-                    <SelectItem value="conformance">Conformance</SelectItem>
+                    <SelectItem value="simulation">Simulation</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setShowFilterDialog(true)}>
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
+                {getActiveFilterCount() > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {getActiveFilterCount()}
+                  </Badge>
+                )}
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleExportData}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
             </div>
           </div>
+
+          {/* Active Filters Display */}
+          {getActiveFilterCount() > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {activeFilters.timeRange !== "all" && (
+                <Badge variant="outline">Time: {activeFilters.timeRange}</Badge>
+              )}
+              {activeFilters.performance !== "all" && (
+                <Badge variant="outline">Performance: {activeFilters.performance}</Badge>
+              )}
+              {activeFilters.activities.map(activity => (
+                <Badge key={activity} variant="secondary">{activity}</Badge>
+              ))}
+              {activeFilters.variants.map(variant => (
+                <Badge key={variant} variant="outline">{variant}</Badge>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Process Visualization */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GitBranch className="h-5 w-5" />
-                Process Flow Visualization
-              </CardTitle>
-              <CardDescription>
-                Discovered process model based on {processSteps.reduce((sum, step) => sum + parseInt(step.frequency), 0)}% of cases
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-96 bg-muted/20 rounded-lg flex items-center justify-center relative overflow-hidden">
-                {/* Process Flow Diagram */}
-                <div className="w-full h-full p-4">
-                  <div className="flex flex-col gap-4 h-full justify-center">
-                    {/* Start Node */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
-                        S
-                      </div>
-                      <div className="flex-1 h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded"></div>
-                    </div>
-                    
-                    {/* Process Steps */}
-                    <div className="grid grid-cols-5 gap-2">
-                      {processSteps.slice(0, 5).map((step, index) => (
-                        <div key={step.id} className="text-center">
-                          <div className={`w-16 h-12 rounded border-2 flex items-center justify-center text-xs font-medium mb-1 ${
-                            step.bottleneck ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-blue-50'
-                          }`}>
-                            {step.name.split(' ')[0]}
+      <Tabs value={selectedView} onValueChange={setSelectedView}>
+        <TabsContent value="flowchart">
+          {/* Process Visualization */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GitBranch className="h-5 w-5" />
+                    Process Flow Visualization
+                  </CardTitle>
+                  <CardDescription>
+                    Discovered process model based on {processSteps.reduce((sum, step) => sum + parseInt(step.frequency), 0)}% of cases
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-96 bg-muted/20 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <div className="w-full h-full p-4">
+                      <div className="flex flex-col gap-4 h-full justify-center">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+                            S
                           </div>
-                          <div className="text-xs text-muted-foreground">{step.frequency}</div>
-                          {step.bottleneck && <AlertTriangle className="h-3 w-3 text-red-500 mx-auto" />}
+                          <div className="flex-1 h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded"></div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    <div className="grid grid-cols-5 gap-2">
-                      {processSteps.slice(5).map((step, index) => (
-                        <div key={step.id} className="text-center">
-                          <div className={`w-16 h-12 rounded border-2 flex items-center justify-center text-xs font-medium mb-1 ${
-                            step.bottleneck ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-blue-50'
-                          }`}>
-                            {step.name.split(' ')[0]}
+                        
+                        <div className="grid grid-cols-5 gap-2">
+                          {processSteps.slice(0, 5).map((step, index) => (
+                            <div key={step.id} className="text-center">
+                              <div className={`w-16 h-12 rounded border-2 flex items-center justify-center text-xs font-medium mb-1 ${
+                                step.bottleneck ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-blue-50'
+                              }`}>
+                                {step.name.split(' ')[0]}
+                              </div>
+                              <div className="text-xs text-muted-foreground">{step.frequency}</div>
+                              {step.bottleneck && <AlertTriangle className="h-3 w-3 text-red-500 mx-auto" />}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="grid grid-cols-5 gap-2">
+                          {processSteps.slice(5).map((step, index) => (
+                            <div key={step.id} className="text-center">
+                              <div className={`w-16 h-12 rounded border-2 flex items-center justify-center text-xs font-medium mb-1 ${
+                                step.bottleneck ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-blue-50'
+                              }`}>
+                                {step.name.split(' ')[0]}
+                              </div>
+                              <div className="text-xs text-muted-foreground">{step.frequency}</div>
+                              {step.bottleneck && <AlertTriangle className="h-3 w-3 text-red-500 mx-auto" />}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-2 bg-gradient-to-r from-blue-500 to-red-500 rounded"></div>
+                          <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">
+                            E
                           </div>
-                          <div className="text-xs text-muted-foreground">{step.frequency}</div>
-                          {step.bottleneck && <AlertTriangle className="h-3 w-3 text-red-500 mx-auto" />}
                         </div>
-                      ))}
+                      </div>
                     </div>
                     
-                    {/* End Node */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 h-2 bg-gradient-to-r from-blue-500 to-red-500 rounded"></div>
-                      <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">
-                        E
-                      </div>
+                    <div className="absolute bottom-4 right-4">
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Full View
+                      </Button>
                     </div>
                   </div>
-                </div>
-                
-                <div className="absolute bottom-4 right-4">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-2" />
-                    Full View
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Process Variants */}
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Process Variants
+                  </CardTitle>
+                  <CardDescription>
+                    Different paths through the process
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {processVariants.map((variant) => (
+                    <div key={variant.id} className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-sm">{variant.name}</h4>
+                        <Badge variant={
+                          variant.performance === "excellent" ? "default" :
+                          variant.performance === "good" ? "secondary" :
+                          variant.performance === "moderate" ? "outline" : "destructive"
+                        }>
+                          {variant.performance}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <div>
+                          <div className="font-medium">{variant.frequency}</div>
+                          <div>Frequency</div>
+                        </div>
+                        <div>
+                          <div className="font-medium">{variant.avgDuration}</div>
+                          <div>Avg Duration</div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2">
+                        {variant.cases.toLocaleString()} cases
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Search className="h-4 w-4 mr-2" />
+                    Explore All Variants
                   </Button>
-                </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="simulation">
+          <ProcessSimulation />
+        </TabsContent>
+
+        <TabsContent value="variants">
+          <Card>
+            <CardHeader>
+              <CardTitle>Process Variants Analysis</CardTitle>
+              <CardDescription>Detailed analysis of different process execution paths</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                <Activity className="h-12 w-12 mx-auto mb-4" />
+                <p>Variant analysis view will be displayed here</p>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
 
-        {/* Process Variants */}
-        <div>
+        <TabsContent value="performance">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Process Variants
-              </CardTitle>
-              <CardDescription>
-                Different paths through the process
-              </CardDescription>
+              <CardTitle>Performance Analysis</CardTitle>
+              <CardDescription>Process performance metrics and bottleneck analysis</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {processVariants.map((variant) => (
-                <div key={variant.id} className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-sm">{variant.name}</h4>
-                    <Badge variant={
-                      variant.performance === "excellent" ? "default" :
-                      variant.performance === "good" ? "secondary" :
-                      variant.performance === "moderate" ? "outline" : "destructive"
-                    }>
-                      {variant.performance}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                    <div>
-                      <div className="font-medium">{variant.frequency}</div>
-                      <div>Frequency</div>
-                    </div>
-                    <div>
-                      <div className="font-medium">{variant.avgDuration}</div>
-                      <div>Avg Duration</div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    {variant.cases.toLocaleString()} cases
-                  </div>
-                </div>
-              ))}
-              
-              <Button variant="outline" size="sm" className="w-full">
-                <Search className="h-4 w-4 mr-2" />
-                Explore All Variants
-              </Button>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4" />
+                <p>Performance analysis view will be displayed here</p>
+              </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Process Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -300,6 +422,14 @@ export const ProcessExplorer: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Filter Dialog */}
+      <ProcessFilterDialog
+        open={showFilterDialog}
+        onOpenChange={setShowFilterDialog}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={activeFilters}
+      />
     </div>
   );
 };
