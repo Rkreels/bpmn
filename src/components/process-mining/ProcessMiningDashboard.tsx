@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { ProcessMiningActions } from "./ProcessMiningActions";
 import { ProcessExplorer } from "./ProcessExplorer";
 import { ProcessIntelligenceAnalytics } from "./ProcessIntelligenceAnalytics";
 import { ProcessPerformanceDashboard } from "./ProcessPerformanceDashboard";
@@ -14,20 +14,12 @@ import { ProcessOptimizationSuite } from "./ProcessOptimizationSuite";
 import { EventLogManager } from "./EventLogManager";
 import { 
   Search, 
-  Upload, 
-  Download, 
-  Settings,
-  Play,
   BarChart3,
   Activity,
   Zap,
   Database,
   AlertTriangle,
-  FileText,
-  Plus,
-  RefreshCw,
-  Filter,
-  Share2
+  FileText
 } from "lucide-react";
 
 export const ProcessMiningDashboard: React.FC = () => {
@@ -35,7 +27,6 @@ export const ProcessMiningDashboard: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const miningStats = [
     { 
@@ -68,12 +59,12 @@ export const ProcessMiningDashboard: React.FC = () => {
     }
   ];
 
-  const recentAnalyses = [
+  const [recentAnalyses, setRecentAnalyses] = useState([
     { id: 1, name: "Order-to-Cash Process", status: "Completed", date: "2 hours ago", insights: 12, variants: 8 },
     { id: 2, name: "Customer Support Workflow", status: "In Progress", date: "1 day ago", insights: 8, variants: 5 },
     { id: 3, name: "Invoice Processing", status: "Completed", date: "3 days ago", insights: 15, variants: 12 },
     { id: 4, name: "Employee Onboarding", status: "Queued", date: "1 week ago", insights: 0, variants: 0 }
-  ];
+  ]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -88,24 +79,24 @@ export const ProcessMiningDashboard: React.FC = () => {
     speakText(tabMessages[tab as keyof typeof tabMessages] || "Process Mining section opened");
   };
 
-  const handleUploadEventLog = async () => {
-    setIsUploading(true);
+  const handleNewProject = () => {
     toast({
-      title: "Event Log Upload",
-      description: "Starting file upload process..."
+      title: "New Project",
+      description: "Creating new process mining project..."
     });
-    speakText("Opening event log upload. Upload your process data to discover actual workflows and performance patterns.");
-    
-    setTimeout(() => {
-      setIsUploading(false);
-      toast({
-        title: "Upload Complete",
-        description: "Event log has been successfully uploaded and is ready for analysis."
-      });
-    }, 3000);
+    speakText("Creating new process mining project. This will set up a workspace for analyzing your business processes.");
+    console.log("New project created");
   };
 
-  const handleStartAnalysis = async () => {
+  const handleUploadData = (file: File) => {
+    console.log("File uploaded:", file.name);
+    toast({
+      title: "Upload Complete",
+      description: `${file.name} has been uploaded successfully.`
+    });
+  };
+
+  const handleStartAnalysis = () => {
     setIsAnalysisRunning(true);
     toast({
       title: "Analysis Started",
@@ -119,30 +110,27 @@ export const ProcessMiningDashboard: React.FC = () => {
         title: "Analysis Complete",
         description: "Process mining analysis has finished. Results are now available."
       });
+      console.log("Analysis completed");
     }, 5000);
   };
 
-  const handleExportResults = async () => {
+  const handleExportResults = () => {
+    console.log("Exporting process mining results");
     toast({
-      title: "Export Started",
-      description: "Preparing analysis results for download..."
+      title: "Export Complete",
+      description: "Analysis results have been exported successfully."
     });
-    speakText("Exporting process mining results including discovered models, performance metrics, and optimization recommendations.");
-    
-    setTimeout(() => {
-      toast({
-        title: "Export Complete",
-        description: "Analysis results have been exported successfully."
-      });
-    }, 2000);
   };
 
-  const handleNewProject = () => {
-    toast({
-      title: "New Project",
-      description: "Creating new process mining project..."
-    });
-    speakText("Creating new process mining project. This will set up a workspace for analyzing your business processes.");
+  const handleAnalysisClick = (analysisId: number) => {
+    const analysis = recentAnalyses.find(a => a.id === analysisId);
+    if (analysis) {
+      toast({
+        title: "Analysis Details",
+        description: `Opening detailed view for ${analysis.name}`
+      });
+      console.log("Analysis clicked:", analysis);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -164,45 +152,13 @@ export const ProcessMiningDashboard: React.FC = () => {
               <p className="text-muted-foreground text-sm md:text-base">Discover, analyze, and optimize your business processes</p>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2">
-              <Button 
-                variant="outline"
-                onClick={handleNewProject}
-                className="hover-scale text-xs md:text-sm"
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                New Project
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleUploadEventLog}
-                disabled={isUploading}
-                className="hover-scale text-xs md:text-sm"
-                size="sm"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {isUploading ? "Uploading..." : "Upload Data"}
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleExportResults}
-                className="hover-scale text-xs md:text-sm"
-                size="sm"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Button 
-                onClick={handleStartAnalysis}
-                disabled={isAnalysisRunning}
-                className="hover-scale text-xs md:text-sm"
-                size="sm"
-              >
-                {isAnalysisRunning ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-                {isAnalysisRunning ? "Analyzing..." : "Start Analysis"}
-              </Button>
-            </div>
+            <ProcessMiningActions
+              onNewProject={handleNewProject}
+              onUploadData={handleUploadData}
+              onStartAnalysis={handleStartAnalysis}
+              onExportResults={handleExportResults}
+              isAnalysisRunning={isAnalysisRunning}
+            />
           </div>
           
           <div className="w-full overflow-x-auto">
@@ -286,16 +242,16 @@ export const ProcessMiningDashboard: React.FC = () => {
                     <CardTitle className="text-lg md:text-xl">Recent Analyses</CardTitle>
                     <CardDescription>Latest process mining projects and their status</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab("explorer")}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    View All
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {recentAnalyses.map((analysis) => (
-                    <div key={analysis.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div 
+                      key={analysis.id} 
+                      className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => handleAnalysisClick(analysis.id)}
+                    >
                       <div className="flex-1 space-y-2 md:space-y-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium text-sm md:text-base">{analysis.name}</h3>
@@ -308,18 +264,6 @@ export const ProcessMiningDashboard: React.FC = () => {
                           <span>Insights: {analysis.insights}</span>
                           <span>Variants: {analysis.variants}</span>
                         </div>
-                      </div>
-                      <div className="mt-2 md:mt-0 md:ml-4">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => toast({ 
-                            title: "Analysis Details", 
-                            description: `Opening detailed view for ${analysis.name}` 
-                          })}
-                        >
-                          View Results
-                        </Button>
                       </div>
                     </div>
                   ))}

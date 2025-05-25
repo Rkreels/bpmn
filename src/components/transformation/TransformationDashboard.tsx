@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { TransformationActions } from "./TransformationActions";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { ValueRealization } from "./ValueRealization";
 import { ChangeManagement } from "./ChangeManagement";
@@ -17,77 +17,59 @@ import {
   DollarSign, 
   Users,
   AlertTriangle,
-  Calendar,
   BarChart3,
-  Settings,
-  Plus,
-  Download,
-  FileText,
-  Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  Clock
 } from "lucide-react";
+
+interface Initiative {
+  id: string;
+  name: string;
+  status: string;
+  progress: number;
+  budget: string;
+  timeline: string;
+  description?: string;
+}
 
 export const TransformationDashboard: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("portfolio");
-  const [isLoading, setIsLoading] = useState(false);
+  const [initiatives, setInitiatives] = useState<Initiative[]>([
+    { id: "1", name: "Digital Customer Onboarding", status: "In Progress", progress: 75, budget: "$250K", timeline: "Q2 2024" },
+    { id: "2", name: "Process Automation Suite", status: "Planning", progress: 25, budget: "$180K", timeline: "Q3 2024" },
+    { id: "3", name: "Data Analytics Platform", status: "Completed", progress: 100, budget: "$320K", timeline: "Q1 2024" },
+    { id: "4", name: "Mobile Experience Upgrade", status: "At Risk", progress: 40, budget: "$150K", timeline: "Q2 2024" }
+  ]);
 
   const transformationMetrics = [
     { label: "Total Portfolio Value", value: "$2.4M", change: "+12%", trend: "up", icon: DollarSign },
-    { label: "Active Initiatives", value: "18", change: "+3", trend: "up", icon: Target },
+    { label: "Active Initiatives", value: initiatives.length.toString(), change: "+3", trend: "up", icon: Target },
     { label: "Value Delivered YTD", value: "$890K", change: "+23%", trend: "up", icon: TrendingUp },
     { label: "Transformation ROI", value: "340%", change: "+45%", trend: "up", icon: BarChart3 }
   ];
 
-  const recentInitiatives = [
-    { id: 1, name: "Digital Customer Onboarding", status: "In Progress", progress: 75, budget: "$250K", timeline: "Q2 2024" },
-    { id: 2, name: "Process Automation Suite", status: "Planning", progress: 25, budget: "$180K", timeline: "Q3 2024" },
-    { id: 3, name: "Data Analytics Platform", status: "Completed", progress: 100, budget: "$320K", timeline: "Q1 2024" },
-    { id: 4, name: "Mobile Experience Upgrade", status: "At Risk", progress: 40, budget: "$150K", timeline: "Q2 2024" }
-  ];
-
-  const handleNewInitiative = async () => {
-    setIsLoading(true);
-    toast({
-      title: "Creating Initiative",
-      description: "Opening initiative creation wizard..."
-    });
-    speakText("Creating new transformation initiative. This will open the initiative planning wizard to define objectives, scope, and resources.");
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Initiative Created",
-        description: "New transformation initiative has been added to your portfolio."
-      });
-    }, 2000);
+  const handleCreateInitiative = (newInitiative: Initiative) => {
+    setInitiatives(prev => [...prev, newInitiative]);
+    console.log("New initiative created:", newInitiative);
   };
 
-  const handleGenerateReport = async () => {
-    setIsLoading(true);
+  const handleGenerateReport = () => {
+    console.log("Generating transformation report...");
     toast({
-      title: "Generating Report",
-      description: "Creating comprehensive transformation report..."
+      title: "Report Generated",
+      description: "Transformation report has been generated successfully."
     });
-    speakText("Generating transformation report. This includes portfolio status, value realization metrics, and risk assessments.");
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Report Generated",
-        description: "Transformation report is ready for download."
-      });
-    }, 3000);
   };
 
-  const handleConfigureSettings = () => {
+  const handleDownloadData = () => {
+    console.log("Downloading transformation data...");
     toast({
-      title: "Configuration",
-      description: "Opening transformation settings panel..."
+      title: "Data Downloaded",
+      description: "Transformation data has been exported successfully."
     });
-    speakText("Opening transformation configuration. Here you can set up governance frameworks, approval workflows, and reporting preferences.");
   };
 
   const handleTabChange = (value: string) => {
@@ -120,6 +102,17 @@ export const TransformationDashboard: React.FC = () => {
     }
   };
 
+  const handleInitiativeClick = (initiativeId: string) => {
+    const initiative = initiatives.find(i => i.id === initiativeId);
+    if (initiative) {
+      toast({
+        title: "Initiative Details",
+        description: `Opening details for ${initiative.name}`
+      });
+      console.log("Initiative clicked:", initiative);
+    }
+  };
+
   return (
     <div 
       className="w-full min-h-screen p-4 md:p-6 space-y-6 animate-fade-in"
@@ -132,44 +125,11 @@ export const TransformationDashboard: React.FC = () => {
           <p className="text-muted-foreground text-sm md:text-base">Orchestrate and monitor your digital transformation journey</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => speakText("Opening transformation planning tools to create roadmaps and timelines.")}
-            className="hover-scale text-xs md:text-sm"
-            size="sm"
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Planning
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={handleGenerateReport}
-            disabled={isLoading}
-            className="hover-scale text-xs md:text-sm"
-            size="sm"
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            {isLoading ? "Generating..." : "Reports"}
-          </Button>
-          <Button 
-            onClick={handleConfigureSettings}
-            className="hover-scale text-xs md:text-sm"
-            size="sm"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Configure
-          </Button>
-          <Button 
-            onClick={handleNewInitiative}
-            disabled={isLoading}
-            className="hover-scale text-xs md:text-sm"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {isLoading ? "Creating..." : "New Initiative"}
-          </Button>
-        </div>
+        <TransformationActions
+          onCreateInitiative={handleCreateInitiative}
+          onGenerateReport={handleGenerateReport}
+          onDownloadData={handleDownloadData}
+        />
       </div>
 
       {/* Key Metrics */}
@@ -206,16 +166,16 @@ export const TransformationDashboard: React.FC = () => {
               <CardTitle className="text-lg md:text-xl">Recent Initiatives</CardTitle>
               <CardDescription>Active transformation projects and their status</CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setActiveTab("portfolio")}>
-              <FileText className="h-4 w-4 mr-2" />
-              View All
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentInitiatives.map((initiative) => (
-              <div key={initiative.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+            {initiatives.map((initiative) => (
+              <div 
+                key={initiative.id} 
+                className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => handleInitiativeClick(initiative.id)}
+              >
                 <div className="flex-1 space-y-2 md:space-y-1">
                   <div className="flex items-center gap-2">
                     {getStatusIcon(initiative.status)}
@@ -235,11 +195,6 @@ export const TransformationDashboard: React.FC = () => {
                       style={{ width: `${initiative.progress}%` }}
                     ></div>
                   </div>
-                </div>
-                <div className="mt-2 md:mt-0 md:ml-4">
-                  <Button variant="outline" size="sm" onClick={() => toast({ title: "Initiative Details", description: `Opening details for ${initiative.name}` })}>
-                    View Details
-                  </Button>
                 </div>
               </div>
             ))}

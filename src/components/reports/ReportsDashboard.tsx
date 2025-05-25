@@ -1,18 +1,16 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
-import { ReportActions } from "./ReportActions";
+import { ReportsActions } from "./ReportsActions";
 import { 
   BarChart3, 
   FileText, 
   Calendar, 
-  Download,
   Search,
   Filter,
   TrendingUp,
@@ -87,25 +85,12 @@ export const ReportsDashboard: React.FC = () => {
   const handleCreateReport = (reportData: Report) => {
     setReports(prev => [...prev, reportData]);
     speakText(`New report ${reportData.name} has been created`);
-  };
-
-  const handleUpdateReport = (reportData: Report) => {
-    setReports(prev => prev.map(report => report.id === reportData.id ? reportData : report));
-    speakText(`Report ${reportData.name} has been updated`);
-  };
-
-  const handleDeleteReport = (reportId: string) => {
-    const report = reports.find(r => r.id === reportId);
-    setReports(prev => prev.filter(report => report.id !== reportId));
-    if (report) {
-      speakText(`Report ${report.name} has been deleted`);
-    }
+    console.log("Report created:", reportData);
   };
 
   const handleGenerateReport = (reportId: string) => {
     const report = reports.find(r => r.id === reportId);
     if (report) {
-      // Update last generated time
       setReports(prev => prev.map(r => 
         r.id === reportId ? { ...r, lastGenerated: "Just now" } : r
       ));
@@ -114,6 +99,57 @@ export const ReportsDashboard: React.FC = () => {
         description: `${report.name} has been generated successfully.`
       });
       speakText(`Report ${report.name} has been generated and is ready for download`);
+      console.log("Report generated:", report);
+    }
+  };
+
+  const handleDownloadReport = (reportId: string) => {
+    if (reportId === "all") {
+      console.log("Downloading all reports");
+      const allReportsData = {
+        timestamp: new Date().toISOString(),
+        reports: reports.map(r => ({
+          name: r.name,
+          type: r.type,
+          lastGenerated: r.lastGenerated,
+          status: r.status
+        }))
+      };
+      
+      const blob = new Blob([JSON.stringify(allReportsData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `all-reports-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Complete",
+        description: "All reports have been downloaded successfully."
+      });
+    } else {
+      const report = reports.find(r => r.id === reportId);
+      if (report) {
+        console.log("Downloading report:", report);
+        toast({
+          title: "Download Started",
+          description: `Downloading ${report.name}...`
+        });
+      }
+    }
+  };
+
+  const handleReportClick = (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    if (report) {
+      toast({
+        title: "Report Details",
+        description: `Opening details for ${report.name}`
+      });
+      console.log("Report clicked:", report);
     }
   };
 
@@ -135,21 +171,16 @@ export const ReportsDashboard: React.FC = () => {
           <p className="text-muted-foreground">Generate and manage automated process reports</p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-          <ReportActions
-            mode="create"
-            onSave={handleCreateReport}
-          />
-        </div>
+        <ReportsActions
+          onCreateReport={handleCreateReport}
+          onGenerateReport={handleGenerateReport}
+          onDownloadReport={handleDownloadReport}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
-          <Card key={index}>
+          <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer hover-scale">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 {stat.icon}
@@ -193,7 +224,11 @@ export const ReportsDashboard: React.FC = () => {
             <TabsContent value={activeTab} className="mt-4">
               <div className="space-y-4">
                 {filteredReports.map((report) => (
-                  <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div 
+                    key={report.id} 
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => handleReportClick(report.id)}
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                         <BarChart3 className="h-5 w-5 text-primary" />
@@ -221,17 +256,6 @@ export const ReportsDashboard: React.FC = () => {
                           <span>Last generated: {report.lastGenerated}</span>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <ReportActions
-                        mode="edit"
-                        report={report}
-                        onSave={handleUpdateReport}
-                        onDelete={handleDeleteReport}
-                        onGenerate={handleGenerateReport}
-                        onShare={(id) => toast({ title: "Share Report", description: "Sharing options opened." })}
-                      />
                     </div>
                   </div>
                 ))}
