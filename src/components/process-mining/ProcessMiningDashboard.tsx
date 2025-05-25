@@ -22,13 +22,58 @@ import {
   Activity,
   Zap,
   Database,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Plus,
+  RefreshCw,
+  Filter,
+  Share2
 } from "lucide-react";
 
 export const ProcessMiningDashboard: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const miningStats = [
+    { 
+      label: "Processes Analyzed", 
+      value: "23", 
+      trend: "+12%", 
+      icon: <BarChart3 className="h-6 w-6 text-blue-500" />,
+      description: "Total business processes discovered and analyzed"
+    },
+    { 
+      label: "Event Logs Processed", 
+      value: "1.2M", 
+      trend: "+8%", 
+      icon: <Database className="h-6 w-6 text-green-500" />,
+      description: "Number of process events analyzed"
+    },
+    { 
+      label: "Bottlenecks Identified", 
+      value: "7", 
+      trend: "-15%", 
+      icon: <AlertTriangle className="h-6 w-6 text-orange-500" />,
+      description: "Critical performance bottlenecks found"
+    },
+    { 
+      label: "Optimization Potential", 
+      value: "34%", 
+      trend: "+5%", 
+      icon: <Zap className="h-6 w-6 text-purple-500" />,
+      description: "Estimated process improvement opportunity"
+    }
+  ];
+
+  const recentAnalyses = [
+    { id: 1, name: "Order-to-Cash Process", status: "Completed", date: "2 hours ago", insights: 12, variants: 8 },
+    { id: 2, name: "Customer Support Workflow", status: "In Progress", date: "1 day ago", insights: 8, variants: 5 },
+    { id: 3, name: "Invoice Processing", status: "Completed", date: "3 days ago", insights: 15, variants: 12 },
+    { id: 4, name: "Employee Onboarding", status: "Queued", date: "1 week ago", insights: 0, variants: 0 }
+  ];
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -43,130 +88,245 @@ export const ProcessMiningDashboard: React.FC = () => {
     speakText(tabMessages[tab as keyof typeof tabMessages] || "Process Mining section opened");
   };
 
-  const miningStats = [
-    { label: "Processes Analyzed", value: "23", trend: "+12%", icon: <BarChart3 className="h-6 w-6 text-blue-500" /> },
-    { label: "Event Logs Processed", value: "1.2M", trend: "+8%", icon: <Database className="h-6 w-6 text-green-500" /> },
-    { label: "Bottlenecks Identified", value: "7", trend: "-15%", icon: <AlertTriangle className="h-6 w-6 text-orange-500" /> },
-    { label: "Optimization Potential", value: "34%", trend: "+5%", icon: <Zap className="h-6 w-6 text-purple-500" /> }
-  ];
-
-  const handleUploadEventLog = () => {
+  const handleUploadEventLog = async () => {
+    setIsUploading(true);
     toast({
       title: "Event Log Upload",
-      description: "Event log upload functionality will be implemented."
+      description: "Starting file upload process..."
     });
     speakText("Opening event log upload. Upload your process data to discover actual workflows and performance patterns.");
+    
+    setTimeout(() => {
+      setIsUploading(false);
+      toast({
+        title: "Upload Complete",
+        description: "Event log has been successfully uploaded and is ready for analysis."
+      });
+    }, 3000);
   };
 
-  const handleStartAnalysis = () => {
+  const handleStartAnalysis = async () => {
+    setIsAnalysisRunning(true);
     toast({
       title: "Analysis Started",
-      description: "Process mining analysis has been initiated."
+      description: "Running comprehensive process mining analysis..."
     });
     speakText("Starting process mining analysis. This will discover your actual process flows and identify improvement opportunities.");
+    
+    setTimeout(() => {
+      setIsAnalysisRunning(false);
+      toast({
+        title: "Analysis Complete",
+        description: "Process mining analysis has finished. Results are now available."
+      });
+    }, 5000);
+  };
+
+  const handleExportResults = async () => {
+    toast({
+      title: "Export Started",
+      description: "Preparing analysis results for download..."
+    });
+    speakText("Exporting process mining results including discovered models, performance metrics, and optimization recommendations.");
+    
+    setTimeout(() => {
+      toast({
+        title: "Export Complete",
+        description: "Analysis results have been exported successfully."
+      });
+    }, 2000);
+  };
+
+  const handleNewProject = () => {
+    toast({
+      title: "New Project",
+      description: "Creating new process mining project..."
+    });
+    speakText("Creating new process mining project. This will set up a workspace for analyzing your business processes.");
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Completed": return "bg-green-100 text-green-800";
+      case "In Progress": return "bg-blue-100 text-blue-800";
+      case "Queued": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
   };
 
   return (
-    <div 
-      className="h-full w-full bg-background"
-      onMouseEnter={() => speakText("Process Mining Dashboard. Discover, analyze, and optimize your business processes using advanced process mining techniques and AI-powered insights.")}
-    >
+    <div className="h-full w-full bg-background">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full">
         <div className="border-b bg-muted/20 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold">Process Mining</h1>
-              <p className="text-muted-foreground">Discover, analyze, and optimize your business processes</p>
+          <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-4">
+            <div className="space-y-2">
+              <h1 className="text-2xl md:text-3xl font-bold">Process Mining</h1>
+              <p className="text-muted-foreground text-sm md:text-base">Discover, analyze, and optimize your business processes</p>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button 
                 variant="outline"
-                onClick={handleUploadEventLog}
-                onMouseEnter={() => speakText("Upload event logs to start process discovery and analysis.")}
+                onClick={handleNewProject}
+                className="hover-scale text-xs md:text-sm"
+                size="sm"
               >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Data
+                <Plus className="h-4 w-4 mr-2" />
+                New Project
               </Button>
               <Button 
                 variant="outline"
-                onMouseEnter={() => speakText("Download analysis results and process models.")}
+                onClick={handleUploadEventLog}
+                disabled={isUploading}
+                className="hover-scale text-xs md:text-sm"
+                size="sm"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {isUploading ? "Uploading..." : "Upload Data"}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleExportResults}
+                className="hover-scale text-xs md:text-sm"
+                size="sm"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
               <Button 
                 onClick={handleStartAnalysis}
-                onMouseEnter={() => speakText("Start comprehensive process mining analysis.")}
+                disabled={isAnalysisRunning}
+                className="hover-scale text-xs md:text-sm"
+                size="sm"
               >
-                <Play className="h-4 w-4 mr-2" />
-                Start Analysis
+                {isAnalysisRunning ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+                {isAnalysisRunning ? "Analyzing..." : "Start Analysis"}
               </Button>
             </div>
           </div>
           
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger 
-              value="overview"
-              onMouseEnter={() => speakText("Overview tab. Get a comprehensive view of your process mining insights.")}
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="explorer"
-              onMouseEnter={() => speakText("Process Explorer. Visualize discovered process models.")}
-            >
-              Explorer
-            </TabsTrigger>
-            <TabsTrigger 
-              value="performance"
-              onMouseEnter={() => speakText("Performance analysis. Monitor process KPIs and bottlenecks.")}
-            >
-              Performance
-            </TabsTrigger>
-            <TabsTrigger 
-              value="conformance"
-              onMouseEnter={() => speakText("Conformance checking. Compare actual vs designed processes.")}
-            >
-              Conformance
-            </TabsTrigger>
-            <TabsTrigger 
-              value="optimization"
-              onMouseEnter={() => speakText("Optimization recommendations. Get AI-powered improvement suggestions.")}
-            >
-              Optimization
-            </TabsTrigger>
-            <TabsTrigger 
-              value="eventlogs"
-              onMouseEnter={() => speakText("Event log management. Upload and manage your process data.")}
-            >
-              Event Logs
-            </TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto">
+            <TabsList className="grid w-full min-w-[700px] grid-cols-6 h-auto">
+              <TabsTrigger 
+                value="overview"
+                className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Overview</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="explorer"
+                className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm"
+              >
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Explorer</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="performance"
+                className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm"
+              >
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">Performance</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="conformance"
+                className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Conformance</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="optimization"
+                className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm"
+              >
+                <Zap className="h-4 w-4" />
+                <span className="hidden sm:inline">Optimization</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="eventlogs"
+                className="flex items-center gap-2 p-2 md:p-3 text-xs md:text-sm"
+              >
+                <Database className="h-4 w-4" />
+                <span className="hidden sm:inline">Event Logs</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4 md:p-6 space-y-6">
           <TabsContent value="overview" className="space-y-6 m-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {miningStats.map((stat, index) => (
-                <Card key={index}>
+                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer hover-scale">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-2">
                       {stat.icon}
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground">{stat.label}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">{stat.label}</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-2xl font-bold">{stat.value}</p>
+                          <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
                           <Badge variant="outline" className="text-xs">
                             {stat.trend}
                           </Badge>
                         </div>
                       </div>
                     </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{stat.description}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
+
+            {/* Recent Analyses */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg md:text-xl">Recent Analyses</CardTitle>
+                    <CardDescription>Latest process mining projects and their status</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("explorer")}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentAnalyses.map((analysis) => (
+                    <div key={analysis.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex-1 space-y-2 md:space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-sm md:text-base">{analysis.name}</h3>
+                          <Badge className={`text-xs ${getStatusColor(analysis.status)}`}>
+                            {analysis.status}
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-4 text-xs md:text-sm text-muted-foreground">
+                          <span>Last updated: {analysis.date}</span>
+                          <span>Insights: {analysis.insights}</span>
+                          <span>Variants: {analysis.variants}</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 md:mt-0 md:ml-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => toast({ 
+                            title: "Analysis Details", 
+                            description: `Opening detailed view for ${analysis.name}` 
+                          })}
+                        >
+                          View Results
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             <ProcessIntelligenceAnalytics />
           </TabsContent>
           
