@@ -23,13 +23,15 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
   trigger, 
   onTouchpointCreated 
 }) => {
-  const { updateJourney, journeys } = useJourneyData();
+  const { addTouchpointToStage } = useJourneyData();
   const { speakText } = useVoice();
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    channel: "",
+    description: "",
     type: "digital" as "digital" | "physical" | "human",
+    channel: "",
+    satisfaction: 3,
     emotion: "neutral" as Touchpoint["emotion"],
     duration: "",
     painPoints: "",
@@ -44,34 +46,27 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
       return;
     }
 
-    const journey = journeys.find(j => j.id === journeyId);
-    if (!journey) return;
+    const painPointsArray = formData.painPoints ? formData.painPoints.split(',').map(p => p.trim()).filter(p => p) : [];
+    const opportunitiesArray = formData.opportunities ? formData.opportunities.split(',').map(o => o.trim()).filter(o => o) : [];
 
-    const newTouchpoint: Touchpoint = {
-      id: `touchpoint-${Date.now()}`,
+    addTouchpointToStage(journeyId, stageId, {
       name: formData.name,
-      channel: formData.channel,
+      description: formData.description,
       type: formData.type,
+      channel: formData.channel,
+      satisfaction: formData.satisfaction,
       emotion: formData.emotion,
-      duration: formData.duration || "5 min",
-      painPoints: formData.painPoints ? formData.painPoints.split(",").map(p => p.trim()) : [],
-      opportunities: formData.opportunities ? formData.opportunities.split(",").map(o => o.trim()) : [],
-      satisfaction: 3,
-      description: ""
-    };
-
-    const updatedStages = journey.stages.map(stage => 
-      stage.id === stageId 
-        ? { ...stage, touchpoints: [...stage.touchpoints, newTouchpoint] }
-        : stage
-    );
-
-    updateJourney(journeyId, { stages: updatedStages });
+      duration: formData.duration,
+      painPoints: painPointsArray,
+      opportunities: opportunitiesArray
+    });
 
     setFormData({
       name: "",
-      channel: "",
+      description: "",
       type: "digital",
+      channel: "",
+      satisfaction: 3,
       emotion: "neutral",
       duration: "",
       painPoints: "",
@@ -81,15 +76,7 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
     setOpen(false);
     onTouchpointCreated?.();
     
-    speakText(`New touchpoint ${formData.name} has been added to the journey stage. This ${formData.type} touchpoint via ${formData.channel} will help track customer interactions and identify optimization opportunities.`);
-  };
-
-  const handleTypeChange = (value: string) => {
-    setFormData({ ...formData, type: value as "digital" | "physical" | "human" });
-  };
-
-  const handleEmotionChange = (value: string) => {
-    setFormData({ ...formData, emotion: value as Touchpoint["emotion"] });
+    speakText(`New touchpoint ${formData.name} has been added to the stage. This interaction point will help track customer experience and identify improvement opportunities.`);
   };
 
   return (
@@ -97,76 +84,72 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline" size="sm">
-            <Plus className="h-3 w-3 mr-2" />
+            <Plus className="h-4 w-4 mr-2" />
             Add Touchpoint
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New Touchpoint</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Touchpoint Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Website Homepage"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="channel">Channel *</Label>
-              <Input
-                id="channel"
-                value={formData.channel}
-                onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
-                placeholder="e.g., Website, Email"
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Touchpoint Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g., Website Visit, Phone Call, Email"
+              required
+            />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select 
-                value={formData.type} 
-                onValueChange={handleTypeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="digital">Digital</SelectItem>
-                  <SelectItem value="physical">Physical</SelectItem>
-                  <SelectItem value="human">Human</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="emotion">Emotion</Label>
-              <Select 
-                value={formData.emotion} 
-                onValueChange={handleEmotionChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="very-negative">Very Negative</SelectItem>
-                  <SelectItem value="negative">Negative</SelectItem>
-                  <SelectItem value="neutral">Neutral</SelectItem>
-                  <SelectItem value="positive">Positive</SelectItem>
-                  <SelectItem value="very-positive">Very Positive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="channel">Channel *</Label>
+            <Input
+              id="channel"
+              value={formData.channel}
+              onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
+              placeholder="e.g., Website, Email, Phone, Social Media"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="type">Type</Label>
+            <Select 
+              value={formData.type} 
+              onValueChange={(value: "digital" | "physical" | "human") => setFormData({ ...formData, type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="digital">Digital</SelectItem>
+                <SelectItem value="physical">Physical</SelectItem>
+                <SelectItem value="human">Human</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="emotion">Customer Emotion</Label>
+            <Select 
+              value={formData.emotion} 
+              onValueChange={(value: Touchpoint["emotion"]) => setFormData({ ...formData, emotion: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="very-negative">Very Negative</SelectItem>
+                <SelectItem value="negative">Negative</SelectItem>
+                <SelectItem value="neutral">Neutral</SelectItem>
+                <SelectItem value="positive">Positive</SelectItem>
+                <SelectItem value="very-positive">Very Positive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
@@ -175,28 +158,39 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
               id="duration"
               value={formData.duration}
               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-              placeholder="e.g., 5 min, 30 min"
+              placeholder="e.g., 5 minutes, 2 hours"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="painPoints">Pain Points (comma separated)</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
-              id="painPoints"
-              value={formData.painPoints}
-              onChange={(e) => setFormData({ ...formData, painPoints: e.target.value })}
-              placeholder="e.g., Slow loading, Complex navigation"
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe this touchpoint"
               rows={2}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="opportunities">Opportunities (comma separated)</Label>
+            <Label htmlFor="painPoints">Pain Points (comma-separated)</Label>
+            <Textarea
+              id="painPoints"
+              value={formData.painPoints}
+              onChange={(e) => setFormData({ ...formData, painPoints: e.target.value })}
+              placeholder="e.g., Slow loading, Confusing navigation, Long wait times"
+              rows={2}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="opportunities">Opportunities (comma-separated)</Label>
             <Textarea
               id="opportunities"
               value={formData.opportunities}
               onChange={(e) => setFormData({ ...formData, opportunities: e.target.value })}
-              placeholder="e.g., Improve page speed, A/B test CTAs"
+              placeholder="e.g., Add live chat, Simplify form, Provide tutorials"
               rows={2}
             />
           </div>

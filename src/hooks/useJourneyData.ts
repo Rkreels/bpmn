@@ -150,6 +150,30 @@ export const useJourneyData = () => {
     );
   }, []);
 
+  const addTouchpointToStage = useCallback((journeyId: string, stageId: string, touchpointData: Omit<Touchpoint, "id">) => {
+    const newTouchpoint: Touchpoint = {
+      ...touchpointData,
+      id: `touchpoint_${Date.now()}`
+    };
+    
+    setJourneys(prev => 
+      prev.map(journey => 
+        journey.id === journeyId 
+          ? {
+              ...journey,
+              stages: journey.stages.map(stage =>
+                stage.id === stageId
+                  ? { ...stage, touchpoints: [...stage.touchpoints, newTouchpoint] }
+                  : stage
+              ),
+              updatedAt: new Date().toISOString()
+            }
+          : journey
+      )
+    );
+    return newTouchpoint.id;
+  }, []);
+
   const exportJourneyData = useCallback((format: "json" | "csv" | "pdf") => {
     console.log(`Exporting journey data in ${format} format`);
     // Implementation for export functionality
@@ -168,6 +192,7 @@ export const useJourneyData = () => {
     deleteJourney,
     addStageToJourney,
     deleteStage,
+    addTouchpointToStage,
     exportJourneyData,
     shareJourney
   };
