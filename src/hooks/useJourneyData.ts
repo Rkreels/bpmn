@@ -26,6 +26,10 @@ export interface Touchpoint {
   channel: string;
   description: string;
   satisfaction: number;
+  emotion: "very-negative" | "negative" | "neutral" | "positive" | "very-positive";
+  duration: string;
+  painPoints: string[];
+  opportunities: string[];
 }
 
 export interface Persona {
@@ -35,6 +39,10 @@ export interface Persona {
   demographics: string;
   goals: string[];
   painPoints: string[];
+  role: string;
+  department: string;
+  techSavviness: "low" | "medium" | "high";
+  decisionInfluence: "low" | "medium" | "high";
 }
 
 export const useJourneyData = () => {
@@ -57,7 +65,11 @@ export const useJourneyData = () => {
               type: "digital",
               channel: "Website",
               description: "Initial website exploration",
-              satisfaction: 4.2
+              satisfaction: 4.2,
+              emotion: "positive",
+              duration: "5 minutes",
+              painPoints: ["Complex navigation", "Too much information"],
+              opportunities: ["Simplify landing page", "Add guided tour"]
             }
           ]
         }
@@ -74,7 +86,11 @@ export const useJourneyData = () => {
       description: "Early adopter with high technical knowledge",
       demographics: "25-40 years, Urban, High income",
       goals: ["Efficiency", "Innovation", "Growth"],
-      painPoints: ["Complex processes", "Time constraints", "Poor user experience"]
+      painPoints: ["Complex processes", "Time constraints", "Poor user experience"],
+      role: "Senior Manager",
+      department: "IT",
+      techSavviness: "high",
+      decisionInfluence: "high"
     }
   ]);
 
@@ -103,6 +119,34 @@ export const useJourneyData = () => {
     setJourneys(prev => prev.filter(journey => journey.id !== id));
   }, []);
 
+  const addStageToJourney = useCallback((journeyId: string, stageData: Omit<JourneyStage, "id">) => {
+    const newStage: JourneyStage = {
+      ...stageData,
+      id: `stage_${Date.now()}`
+    };
+    setJourneys(prev => 
+      prev.map(journey => 
+        journey.id === journeyId 
+          ? { ...journey, stages: [...journey.stages, newStage], updatedAt: new Date().toISOString() }
+          : journey
+      )
+    );
+  }, []);
+
+  const deleteStage = useCallback((journeyId: string, stageId: string) => {
+    setJourneys(prev => 
+      prev.map(journey => 
+        journey.id === journeyId 
+          ? { 
+              ...journey, 
+              stages: journey.stages.filter(stage => stage.id !== stageId),
+              updatedAt: new Date().toISOString()
+            }
+          : journey
+      )
+    );
+  }, []);
+
   const exportJourneyData = useCallback((format: "json" | "csv" | "pdf") => {
     console.log(`Exporting journey data in ${format} format`);
     // Implementation for export functionality
@@ -119,6 +163,8 @@ export const useJourneyData = () => {
     createJourney,
     updateJourney,
     deleteJourney,
+    addStageToJourney,
+    deleteStage,
     exportJourneyData,
     shareJourney
   };

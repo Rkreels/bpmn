@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
-import { useJourneyData, TouchPoint } from "@/hooks/useJourneyData";
+import { useJourneyData, Touchpoint } from "@/hooks/useJourneyData";
 import { CreateStageDialog } from "./dialogs/CreateStageDialog";
 import { CreateTouchpointDialog } from "./dialogs/CreateTouchpointDialog";
 import { 
@@ -74,7 +74,7 @@ export const CustomerJourneyCanvas: React.FC = () => {
     deleteStage(currentJourney.id, stageId);
   };
 
-  const getEmotionIcon = (emotion: TouchPoint["emotion"]) => {
+  const getEmotionIcon = (emotion: Touchpoint["emotion"]) => {
     switch (emotion) {
       case "very-negative": return <Frown className="h-4 w-4 text-red-600" />;
       case "negative": return <Frown className="h-4 w-4 text-orange-500" />;
