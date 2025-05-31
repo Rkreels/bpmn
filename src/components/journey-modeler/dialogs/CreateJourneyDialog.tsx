@@ -37,10 +37,9 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
       return;
     }
 
-    const newJourney = createJourney({
+    const newJourneyId = createJourney({
       ...formData,
-      stages: [],
-      createdBy: "Current User"
+      stages: []
     });
 
     setFormData({
@@ -51,7 +50,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
     });
     
     setOpen(false);
-    onJourneyCreated?.(newJourney.id);
+    onJourneyCreated?.(newJourneyId);
     
     speakText(`New customer journey ${formData.name} has been created successfully. You can now start adding stages and touchpoints to map the complete customer experience.`);
   };

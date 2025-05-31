@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useJourneyData, TouchPoint } from "@/hooks/useJourneyData";
+import { useJourneyData, Touchpoint } from "@/hooks/useJourneyData";
 import { useVoice } from "@/contexts/VoiceContext";
 import { Plus } from "lucide-react";
 
@@ -30,7 +30,7 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
     name: "",
     channel: "",
     type: "digital" as "digital" | "physical" | "human",
-    emotion: "neutral" as TouchPoint["emotion"],
+    emotion: "neutral" as Touchpoint["emotion"],
     duration: "",
     painPoints: "",
     opportunities: ""
@@ -47,7 +47,7 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
     const journey = journeys.find(j => j.id === journeyId);
     if (!journey) return;
 
-    const newTouchpoint: TouchPoint = {
+    const newTouchpoint: Touchpoint = {
       id: `touchpoint-${Date.now()}`,
       name: formData.name,
       channel: formData.channel,
@@ -57,11 +57,7 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
       painPoints: formData.painPoints ? formData.painPoints.split(",").map(p => p.trim()) : [],
       opportunities: formData.opportunities ? formData.opportunities.split(",").map(o => o.trim()) : [],
       satisfaction: 3,
-      effort: 3,
-      interactions: 0,
-      conversionRate: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      description: ""
     };
 
     const updatedStages = journey.stages.map(stage => 
@@ -93,7 +89,7 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
   };
 
   const handleEmotionChange = (value: string) => {
-    setFormData({ ...formData, emotion: value as TouchPoint["emotion"] });
+    setFormData({ ...formData, emotion: value as Touchpoint["emotion"] });
   };
 
   return (
