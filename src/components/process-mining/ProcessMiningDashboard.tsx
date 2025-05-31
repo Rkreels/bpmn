@@ -13,6 +13,7 @@ import { ProcessPerformanceDashboard } from "./ProcessPerformanceDashboard";
 import { ProcessConformanceChecker } from "./ProcessConformanceChecker";
 import { ProcessOptimizationSuite } from "./ProcessOptimizationSuite";
 import { EventLogManager } from "./EventLogManager";
+import { VoiceTrainerToggle } from "@/components/voice/VoiceTrainerToggle";
 import { 
   Search, 
   BarChart3,
@@ -20,7 +21,10 @@ import {
   Zap,
   Database,
   AlertTriangle,
-  FileText
+  FileText,
+  TrendingUp,
+  Users,
+  Clock
 } from "lucide-react";
 
 export const ProcessMiningDashboard: React.FC = () => {
@@ -37,28 +41,36 @@ export const ProcessMiningDashboard: React.FC = () => {
       value: variants.length.toString(), 
       trend: "+12%", 
       icon: <BarChart3 className="h-6 w-6 text-blue-500" />,
-      description: "Total business processes discovered and analyzed"
+      description: "Total business processes discovered and analyzed",
+      interactive: true,
+      onClick: () => handleStatClick("processes")
     },
     { 
       label: "Event Logs Processed", 
       value: eventLogs.filter(log => log.status === "ready").length.toString(), 
       trend: "+8%", 
       icon: <Database className="h-6 w-6 text-green-500" />,
-      description: "Number of process event logs analyzed"
+      description: "Number of process event logs analyzed",
+      interactive: true,
+      onClick: () => handleStatClick("eventlogs")
     },
     { 
       label: "Bottlenecks Identified", 
       value: bottlenecks.filter(b => b.severity === "high").length.toString(), 
       trend: "-15%", 
       icon: <AlertTriangle className="h-6 w-6 text-orange-500" />,
-      description: "Critical performance bottlenecks found"
+      description: "Critical performance bottlenecks found",
+      interactive: true,
+      onClick: () => handleStatClick("bottlenecks")
     },
     { 
       label: "Process Cases", 
       value: processCases.length.toString(), 
       trend: "+5%", 
       icon: <Zap className="h-6 w-6 text-purple-500" />,
-      description: "Total process instances analyzed"
+      description: "Total process instances analyzed",
+      interactive: true,
+      onClick: () => handleStatClick("cases")
     }
   ];
 
@@ -69,8 +81,33 @@ export const ProcessMiningDashboard: React.FC = () => {
     status: log.status === "ready" ? "Completed" : log.status === "processing" ? "In Progress" : "Queued",
     date: log.uploadDate,
     insights: log.variants,
-    variants: log.activities
+    variants: log.activities,
+    interactive: true
   }));
+
+  const handleStatClick = (statType: string) => {
+    const statMessages = {
+      processes: "Viewing process variants. These show different execution paths discovered in your business processes.",
+      eventlogs: "Navigating to event logs. Here you can upload and manage your process data files.",
+      bottlenecks: "Showing bottleneck analysis. These are activities causing delays in your processes.",
+      cases: "Displaying process cases. Individual instances of your business process executions."
+    };
+    
+    speakText(statMessages[statType as keyof typeof statMessages] || "Viewing process mining statistics");
+    
+    // Navigate to relevant tab based on stat clicked
+    const tabMapping = {
+      processes: "explorer",
+      eventlogs: "eventlogs", 
+      bottlenecks: "performance",
+      cases: "explorer"
+    };
+    
+    const targetTab = tabMapping[statType as keyof typeof tabMapping];
+    if (targetTab) {
+      setActiveTab(targetTab);
+    }
+  };
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -100,6 +137,7 @@ export const ProcessMiningDashboard: React.FC = () => {
       title: "Upload Complete",
       description: `${file.name} has been uploaded successfully.`
     });
+    speakText(`Event log ${file.name} uploaded successfully. Analysis will begin automatically.`);
   };
 
   const handleStartAnalysis = () => {
@@ -121,6 +159,7 @@ export const ProcessMiningDashboard: React.FC = () => {
         title: "Analysis Complete",
         description: "Process mining analysis has finished. Results are now available."
       });
+      speakText("Analysis complete. New insights and bottlenecks have been discovered. Check the results in the explorer tab.");
       console.log("Analysis completed");
     }, 5000);
   };
@@ -131,6 +170,7 @@ export const ProcessMiningDashboard: React.FC = () => {
       title: "Export Complete",
       description: `Analysis results exported as ${filename}`
     });
+    speakText(`Results exported successfully as ${filename}. You can now share these insights with your team.`);
   };
 
   const handleAnalysisClick = (analysisId: number) => {
@@ -140,6 +180,7 @@ export const ProcessMiningDashboard: React.FC = () => {
         title: "Analysis Details",
         description: `Opening detailed view for ${analysis.name}`
       });
+      speakText(`Opening detailed analysis for ${analysis.name}. This shows process variants, performance metrics, and bottlenecks.`);
       console.log("Analysis clicked:", analysis);
     }
   };
@@ -154,8 +195,8 @@ export const ProcessMiningDashboard: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-full bg-background">
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full">
+    <div className="h-full w-full bg-background process-mining-dashboard">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full tabs-navigation">
         <div className="border-b bg-muted/20 p-4">
           <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-4">
             <div className="space-y-2">
@@ -163,13 +204,15 @@ export const ProcessMiningDashboard: React.FC = () => {
               <p className="text-muted-foreground text-sm md:text-base">Discover, analyze, and optimize your business processes</p>
             </div>
             
-            <ProcessMiningActions
-              onNewProject={handleNewProject}
-              onUploadData={handleUploadData}
-              onStartAnalysis={handleStartAnalysis}
-              onExportResults={handleExportResults}
-              isAnalysisRunning={isAnalysisRunning}
-            />
+            <div className="process-mining-actions">
+              <ProcessMiningActions
+                onNewProject={handleNewProject}
+                onUploadData={handleUploadData}
+                onStartAnalysis={handleStartAnalysis}
+                onExportResults={handleExportResults}
+                isAnalysisRunning={isAnalysisRunning}
+              />
+            </div>
           </div>
           
           <div className="w-full overflow-x-auto">
@@ -223,9 +266,13 @@ export const ProcessMiningDashboard: React.FC = () => {
         <div className="flex-1 p-4 md:p-6 space-y-6">
           <TabsContent value="overview" className="space-y-6 m-0">
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mining-stats">
               {miningStats.map((stat, index) => (
-                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer hover-scale">
+                <Card 
+                  key={index} 
+                  className={`hover:shadow-md transition-all duration-200 ${stat.interactive ? 'cursor-pointer hover:scale-105' : ''}`}
+                  onClick={stat.interactive ? stat.onClick : undefined}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-2">
                       {stat.icon}
@@ -240,6 +287,11 @@ export const ProcessMiningDashboard: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">{stat.description}</p>
+                    {stat.interactive && (
+                      <div className="mt-2 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                        Click to explore →
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -260,7 +312,7 @@ export const ProcessMiningDashboard: React.FC = () => {
                   {recentAnalyses.map((analysis) => (
                     <div 
                       key={analysis.id} 
-                      className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer hover:shadow-md"
                       onClick={() => handleAnalysisClick(analysis.id)}
                     >
                       <div className="flex-1 space-y-2 md:space-y-1">
@@ -271,10 +323,22 @@ export const ProcessMiningDashboard: React.FC = () => {
                           </Badge>
                         </div>
                         <div className="flex flex-wrap gap-4 text-xs md:text-sm text-muted-foreground">
-                          <span>Last updated: {analysis.date}</span>
-                          <span>Insights: {analysis.insights}</span>
-                          <span>Variants: {analysis.variants}</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Last updated: {analysis.date}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" />
+                            Insights: {analysis.insights}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            Variants: {analysis.variants}
+                          </span>
                         </div>
+                      </div>
+                      <div className="mt-2 md:mt-0 text-xs text-primary">
+                        Click to view details →
                       </div>
                     </div>
                   ))}
@@ -285,7 +349,7 @@ export const ProcessMiningDashboard: React.FC = () => {
             <ProcessIntelligenceAnalytics />
           </TabsContent>
           
-          <TabsContent value="explorer" className="m-0">
+          <TabsContent value="explorer" className="m-0 process-explorer">
             <ProcessExplorer />
           </TabsContent>
           
@@ -293,7 +357,7 @@ export const ProcessMiningDashboard: React.FC = () => {
             <ProcessPerformanceDashboard />
           </TabsContent>
           
-          <TabsContent value="conformance" className="m-0">
+          <TabsContent value="conformance" className="m-0 conformance-checker">
             <ProcessConformanceChecker />
           </TabsContent>
           
@@ -306,6 +370,8 @@ export const ProcessMiningDashboard: React.FC = () => {
           </TabsContent>
         </div>
       </Tabs>
+      
+      <VoiceTrainerToggle />
     </div>
   );
 };

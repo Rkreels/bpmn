@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Headphones, Volume2, VolumeX } from "lucide-react";
 import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
 import { useVoice } from "@/contexts/VoiceContext";
+import { cn } from "@/lib/utils";
 
 export const VoiceTrainerToggle: React.FC = () => {
   const { isTrainerEnabled, toggleTrainer } = useVoiceTrainer();
@@ -45,6 +46,3 @@ export const VoiceTrainerToggle: React.FC = () => {
     </div>
   );
 };
-
-// Import cn utility function for conditional class names
-import { cn } from "@/lib/utils";

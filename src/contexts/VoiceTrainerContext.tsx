@@ -44,6 +44,44 @@ interface Tutorial {
 // Define tutorials for different modules
 const tutorials: Tutorial[] = [
   {
+    id: "process-mining-intro",
+    name: "Process Mining Introduction",
+    description: "Learn how to analyze and optimize business processes using event data",
+    pageUrl: "/process-mining",
+    steps: [
+      {
+        id: "welcome",
+        text: "Welcome to Process Mining! This powerful module helps you discover, analyze, and optimize your business processes using real data from your systems. You can upload event logs, discover actual process flows, identify bottlenecks, and get optimization recommendations.",
+        elementSelector: ".process-mining-dashboard"
+      },
+      {
+        id: "actions",
+        text: "These action buttons let you create new mining projects, upload event data files, start comprehensive analysis, and export results. The upload supports CSV, XES, and JSON formats up to 50MB.",
+        elementSelector: ".process-mining-actions"
+      },
+      {
+        id: "stats",
+        text: "These interactive statistics show your process mining progress: processes analyzed, event logs processed, bottlenecks identified, and total process cases. Click on any statistic to navigate to the relevant section.",
+        elementSelector: ".mining-stats"
+      },
+      {
+        id: "tabs",
+        text: "Navigate between different analysis views: Overview for dashboard and statistics, Explorer for process variants and case analysis, Performance for bottleneck identification, Conformance for compliance checking, Optimization for improvement recommendations, and Event Logs for data management.",
+        elementSelector: ".tabs-navigation"
+      },
+      {
+        id: "explorer",
+        text: "The Process Explorer shows your actual process flows discovered from event logs. You can view different process variants, their frequencies, analyze individual cases, and identify bottlenecks with recommendations for optimization.",
+        elementSelector: ".process-explorer"
+      },
+      {
+        id: "conformance",
+        text: "Conformance checking compares your actual process execution against reference models to identify deviations, compliance issues, and process variations that may need attention.",
+        elementSelector: ".conformance-checker"
+      }
+    ]
+  },
+  {
     id: "transformation-cockpit-intro",
     name: "Transformation Cockpit Introduction", 
     description: "Learn how to manage digital transformation initiatives",
@@ -78,44 +116,6 @@ const tutorials: Tutorial[] = [
         id: "portfolio",
         text: "The Portfolio tab allows you to filter, view, edit, and create transformation initiatives. You can also export data and track progress across all programs.",
         elementSelector: ".portfolio-overview"
-      }
-    ]
-  },
-  {
-    id: "process-mining-intro",
-    name: "Process Mining Introduction",
-    description: "Learn how to analyze and optimize business processes",
-    pageUrl: "/process-mining", 
-    steps: [
-      {
-        id: "welcome",
-        text: "Welcome to Process Mining! This module helps you discover, analyze, and optimize your business processes using real data from your systems.",
-        elementSelector: ".process-mining-dashboard"
-      },
-      {
-        id: "actions",
-        text: "These actions let you create new mining projects, upload event data, start analysis, and export results for your process optimization initiatives.",
-        elementSelector: ".process-mining-actions"
-      },
-      {
-        id: "stats",
-        text: "Monitor key process mining statistics: number of processes analyzed, event logs processed, bottlenecks identified, and optimization potential.",
-        elementSelector: ".mining-stats"
-      },
-      {
-        id: "explorer",
-        text: "The Process Explorer visualizes your actual process flows discovered from event logs, showing variants, frequencies, and performance metrics.",
-        elementSelector: ".process-explorer"
-      },
-      {
-        id: "bottlenecks",
-        text: "Bottleneck analysis identifies process activities causing delays and inefficiencies, with recommendations for optimization and potential savings.",
-        elementSelector: ".bottleneck-analysis"
-      },
-      {
-        id: "conformance",
-        text: "Conformance checking compares your actual process execution against reference models to identify deviations and compliance issues.",
-        elementSelector: ".conformance-checker"
       }
     ]
   },
