@@ -1,88 +1,70 @@
 
-import { useState, useCallback } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useState, useCallback } from "react";
 
 export interface Notification {
   id: string;
   title: string;
   description: string;
   time: string;
+  type: "message" | "update" | "alert";
   read: boolean;
-  type: 'message' | 'update' | 'alert';
-  icon?: string;
 }
 
 export const useNotifications = () => {
-  const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([
     {
-      id: '1',
-      title: 'New comments on "Customer Onboarding"',
-      description: 'Lisa added: "We should clarify the approval step"',
-      time: '10 mins ago',
-      read: false,
-      type: 'message'
+      id: "1",
+      title: "New discussion started",
+      description: "John Doe started a discussion about process optimization",
+      time: "2 minutes ago",
+      type: "message",
+      read: false
     },
     {
-      id: '2',
-      title: 'Process "Order to Cash" updated',
-      description: 'Major version update to v2.0',
-      time: '2 hours ago',
-      read: false,
-      type: 'update'
+      id: "2",
+      title: "Approval required",
+      description: "Purchase order workflow needs your approval",
+      time: "1 hour ago",
+      type: "update",
+      read: false
     },
     {
-      id: '3',
-      title: 'Bottleneck detected in "Invoice Approval"',
-      description: 'Processing time increased by 25%',
-      time: 'Yesterday',
-      read: false,
-      type: 'alert'
+      id: "3",
+      title: "Process review scheduled",
+      description: "Monthly process review scheduled for tomorrow",
+      time: "3 hours ago",
+      type: "alert",
+      read: true
     }
   ]);
 
+  const addNotification = useCallback((notification: Omit<Notification, "id" | "read">) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: `notification_${Date.now()}`,
+      read: false
+    };
+    setNotifications(prev => [newNotification, ...prev]);
+  }, []);
+
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => 
-      prev.map(notif => {
-        if (notif.id === id) {
-          toast({
-            title: "Notification marked as read",
-            description: notif.title,
-          });
-          return { ...notif, read: true };
-        }
-        return notif;
-      })
+      prev.map(notification => 
+        notification.id === id 
+          ? { ...notification, read: true }
+          : notification
+      )
     );
-  }, [toast]);
+  }, []);
 
   const clearAll = useCallback(() => {
     setNotifications([]);
-    toast({
-      title: "Notifications cleared",
-      description: "All notifications have been removed",
-    });
-  }, [toast]);
+  }, []);
 
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'read'>) => {
-    const newNotification = {
-      ...notification,
-      id: Date.now().toString(),
-      read: false,
-    };
-    
-    setNotifications(prev => [newNotification, ...prev]);
-    
-    toast({
-      title: "New notification",
-      description: notification.title,
-    });
-  }, [toast]);
-
-  return { 
-    notifications, 
-    markAsRead, 
-    clearAll,
-    addNotification
+  return {
+    notifications,
+    addNotification,
+    markAsRead,
+    clearAll
   };
 };
