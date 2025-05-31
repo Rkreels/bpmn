@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { useProcessMiningData } from "@/hooks/useProcessMiningData";
 import { ProcessMiningActions } from "./ProcessMiningActions";
 import { ProcessExplorer } from "./ProcessExplorer";
 import { ProcessIntelligenceAnalytics } from "./ProcessIntelligenceAnalytics";
@@ -25,46 +26,51 @@ import {
 export const ProcessMiningDashboard: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
+  const { eventLogs, processCases, variants, bottlenecks, uploadEventLog, runAnalysis, exportData } = useProcessMiningData();
   const [activeTab, setActiveTab] = useState("overview");
   const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
 
+  // Calculate dynamic stats from actual data
   const miningStats = [
     { 
       label: "Processes Analyzed", 
-      value: "23", 
+      value: variants.length.toString(), 
       trend: "+12%", 
       icon: <BarChart3 className="h-6 w-6 text-blue-500" />,
       description: "Total business processes discovered and analyzed"
     },
     { 
       label: "Event Logs Processed", 
-      value: "1.2M", 
+      value: eventLogs.filter(log => log.status === "ready").length.toString(), 
       trend: "+8%", 
       icon: <Database className="h-6 w-6 text-green-500" />,
-      description: "Number of process events analyzed"
+      description: "Number of process event logs analyzed"
     },
     { 
       label: "Bottlenecks Identified", 
-      value: "7", 
+      value: bottlenecks.filter(b => b.severity === "high").length.toString(), 
       trend: "-15%", 
       icon: <AlertTriangle className="h-6 w-6 text-orange-500" />,
       description: "Critical performance bottlenecks found"
     },
     { 
-      label: "Optimization Potential", 
-      value: "34%", 
+      label: "Process Cases", 
+      value: processCases.length.toString(), 
       trend: "+5%", 
       icon: <Zap className="h-6 w-6 text-purple-500" />,
-      description: "Estimated process improvement opportunity"
+      description: "Total process instances analyzed"
     }
   ];
 
-  const [recentAnalyses, setRecentAnalyses] = useState([
-    { id: 1, name: "Order-to-Cash Process", status: "Completed", date: "2 hours ago", insights: 12, variants: 8 },
-    { id: 2, name: "Customer Support Workflow", status: "In Progress", date: "1 day ago", insights: 8, variants: 5 },
-    { id: 3, name: "Invoice Processing", status: "Completed", date: "3 days ago", insights: 15, variants: 12 },
-    { id: 4, name: "Employee Onboarding", status: "Queued", date: "1 week ago", insights: 0, variants: 0 }
-  ]);
+  // Use actual event logs data
+  const recentAnalyses = eventLogs.slice(0, 4).map((log, index) => ({
+    id: index + 1,
+    name: log.name,
+    status: log.status === "ready" ? "Completed" : log.status === "processing" ? "In Progress" : "Queued",
+    date: log.uploadDate,
+    insights: log.variants,
+    variants: log.activities
+  }));
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -89,7 +95,7 @@ export const ProcessMiningDashboard: React.FC = () => {
   };
 
   const handleUploadData = (file: File) => {
-    console.log("File uploaded:", file.name);
+    uploadEventLog(file);
     toast({
       title: "Upload Complete",
       description: `${file.name} has been uploaded successfully.`
@@ -104,6 +110,11 @@ export const ProcessMiningDashboard: React.FC = () => {
     });
     speakText("Starting process mining analysis. This will discover your actual process flows and identify improvement opportunities.");
     
+    // Run analysis on all ready logs
+    eventLogs.filter(log => log.status === "ready").forEach(log => {
+      runAnalysis(log.id);
+    });
+    
     setTimeout(() => {
       setIsAnalysisRunning(false);
       toast({
@@ -115,10 +126,10 @@ export const ProcessMiningDashboard: React.FC = () => {
   };
 
   const handleExportResults = () => {
-    console.log("Exporting process mining results");
+    const filename = exportData("pdf", "process-mining-results");
     toast({
       title: "Export Complete",
-      description: "Analysis results have been exported successfully."
+      description: `Analysis results exported as ${filename}`
     });
   };
 

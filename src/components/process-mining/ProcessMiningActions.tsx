@@ -28,16 +28,20 @@ export const ProcessMiningActions: React.FC<ProcessMiningActionsProps> = ({
 
   const handleCreateProject = (project: any) => {
     console.log("New project created:", project);
+    setIsNewProjectOpen(false);
   };
 
   const handleUploadClick = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.csv,.xes,.json';
+    input.multiple = true;
     input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        onUploadData(file);
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        Array.from(files).forEach(file => {
+          onUploadData(file);
+        });
       }
     };
     input.click();
@@ -45,7 +49,7 @@ export const ProcessMiningActions: React.FC<ProcessMiningActionsProps> = ({
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button onClick={handleNewProject}>
           <Plus className="h-4 w-4 mr-2" />
           New Project
