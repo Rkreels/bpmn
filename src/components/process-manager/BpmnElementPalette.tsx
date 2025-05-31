@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Square, Diamond, Circle, Layers, Database, Layout, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface BpmnElementPaletteProps {
   onAddElement: (elementType: string) => void;

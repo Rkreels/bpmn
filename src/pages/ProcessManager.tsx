@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,9 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useProcessManagerData } from "@/hooks/useProcessManagerData";
 import { EditorToolbar } from "@/components/process-manager/EditorToolbar";
 import { EditorTabView } from "@/components/process-manager/EditorTabView";
 import { ProcessContent } from "@/components/process-manager/ProcessContent";
+import { ProcessManagerVoiceGuide } from "@/components/process-manager/ProcessManagerVoiceGuide";
+import { VoiceTrainerToggle } from "@/components/voice/VoiceTrainerToggle";
 import { 
   Save, 
   Download, 
@@ -24,7 +26,10 @@ import {
   CheckCircle,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  Search,
+  Filter,
+  TrendingUp
 } from "lucide-react";
 
 export default function ProcessManager() {
@@ -35,15 +40,67 @@ export default function ProcessManager() {
   const [processOwner, setProcessOwner] = useState("John Doe");
   const [isSimulating, setIsSimulating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  
   const { toast } = useToast();
   const { speakText } = useVoice();
+  const { 
+    templates, 
+    projects, 
+    metrics, 
+    createTemplate, 
+    updateTemplate, 
+    deleteTemplate,
+    createProject,
+    updateProject,
+    validateProcess,
+    simulateProcess,
+    exportProcess
+  } = useProcessManagerData();
   
+  // Dynamic process metrics based on actual data
   const processMetrics = [
-    { label: "Process Steps", value: "12", icon: Activity, color: "text-blue-600" },
-    { label: "Avg. Duration", value: "4.2 days", icon: Clock, color: "text-green-600" },
-    { label: "Completion Rate", value: "94%", icon: CheckCircle, color: "text-emerald-600" },
-    { label: "Active Instances", value: "156", icon: Users, color: "text-purple-600" }
+    { 
+      label: "Active Templates", 
+      value: templates.filter(t => t.status === "active").length.toString(), 
+      icon: Activity, 
+      color: "text-blue-600",
+      trend: "+12%"
+    },
+    { 
+      label: "Running Projects", 
+      value: projects.filter(p => p.status === "active").length.toString(), 
+      icon: Clock, 
+      color: "text-green-600",
+      trend: "+8%"
+    },
+    { 
+      label: "Completion Rate", 
+      value: `${Math.round(projects.filter(p => p.status === "completed").length / projects.length * 100)}%`, 
+      icon: CheckCircle, 
+      color: "text-emerald-600",
+      trend: "+5%"
+    },
+    { 
+      label: "Team Collaboration", 
+      value: projects.reduce((acc, p) => acc + p.team.length, 0).toString(), 
+      icon: Users, 
+      color: "text-purple-600",
+      trend: "+15%"
+    }
   ];
+
+  // Filter templates based on search and category
+  const filteredTemplates = templates.filter(template => {
+    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         template.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === "all" || template.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Get unique categories for filter
+  const categories = ["all", ...Array.from(new Set(templates.map(t => t.category)))];
 
   useEffect(() => {
     if (!isAutoSaveEnabled) return;
@@ -58,9 +115,9 @@ export default function ProcessManager() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     const tabNames = {
-      editor: "Process Editor",
-      properties: "Process Properties",
-      repository: "Process Repository"
+      editor: "Process Editor - Design and model your business processes",
+      properties: "Process Properties - Configure metadata and business rules",
+      repository: "Process Repository - Manage templates and reusable components"
     };
     speakText(`Switched to ${tabNames[tab as keyof typeof tabNames]}`);
   };
@@ -89,7 +146,7 @@ export default function ProcessManager() {
     }, 500);
   };
 
-  const handleSimulation = () => {
+  const handleSimulation = async () => {
     setIsSimulating(true);
     toast({
       title: "Starting Simulation",
@@ -97,67 +154,112 @@ export default function ProcessManager() {
     });
     speakText("Starting process simulation to analyze performance and identify bottlenecks");
     
-    setTimeout(() => {
+    try {
+      const results = await simulateProcess("current-process");
       setIsSimulating(false);
       toast({
         title: "Simulation Complete",
-        description: "Process simulation completed successfully"
+        description: `Simulation completed. Execution time: ${(results as any).executionTime.toFixed(1)}s, Throughput: ${(results as any).throughput} cases/hour`
       });
-    }, 3000);
+      speakText(`Simulation complete. Average execution time is ${(results as any).executionTime.toFixed(1)} seconds with ${(results as any).throughput} cases per hour throughput.`);
+    } catch (error) {
+      setIsSimulating(false);
+      toast({
+        title: "Simulation Error",
+        description: "An error occurred during simulation"
+      });
+    }
   };
 
   const handleExport = () => {
     setIsLoading(true);
-    toast({
-      title: "Exporting Process",
-      description: "Process model is being exported..."
-    });
-    speakText("Exporting process model in BPMN format");
+    const filename = exportProcess("current-process", "bpmn");
+    speakText(`Exporting process model as ${filename}`);
     
     setTimeout(() => {
       setIsLoading(false);
       toast({
         title: "Export Complete",
-        description: "Process model exported successfully"
+        description: `Process model exported as ${filename}`
       });
     }, 2000);
   };
 
-  const handleShare = () => {
-    toast({
-      title: "Share Process",
-      description: "Opening sharing options..."
-    });
-    speakText("Opening process sharing options");
+  const handleValidateProcess = () => {
+    const mockProcessData = {
+      name: processName,
+      elements: [
+        { type: "start-event", name: "Start" },
+        { type: "task", name: "Process Order" },
+        { type: "end-event", name: "End" }
+      ]
+    };
+    
+    const validation = validateProcess(mockProcessData);
+    
+    if (validation.isValid) {
+      toast({
+        title: "Validation Successful",
+        description: "Process model is valid and ready for deployment."
+      });
+      speakText("Process validation successful. Your model follows BPMN standards and best practices.");
+    } else {
+      toast({
+        title: "Validation Issues Found",
+        description: `Found ${validation.errors.length} errors and ${validation.warnings.length} warnings.`
+      });
+      speakText(`Validation found ${validation.errors.length} errors and ${validation.warnings.length} warnings that need attention.`);
+    }
   };
 
-  const handleNewProcess = () => {
-    toast({
-      title: "Creating New Process",
-      description: "Opening new process template..."
-    });
-    speakText("Creating a new process model");
-  };
-
-  const handleUseTemplate = (templateName: string) => {
+  const handleUseTemplate = (template: any) => {
     toast({
       title: "Using Template",
-      description: `Loading ${templateName} template...`
+      description: `Loading ${template.name} template...`
     });
-    speakText(`Loading ${templateName} template for your process`);
+    speakText(`Loading ${template.name} template. This includes ${template.elements} pre-configured elements.`);
+  };
+
+  const handleCreateTemplate = () => {
+    const newTemplate = createTemplate({
+      name: "New Process Template",
+      description: "Custom process template",
+      category: "General"
+    });
+    speakText(`Created new template: ${newTemplate.name}. You can now customize it in the editor.`);
+  };
+
+  const handleCreateProject = () => {
+    const newProject = createProject({
+      name: "New Process Project",
+      description: "Process improvement initiative",
+      priority: "medium"
+    });
+    speakText(`Created new project: ${newProject.name}. Added to active projects list.`);
   };
 
   return (
     <MainLayout pageTitle="Process Manager">
+      <ProcessManagerVoiceGuide />
+      
       <div className="w-full min-h-screen space-y-6 animate-fade-in p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl font-bold">Process Manager</h1>
-            <p className="text-muted-foreground text-sm md:text-base">Design and optimize business processes</p>
+            <p className="text-muted-foreground text-sm md:text-base">Design and optimize business processes with BPMN</p>
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleValidateProcess} 
+              className="hover-scale text-xs md:text-sm"
+              size="sm"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Validate
+            </Button>
             <Button 
               variant="outline" 
               onClick={handleExport} 
@@ -167,15 +269,6 @@ export default function ProcessManager() {
             >
               <Download className="h-4 w-4 mr-2" />
               Export
-            </Button>
-            <Button 
-              variant="outline" 
-              className="hover-scale text-xs md:text-sm"
-              size="sm"
-              onClick={handleShare}
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
             </Button>
             <Button 
               variant="outline" 
@@ -199,18 +292,23 @@ export default function ProcessManager() {
           </div>
         </div>
 
-        {/* Process Metrics */}
+        {/* Dynamic Process Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {processMetrics.map((metric, index) => {
             const IconComponent = metric.icon;
             return (
-              <Card key={index} className="hover:shadow-md transition-shadow hover-scale">
+              <Card key={index} className="hover:shadow-md transition-shadow hover-scale cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <IconComponent className={`h-5 w-5 ${metric.color} flex-shrink-0`} />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs md:text-sm text-muted-foreground truncate">{metric.label}</p>
-                      <p className="text-lg md:text-xl font-bold">{metric.value}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg md:text-xl font-bold">{metric.value}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {metric.trend}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -219,7 +317,7 @@ export default function ProcessManager() {
           })}
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
             <div className="w-full overflow-x-auto">
               <EditorTabView activeTab={activeTab} onTabChange={handleTabChange} />
@@ -354,25 +452,51 @@ export default function ProcessManager() {
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Process Repository</CardTitle>
-                <Button onClick={handleNewProcess} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Process
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleCreateProject} size="sm" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Project
+                  </Button>
+                  <Button onClick={handleCreateTemplate} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Template
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="p-6">
+                {/* Search and Filter Controls */}
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search templates..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                  <select 
+                    className="px-3 py-2 border rounded-md"
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                  >
+                    {categories.map(category => (
+                      <option key={category} value={category}>
+                        {category === "all" ? "All Categories" : category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Dynamic Templates Grid */}
                 <div className="space-y-4">
-                  <p className="text-muted-foreground">Browse and manage process templates in the repository.</p>
+                  <p className="text-muted-foreground">
+                    Browse and manage {filteredTemplates.length} process templates in the repository.
+                  </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[
-                      { name: "Order Processing Template", desc: "Standard order processing flow with approvals", status: "active" },
-                      { name: "Invoice Approval Template", desc: "Multi-level invoice approval process", status: "draft" },
-                      { name: "Customer Onboarding Template", desc: "Customer registration and verification process", status: "active" },
-                      { name: "HR Recruitment Process", desc: "End-to-end recruitment workflow", status: "active" },
-                      { name: "Expense Approval Process", desc: "Employee expense approval workflow", status: "review" },
-                      { name: "Project Initiation Template", desc: "Standard project startup process", status: "active" }
-                    ].map((template, index) => (
-                      <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer hover-scale">
+                    {filteredTemplates.map((template) => (
+                      <Card key={template.id} className="hover:shadow-md transition-shadow cursor-pointer hover-scale">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <h4 className="font-medium text-sm">{template.name}</h4>
@@ -383,13 +507,18 @@ export default function ProcessManager() {
                               {template.status}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{template.desc}</p>
+                          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{template.description}</p>
+                          <div className="text-xs text-muted-foreground mb-3">
+                            <div>Category: {template.category}</div>
+                            <div>Elements: {template.elements} • Usage: {template.usage}</div>
+                            <div>Version: {template.version} • By: {template.author}</div>
+                          </div>
                           <div className="flex gap-1">
                             <Button 
                               size="sm" 
                               variant="outline" 
                               className="text-xs flex-1"
-                              onClick={() => handleUseTemplate(template.name)}
+                              onClick={() => handleUseTemplate(template)}
                             >
                               Use
                             </Button>
@@ -407,28 +536,34 @@ export default function ProcessManager() {
                     ))}
                   </div>
                   
-                  <div className="mt-6">
-                    <h4 className="font-medium mb-3">Recently Used Templates</h4>
+                  {/* Active Projects */}
+                  <div className="mt-8">
+                    <h4 className="font-medium mb-3">Active Projects ({projects.filter(p => p.status === "active").length})</h4>
                     <div className="border rounded-md divide-y">
-                      {[
-                        { name: "Procurement Process", lastUsed: "Yesterday", category: "Operations" },
-                        { name: "HR Onboarding", lastUsed: "3 days ago", category: "Human Resources" },
-                        { name: "Claims Processing", lastUsed: "1 week ago", category: "Insurance" }
-                      ].map((template, index) => (
-                        <div key={index} className="p-3 flex justify-between items-center hover:bg-muted/50">
+                      {projects.filter(p => p.status === "active").map((project) => (
+                        <div key={project.id} className="p-3 flex justify-between items-center hover:bg-muted/50">
                           <div className="min-w-0 flex-1">
-                            <h5 className="font-medium text-sm">{template.name}</h5>
-                            <p className="text-xs text-muted-foreground">
-                              {template.category} • Last used: {template.lastUsed}
-                            </p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h5 className="font-medium text-sm">{project.name}</h5>
+                              <Badge 
+                                variant={project.priority === "high" ? "destructive" : project.priority === "medium" ? "secondary" : "outline"}
+                                className="text-xs"
+                              >
+                                {project.priority}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-1">{project.description}</p>
+                            <div className="text-xs text-muted-foreground">
+                              Owner: {project.owner} • Team: {project.team.length} members • Progress: {project.progress}%
+                            </div>
                           </div>
                           <Button 
                             size="sm" 
                             variant="outline" 
                             className="hover-scale ml-4 flex-shrink-0"
-                            onClick={() => handleUseTemplate(template.name)}
+                            onClick={() => toast({ title: "Opening Project", description: `Loading ${project.name}` })}
                           >
-                            Use
+                            Open
                           </Button>
                         </div>
                       ))}
@@ -440,6 +575,8 @@ export default function ProcessManager() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <VoiceTrainerToggle />
     </MainLayout>
   );
 }

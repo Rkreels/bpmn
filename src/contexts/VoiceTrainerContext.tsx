@@ -122,32 +122,38 @@ const tutorials: Tutorial[] = [
   {
     id: "process-manager-intro",
     name: "Process Manager Introduction",
-    description: "Learn how to use the Process Manager to create BPMN diagrams",
+    description: "Learn how to design and manage business process models using BPMN",
     pageUrl: "/process-manager",
     steps: [
       {
         id: "welcome",
-        text: "Welcome to the Process Manager! This tool helps you design and manage business process models using the BPMN standard."
+        text: "Welcome to Process Manager! This comprehensive platform helps you design, manage, and optimize business process models using BPMN standards. You can create visual process diagrams, manage templates, set properties, validate models, and simulate execution.",
+        elementSelector: ".process-manager"
       },
       {
-        id: "editor-tabs",
-        text: "The editor has four main tabs: Editor for designing your process, Preview for viewing the rendered model, XML for editing the raw BPMN code, and Simulation for testing your process."
+        id: "metrics",
+        text: "These dynamic metrics show your process management progress: active templates, running projects, completion rates, and team collaboration statistics. Click on any metric to see detailed insights.",
+        elementSelector: ".grid"
       },
       {
-        id: "element-palette",
-        text: "Use the element palette on the left to add new elements to your process. Simply click an element type and then click on the canvas to place it."
+        id: "actions",
+        text: "These action buttons provide essential process operations: Validate checks your model for BPMN compliance, Export creates downloadable files, Simulate tests performance, and Save preserves your work. Each action provides detailed voice feedback.",
+        elementSelector: ".flex.flex-wrap.items-center.gap-2"
       },
       {
-        id: "tools",
-        text: "The tools at the top help you select, move, connect, and manipulate process elements."
+        id: "editor-tab",
+        text: "The Editor tab provides a visual canvas with drag-and-drop BPMN elements. Use the element palette to add tasks, gateways, events, and connectors. The canvas supports zoom, grid snapping, and real-time validation.",
+        elementSelector: "[data-tab='editor']"
       },
       {
-        id: "properties",
-        text: "Click on any element to view and edit its properties, such as name, description, and other attributes."
+        id: "properties-tab",
+        text: "Properties tab allows you to configure process metadata including name, owner, category, business domain, risk level, and status. This information helps with governance and compliance tracking.",
+        elementSelector: "[data-tab='properties']"
       },
       {
-        id: "export",
-        text: "Once your model is complete, you can save it, export it as XML or JSON, or share it with others."
+        id: "repository-tab",
+        text: "Repository tab contains templates and active projects. You can search, filter by category, create new templates, and manage ongoing process improvement initiatives. Templates are reusable and support version control.",
+        elementSelector: "[data-tab='repository']"
       }
     ]
   },
