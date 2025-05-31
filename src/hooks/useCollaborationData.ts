@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 
 export interface TeamMember {

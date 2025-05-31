@@ -6,6 +6,7 @@ export interface Journey {
   name: string;
   description: string;
   status: "active" | "draft" | "archived";
+  personaId: string;
   stages: JourneyStage[];
   createdAt: string;
   updatedAt: string;
@@ -52,6 +53,7 @@ export const useJourneyData = () => {
       name: "Customer Onboarding Journey",
       description: "End-to-end customer onboarding experience",
       status: "active",
+      personaId: "1",
       stages: [
         {
           id: "stage1",
@@ -131,6 +133,7 @@ export const useJourneyData = () => {
           : journey
       )
     );
+    return newStage.id;
   }, []);
 
   const deleteStage = useCallback((journeyId: string, stageId: string) => {

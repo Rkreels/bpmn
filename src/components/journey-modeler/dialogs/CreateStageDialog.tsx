@@ -29,8 +29,8 @@ export const CreateStageDialog: React.FC<CreateStageDialogProps> = ({
     order: 1
   });
 
-  const currentJourney = journeys.find(j => j.id === journeyId);
-  const nextOrder = currentJourney ? currentJourney.stages.length + 1 : 1;
+  const journey = journeys.find(j => j.id === journeyId);
+  const nextOrder = journey ? journey.stages.length + 1 : 1;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,14 +55,14 @@ export const CreateStageDialog: React.FC<CreateStageDialogProps> = ({
     setOpen(false);
     onStageCreated?.();
     
-    speakText(`New stage ${formData.name} has been added to your customer journey. You can now add touchpoints to this stage to map specific customer interactions and emotions.`);
+    speakText(`New stage ${formData.name} has been added to the customer journey. You can now add touchpoints to this stage to track customer interactions.`);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button size="sm">
+          <Button>
             <Plus className="h-4 w-4 mr-2" />
             Add Stage
           </Button>
@@ -95,8 +95,18 @@ export const CreateStageDialog: React.FC<CreateStageDialogProps> = ({
             />
           </div>
           
-          <div className="text-sm text-muted-foreground">
-            This will be stage #{nextOrder} in the journey sequence.
+          <div className="space-y-2">
+            <Label htmlFor="order">Order</Label>
+            <Input
+              id="order"
+              type="number"
+              value={nextOrder}
+              disabled
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground">
+              This stage will be added at position {nextOrder}
+            </p>
           </div>
           
           <div className="flex justify-end gap-2 pt-4">
