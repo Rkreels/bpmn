@@ -198,8 +198,3 @@ export const BpmnElementPalette: React.FC<BpmnElementPaletteProps> = ({ onAddEle
     </div>
   );
 }
-
-// Helper function for class name concatenation since we no longer have direct access to cn from @/lib/utils
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}
