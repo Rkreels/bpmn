@@ -6,7 +6,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useVoice } from "@/contexts/VoiceContext";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   BarChart3,
   Settings,
@@ -119,7 +118,6 @@ export function Sidebar() {
   if (isMobile) {
     return (
       <>
-        {/* Mobile Menu Button */}
         <div className="fixed top-4 left-4 z-50 md:hidden">
           <Button
             variant="outline"
@@ -131,7 +129,6 @@ export function Sidebar() {
           </Button>
         </div>
 
-        {/* Mobile Overlay */}
         {isMobileOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -139,7 +136,6 @@ export function Sidebar() {
           />
         )}
 
-        {/* Mobile Sidebar */}
         <div className={cn(
           "fixed left-0 top-0 z-50 h-full w-72 bg-background border-r transform transition-transform duration-200 md:hidden",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -182,10 +178,9 @@ export function Sidebar() {
     );
   }
 
-  // Desktop Sidebar
   return (
     <div className={cn(
-      "fixed left-0 top-0 z-40 h-full bg-background border-r transition-all duration-200",
+      "flex-shrink-0 bg-background border-r transition-all duration-200",
       isCollapsed ? "w-16" : "w-72"
     )}>
       <div className="flex items-center justify-between p-4 border-b">

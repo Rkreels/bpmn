@@ -22,19 +22,20 @@ export function MainLayout({
   const isMobile = useIsMobile();
   
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex">
       <Sidebar />
       
-      <div className={cn(
-        "flex-1 flex flex-col",
-        isMobile ? "mt-16" : "ml-[240px]"
-      )}>
+      <div className="flex-1 flex flex-col min-w-0">
         <Header 
           pageTitle={pageTitle}
           showPageTitle={showPageTitle} 
         />
         
-        <main className={cn("flex-1 p-3 md:p-6", className)}>
+        <main className={cn(
+          "flex-1 overflow-auto",
+          isMobile ? "p-3" : "p-6",
+          className
+        )}>
           {children}
         </main>
         

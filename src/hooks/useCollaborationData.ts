@@ -1,52 +1,7 @@
-import { useState, useEffect } from "react";
 
-export interface Discussion {
-  id: string;
-  title: string;
-  content: string;
-  author: string;
-  authorInitials: string;
-  createdAt: string;
-  updatedAt: string;
-  tags: string[];
-  likes: string[];
-  views: number;
-  replies: Reply[];
-  isPinned: boolean;
-  isResolved: boolean;
-  processId?: string;
-  processName?: string;
-}
-
-export interface Reply {
-  id: string;
-  content: string;
-  author: string;
-  authorInitials: string;
-  createdAt: string;
-  likes: string[];
-}
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  initials: string;
-  role: string;
-  status: "online" | "away" | "offline";
-  lastActive: string;
-}
-
-export interface Activity {
-  id: string;
-  title: string;
-  description: string;
-  user: string;
-  userName: string;
-  time: string;
-  timestamp: string;
-  status: "approved" | "pending" | "rejected";
-  type: "discussion" | "review" | "approval";
-}
+import { useState } from "react";
+import { useDiscussions } from "./collaboration/useDiscussions";
+import { useTeamData } from "./collaboration/useTeamData";
 
 export interface ProcessReview {
   id: string;
@@ -71,120 +26,8 @@ export interface ScheduleEvent {
 }
 
 export const useCollaborationData = () => {
-  const [discussions, setDiscussions] = useState<Discussion[]>([
-    {
-      id: "1",
-      title: "Streamline Purchase Order Approval Process",
-      content: "Currently, our PO approval process takes too long with multiple handoffs. Can we reduce the approval steps?",
-      author: "Sarah Chen",
-      authorInitials: "SC",
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      tags: ["approval", "efficiency", "procurement"],
-      likes: ["user1", "user2"],
-      views: 23,
-      replies: [
-        {
-          id: "r1",
-          content: "I agree! We could combine steps 2 and 3 into a single approval.",
-          author: "Mike Johnson",
-          authorInitials: "MJ",
-          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-          likes: ["user1"]
-        }
-      ],
-      isPinned: true,
-      isResolved: false,
-      processId: "po-001",
-      processName: "Purchase Order Process"
-    },
-    {
-      id: "2",
-      title: "Digital Transformation Initiative Feedback",
-      content: "How can we better manage the change management aspects of our digital transformation?",
-      author: "Alex Rodriguez",
-      authorInitials: "AR",
-      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-      tags: ["digital transformation", "change management"],
-      likes: ["user3"],
-      views: 15,
-      replies: [],
-      isPinned: false,
-      isResolved: false
-    }
-  ]);
-
-  const [teamMembers] = useState<TeamMember[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      initials: "JD",
-      role: "Process Manager",
-      status: "online",
-      lastActive: "Now"
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      initials: "JS",
-      role: "Business Analyst",
-      status: "away",
-      lastActive: "5 min ago"
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      initials: "MJ",
-      role: "Operations Lead",
-      status: "online",
-      lastActive: "Now"
-    },
-    {
-      id: "4",
-      name: "Sarah Chen",
-      initials: "SC",
-      role: "Project Manager",
-      status: "offline",
-      lastActive: "2 hours ago"
-    }
-  ]);
-
-  const [activities] = useState<Activity[]>([
-    {
-      id: "1",
-      title: "Process workflow approved",
-      description: "Workflow for customer onboarding has been approved",
-      user: "John Doe",
-      userName: "John Doe",
-      time: "2 minutes ago",
-      timestamp: "2 minutes ago",
-      status: "approved",
-      type: "approval"
-    },
-    {
-      id: "2",
-      title: "New discussion started",
-      description: "Discussion about process optimization has been created",
-      user: "Sarah Chen",
-      userName: "Sarah Chen",
-      time: "15 minutes ago",
-      timestamp: "15 minutes ago",
-      status: "pending",
-      type: "discussion"
-    },
-    {
-      id: "3",
-      title: "Process review completed",
-      description: "Review of invoice processing workflow is complete",
-      user: "Mike Johnson",
-      userName: "Mike Johnson",
-      time: "1 hour ago",
-      timestamp: "1 hour ago",
-      status: "approved",
-      type: "review"
-    }
-  ]);
+  const discussionData = useDiscussions();
+  const teamData = useTeamData();
 
   const [processReviews] = useState<ProcessReview[]>([
     {
@@ -231,135 +74,24 @@ export const useCollaborationData = () => {
     }
   ]);
 
-  const currentUserId = "user1";
-
-  const createDiscussion = (discussionData: {
-    title: string;
-    content: string;
-    tags: string[];
-    processId?: string;
-    processName?: string;
-  }) => {
-    const newDiscussion: Discussion = {
-      id: Date.now().toString(),
-      title: discussionData.title,
-      content: discussionData.content,
-      author: "Current User",
-      authorInitials: "CU",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      tags: discussionData.tags,
-      likes: [],
-      views: 1,
-      replies: [],
-      isPinned: false,
-      isResolved: false,
-      processId: discussionData.processId,
-      processName: discussionData.processName
-    };
-
-    setDiscussions(prev => [newDiscussion, ...prev]);
-    return newDiscussion.id;
-  };
-
-  const addReply = (discussionId: string, content: string) => {
-    const newReply: Reply = {
-      id: Date.now().toString(),
-      content,
-      author: "Current User",
-      authorInitials: "CU",
-      createdAt: new Date().toISOString(),
-      likes: []
-    };
-
-    setDiscussions(prev => prev.map(discussion => 
-      discussion.id === discussionId 
-        ? {
-            ...discussion,
-            replies: [...discussion.replies, newReply],
-            updatedAt: new Date().toISOString()
-          }
-        : discussion
-    ));
-  };
-
-  const toggleLike = (discussionId: string, replyId?: string) => {
-    setDiscussions(prev => prev.map(discussion => {
-      if (discussion.id === discussionId) {
-        if (replyId) {
-          // Like a reply
-          return {
-            ...discussion,
-            replies: discussion.replies.map(reply =>
-              reply.id === replyId
-                ? {
-                    ...reply,
-                    likes: reply.likes.includes(currentUserId)
-                      ? reply.likes.filter(id => id !== currentUserId)
-                      : [...reply.likes, currentUserId]
-                  }
-                : reply
-            )
-          };
-        } else {
-          // Like the discussion
-          return {
-            ...discussion,
-            likes: discussion.likes.includes(currentUserId)
-              ? discussion.likes.filter(id => id !== currentUserId)
-              : [...discussion.likes, currentUserId]
-          };
-        }
-      }
-      return discussion;
-    }));
-  };
-
-  const togglePin = (discussionId: string) => {
-    setDiscussions(prev => prev.map(discussion =>
-      discussion.id === discussionId
-        ? { ...discussion, isPinned: !discussion.isPinned }
-        : discussion
-    ));
-  };
-
-  const resolveDiscussion = (discussionId: string) => {
-    setDiscussions(prev => prev.map(discussion =>
-      discussion.id === discussionId
-        ? { ...discussion, isResolved: !discussion.isResolved }
-        : discussion
-    ));
-  };
-
-  const inviteTeamMember = (email: string, role: string) => {
-    console.log(`Inviting ${email} as ${role}`);
-    // In a real app, this would make an API call
-  };
-
   const createProcessReview = (reviewData: Partial<ProcessReview>) => {
     console.log("Creating process review:", reviewData);
-    // In a real app, this would make an API call
   };
 
   const createScheduleEvent = (eventData: Partial<ScheduleEvent>) => {
     console.log("Creating schedule event:", eventData);
-    // In a real app, this would make an API call
   };
 
   return {
-    discussions,
-    teamMembers,
-    activities,
+    ...discussionData,
+    ...teamData,
     processReviews,
     scheduleEvents,
-    currentUserId,
-    createDiscussion,
-    addReply,
-    toggleLike,
-    togglePin,
-    resolveDiscussion,
-    inviteTeamMember,
     createProcessReview,
     createScheduleEvent
   };
 };
+
+// Re-export types for backward compatibility
+export type { Discussion, Reply, TeamMember, Activity } from "./collaboration/useDiscussions";
+export type { Discussion as DiscussionType } from "./collaboration/useDiscussions";
