@@ -1,157 +1,123 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useProcessMiningData } from "@/hooks/useProcessMiningData";
-import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
-import {
-  Upload,
-  FileText,
-  Trash2,
-  Download,
-  Play,
-  Database,
-  Calendar,
-  BarChart3
-} from "lucide-react";
+import { useProcessMiningData } from "@/hooks/useProcessMiningData";
+import { Upload, Download, Trash2, Eye, RefreshCw } from "lucide-react";
 
 export const EventLogManager: React.FC = () => {
-  const { eventLogs, uploadEventLog, deleteEventLog, runAnalysis, exportData } = useProcessMiningData();
-  const { toast } = useToast();
   const { speakText } = useVoice();
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const { eventLogs, uploadEventLog } = useProcessMiningData();
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach(file => {
-      if (file.size > 50 * 1024 * 1024) {
-        toast({
-          title: "File Too Large",
-          description: `${file.name} exceeds 50MB limit`,
-          variant: "destructive"
+  const handleFileUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,.xes,.json';
+    input.multiple = true;
+    
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        setIsUploading(true);
+        Array.from(files).forEach(file => {
+          uploadEventLog(file);
+          speakText(`Uploading ${file.name}. The file will be processed automatically for analysis.`);
         });
-        return;
+        setTimeout(() => setIsUploading(false), 1000);
       }
-
-      const validFormats = ['.csv', '.xes', '.json'];
-      const isValidFormat = validFormats.some(format => file.name.toLowerCase().endsWith(format));
-      
-      if (!isValidFormat) {
-        toast({
-          title: "Invalid Format",
-          description: `${file.name} must be CSV, XES, or JSON format`,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Simulate upload progress
-      const logId = uploadEventLog(file);
-      setUploadProgress(prev => ({ ...prev, [logId]: 0 }));
-
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          const currentProgress = prev[logId] || 0;
-          if (currentProgress >= 100) {
-            clearInterval(interval);
-            return prev;
-          }
-          return { ...prev, [logId]: currentProgress + 10 };
-        });
-      }, 200);
-
-      toast({
-        title: "Upload Started",
-        description: `Uploading ${file.name}...`
-      });
-      
-      speakText(`Uploading event log ${file.name}. This will be processed for analysis once upload completes.`);
-    });
-
-    // Reset input
-    event.target.value = '';
+    };
+    
+    input.click();
   };
 
-  const handleDeleteLog = (logId: string, logName: string) => {
-    deleteEventLog(logId);
-    toast({
-      title: "Event Log Deleted",
-      description: `${logName} has been removed`
-    });
+  const handleDownload = (logId: string) => {
+    const log = eventLogs.find(l => l.id === logId);
+    if (log) {
+      speakText(`Downloading ${log.name}. The processed event log will be saved to your device.`);
+    }
   };
 
-  const handleAnalyzeLog = (logId: string, logName: string) => {
-    runAnalysis(logId);
-    toast({
-      title: "Analysis Started",
-      description: `Processing ${logName} for insights...`
-    });
-    speakText(`Starting analysis of ${logName}. This will discover process variants and identify performance bottlenecks.`);
+  const handleView = (logId: string) => {
+    const log = eventLogs.find(l => l.id === logId);
+    if (log) {
+      speakText(`Opening detailed view for ${log.name}. This shows event log statistics and data preview.`);
+    }
   };
 
-  const handleExportLog = (logId: string, logName: string) => {
-    const filename = exportData("csv", `eventlog-${logName}`);
-    toast({
-      title: "Export Complete",
-      description: `Event log exported as ${filename}`
-    });
+  const handleDelete = (logId: string) => {
+    const log = eventLogs.find(l => l.id === logId);
+    if (log) {
+      speakText(`Deleting ${log.name}. This will remove the event log and all associated analysis results.`);
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "ready": return "bg-green-100 text-green-800";
-      case "processing": return "bg-blue-100 text-blue-800";
-      case "error": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "ready": return "default";
+      case "processing": return "secondary";
+      case "uploading": return "outline";
+      case "error": return "destructive";
+      default: return "outline";
+    }
+  };
+
+  const getStatusProgress = (status: string) => {
+    switch (status) {
+      case "ready": return 100;
+      case "processing": return 70;
+      case "uploading": return 30;
+      case "error": return 0;
+      default: return 0;
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Upload Area */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-semibold">Event Log Manager</h3>
+          <p className="text-muted-foreground">Upload and manage your process event data</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button onClick={handleFileUpload} disabled={isUploading}>
+            <Upload className="h-4 w-4 mr-2" />
+            {isUploading ? "Uploading..." : "Upload Event Log"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Upload Guidelines */}
       <Card>
         <CardHeader>
-          <CardTitle>Upload Event Logs</CardTitle>
-          <CardDescription>
-            Upload your process event data in CSV, XES, or JSON format (max 50MB)
-          </CardDescription>
+          <CardTitle>Supported Formats</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
-            <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center gap-4">
-              <div className="rounded-full border border-dashed p-6">
-                <Upload className="h-10 w-10 text-muted-foreground" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Upload Event Logs</h3>
-                <p className="text-sm text-muted-foreground">
-                  Click to browse or drag and drop your event log files
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Supported formats: CSV, XES, JSON • Max size: 50MB
-                </p>
-              </div>
-              <input
-                type="file"
-                multiple
-                accept=".csv,.xes,.json"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload">
-                <Button asChild>
-                  <span>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Select Files
-                  </span>
-                </Button>
-              </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3 border rounded">
+              <h4 className="font-medium">CSV Files</h4>
+              <p className="text-sm text-muted-foreground">
+                Requires: Case ID, Activity, Timestamp columns
+              </p>
+            </div>
+            <div className="p-3 border rounded">
+              <h4 className="font-medium">XES Files</h4>
+              <p className="text-sm text-muted-foreground">
+                Standard event log format for process mining
+              </p>
+            </div>
+            <div className="p-3 border rounded">
+              <h4 className="font-medium">JSON Files</h4>
+              <p className="text-sm text-muted-foreground">
+                Structured event data with trace information
+              </p>
             </div>
           </div>
         </CardContent>
@@ -161,103 +127,83 @@ export const EventLogManager: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Uploaded Event Logs</CardTitle>
-          <CardDescription>Manage and analyze your process event data</CardDescription>
         </CardHeader>
         <CardContent>
-          {eventLogs.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Database className="h-12 w-12 mx-auto mb-4" />
-              <p>No event logs uploaded yet</p>
-              <p className="text-sm">Upload your first event log to get started</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {eventLogs.map((log) => (
-                <div key={log.id} className="border rounded-lg p-4 hover:bg-muted/50">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-start gap-3">
-                      <FileText className="h-5 w-5 text-blue-500 mt-0.5" />
-                      <div>
-                        <h3 className="font-medium">{log.name}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {log.uploadDate}
-                          </span>
-                          <span>{log.fileSize}</span>
-                          <span>{log.format.toUpperCase()}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(log.status)}>
-                        {log.status}
-                      </Badge>
-                    </div>
+          <div className="space-y-4">
+            {eventLogs.map((log) => (
+              <div key={log.id} className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{log.name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Uploaded on {new Date(log.uploadDate).toLocaleDateString()} • {log.size}
+                    </p>
                   </div>
-
-                  {uploadProgress[log.id] !== undefined && uploadProgress[log.id] < 100 && (
-                    <div className="mb-3">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Uploading...</span>
-                        <span>{uploadProgress[log.id]}%</span>
-                      </div>
-                      <Progress value={uploadProgress[log.id]} />
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Cases:</span>
-                      <span className="ml-2 font-medium">{log.cases.toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Activities:</span>
-                      <span className="ml-2 font-medium">{log.activities}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Variants:</span>
-                      <span className="ml-2 font-medium">{log.variants}</span>
-                    </div>
-                  </div>
-
                   <div className="flex items-center gap-2">
-                    <Button 
-                      size="sm" 
-                      disabled={log.status !== "ready"}
-                      onClick={() => handleAnalyzeLog(log.id, log.name)}
-                    >
-                      <Play className="h-3 w-3 mr-1" />
-                      Analyze
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleExportLog(log.id, log.name)}
-                    >
-                      <Download className="h-3 w-3 mr-1" />
-                      Export
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                    >
-                      <BarChart3 className="h-3 w-3 mr-1" />
-                      Visualize
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleDeleteLog(log.id, log.name)}
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
-                    </Button>
+                    <Badge variant={getStatusColor(log.status)}>
+                      {log.status}
+                    </Badge>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleView(log.id)}
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleDownload(log.id)}
+                        disabled={log.status !== "ready"}
+                      >
+                        <Download className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleDelete(log.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                
+                {log.status === "processing" || log.status === "uploading" ? (
+                  <Progress value={getStatusProgress(log.status)} className="mb-3" />
+                ) : null}
+                
+                {log.status === "ready" && (
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Activities:</span> {log.activities}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Variants:</span> {log.variants}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Cases:</span> {log.cases}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {eventLogs.length === 0 && (
+              <div className="text-center py-12">
+                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Event Logs</h3>
+                <p className="text-muted-foreground mb-4">
+                  Upload your first event log to start process mining analysis
+                </p>
+                <Button onClick={handleFileUpload}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Event Log
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

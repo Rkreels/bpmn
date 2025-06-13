@@ -1,83 +1,101 @@
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 
-export interface Journey {
+export interface CustomerJourney {
   id: string;
   name: string;
   description: string;
-  status: "active" | "draft" | "archived";
-  personaId: string;
-  stages: JourneyStage[];
+  status: "draft" | "active" | "completed";
   createdAt: string;
   updatedAt: string;
+  stages: JourneyStage[];
+  persona: string;
 }
 
 export interface JourneyStage {
   id: string;
   name: string;
   description: string;
-  touchpoints: Touchpoint[];
   order: number;
+  touchpoints: Touchpoint[];
+  emotions: string[];
+  painPoints: string[];
+  opportunities: string[];
 }
 
 export interface Touchpoint {
   id: string;
   name: string;
-  type: "digital" | "physical" | "human";
   channel: string;
-  description: string;
+  type: "digital" | "physical" | "human";
   satisfaction: number;
-  emotion: "very-negative" | "negative" | "neutral" | "positive" | "very-positive";
-  duration: string;
-  painPoints: string[];
-  opportunities: string[];
+  effort: number;
+  frequency: number;
 }
 
 export interface Persona {
   id: string;
   name: string;
-  description: string;
-  demographics: string;
+  age: number;
+  role: string;
   goals: string[];
   painPoints: string[];
-  role: string;
-  department: string;
-  techSavviness: "low" | "medium" | "high";
-  decisionInfluence: "low" | "medium" | "high";
+  behaviors: string[];
+  channels: string[];
 }
 
 export const useJourneyData = () => {
-  const [journeys, setJourneys] = useState<Journey[]>([
+  const [journeys, setJourneys] = useState<CustomerJourney[]>([
     {
       id: "1",
-      name: "Customer Onboarding Journey",
-      description: "End-to-end customer onboarding experience",
+      name: "Digital Onboarding Journey",
+      description: "Complete customer onboarding experience from signup to first transaction",
       status: "active",
-      personaId: "1",
+      createdAt: "2024-01-10T10:00:00Z",
+      updatedAt: "2024-01-15T14:30:00Z",
+      persona: "Tech-Savvy Professional",
       stages: [
         {
-          id: "stage1",
+          id: "s1",
           name: "Awareness",
-          description: "Customer becomes aware of our product",
+          description: "Customer discovers our service",
           order: 1,
           touchpoints: [
             {
-              id: "tp1",
+              id: "t1",
               name: "Website Visit",
+              channel: "Web",
               type: "digital",
-              channel: "Website",
-              description: "Initial website exploration",
-              satisfaction: 4.2,
-              emotion: "positive",
-              duration: "5 minutes",
-              painPoints: ["Complex navigation", "Too much information"],
-              opportunities: ["Simplify landing page", "Add guided tour"]
+              satisfaction: 8,
+              effort: 3,
+              frequency: 85
             }
-          ]
+          ],
+          emotions: ["curious", "hopeful"],
+          painPoints: ["information overload"],
+          opportunities: ["simplify messaging"]
+        },
+        {
+          id: "s2", 
+          name: "Consideration",
+          description: "Customer evaluates our offering",
+          order: 2,
+          touchpoints: [
+            {
+              id: "t2",
+              name: "Product Demo",
+              channel: "Video Call",
+              type: "human",
+              satisfaction: 9,
+              effort: 4,
+              frequency: 65
+            }
+          ],
+          emotions: ["interested", "cautious"],
+          painPoints: ["complex pricing"],
+          opportunities: ["clearer pricing"]
         }
-      ],
-      createdAt: "2024-01-15",
-      updatedAt: "2024-01-20"
+      ]
     }
   ]);
 
@@ -85,104 +103,98 @@ export const useJourneyData = () => {
     {
       id: "1",
       name: "Tech-Savvy Professional",
-      description: "Early adopter with high technical knowledge",
-      demographics: "25-40 years, Urban, High income",
+      age: 32,
+      role: "Software Engineer",
       goals: ["Efficiency", "Innovation", "Growth"],
-      painPoints: ["Complex processes", "Time constraints", "Poor user experience"],
-      role: "Senior Manager",
-      department: "IT",
-      techSavviness: "high",
-      decisionInfluence: "high"
+      painPoints: ["Complex interfaces", "Slow processes"],
+      behaviors: ["Mobile-first", "Self-service preference"],
+      channels: ["Mobile App", "Web", "Email"]
+    },
+    {
+      id: "2", 
+      name: "Business Executive",
+      age: 45,
+      role: "VP of Operations",
+      goals: ["ROI", "Scalability", "Compliance"],
+      painPoints: ["Lack of visibility", "Manual processes"],
+      behaviors: ["Delegator", "Data-driven decisions"],
+      channels: ["Dashboard", "Reports", "Phone"]
     }
   ]);
 
-  const createJourney = useCallback((journeyData: Omit<Journey, "id" | "createdAt" | "updatedAt">) => {
-    const newJourney: Journey = {
-      ...journeyData,
-      id: `journey_${Date.now()}`,
+  const createJourney = (journeyData: Partial<CustomerJourney>) => {
+    const newJourney: CustomerJourney = {
+      id: Date.now().toString(),
+      name: journeyData.name || "New Journey",
+      description: journeyData.description || "",
+      status: "draft",
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      stages: [],
+      persona: journeyData.persona || "",
+      ...journeyData
     };
-    setJourneys(prev => [...prev, newJourney]);
+
+    setJourneys(prev => [newJourney, ...prev]);
     return newJourney.id;
-  }, []);
+  };
 
-  const updateJourney = useCallback((id: string, updates: Partial<Journey>) => {
-    setJourneys(prev => 
-      prev.map(journey => 
-        journey.id === id 
-          ? { ...journey, ...updates, updatedAt: new Date().toISOString() }
-          : journey
-      )
-    );
-  }, []);
+  const updateJourney = (id: string, updates: Partial<CustomerJourney>) => {
+    setJourneys(prev => prev.map(journey =>
+      journey.id === id
+        ? { ...journey, ...updates, updatedAt: new Date().toISOString() }
+        : journey
+    ));
+  };
 
-  const deleteJourney = useCallback((id: string) => {
+  const deleteJourney = (id: string) => {
     setJourneys(prev => prev.filter(journey => journey.id !== id));
-  }, []);
+  };
 
-  const addStageToJourney = useCallback((journeyId: string, stageData: Omit<JourneyStage, "id">) => {
+  const addStage = (journeyId: string, stage: Omit<JourneyStage, "id">) => {
     const newStage: JourneyStage = {
-      ...stageData,
-      id: `stage_${Date.now()}`
+      ...stage,
+      id: Date.now().toString()
     };
-    setJourneys(prev => 
-      prev.map(journey => 
-        journey.id === journeyId 
-          ? { ...journey, stages: [...journey.stages, newStage], updatedAt: new Date().toISOString() }
-          : journey
-      )
-    );
-    return newStage.id;
-  }, []);
 
-  const deleteStage = useCallback((journeyId: string, stageId: string) => {
-    setJourneys(prev => 
-      prev.map(journey => 
-        journey.id === journeyId 
-          ? { 
-              ...journey, 
-              stages: journey.stages.filter(stage => stage.id !== stageId),
-              updatedAt: new Date().toISOString()
-            }
-          : journey
-      )
-    );
-  }, []);
+    setJourneys(prev => prev.map(journey =>
+      journey.id === journeyId
+        ? {
+            ...journey,
+            stages: [...journey.stages, newStage],
+            updatedAt: new Date().toISOString()
+          }
+        : journey
+    ));
+  };
 
-  const addTouchpointToStage = useCallback((journeyId: string, stageId: string, touchpointData: Omit<Touchpoint, "id">) => {
-    const newTouchpoint: Touchpoint = {
-      ...touchpointData,
-      id: `touchpoint_${Date.now()}`
-    };
+  const exportJourneyData = (format: string) => {
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = `journey-maps-${timestamp}.${format}`;
     
-    setJourneys(prev => 
-      prev.map(journey => 
-        journey.id === journeyId 
-          ? {
-              ...journey,
-              stages: journey.stages.map(stage =>
-                stage.id === stageId
-                  ? { ...stage, touchpoints: [...stage.touchpoints, newTouchpoint] }
-                  : stage
-              ),
-              updatedAt: new Date().toISOString()
-            }
-          : journey
-      )
-    );
-    return newTouchpoint.id;
-  }, []);
+    const data = {
+      journeys,
+      personas,
+      exportedAt: new Date().toISOString()
+    };
 
-  const exportJourneyData = useCallback((format: "json" | "csv" | "pdf") => {
-    console.log(`Exporting journey data in ${format} format`);
-    // Implementation for export functionality
-  }, []);
+    console.log(`Exporting journey data as ${filename}:`, data);
+    return filename;
+  };
 
-  const shareJourney = useCallback((journeyId: string, method: "link" | "email") => {
-    console.log(`Sharing journey ${journeyId} via ${method}`);
-    // Implementation for sharing functionality
-  }, []);
+  const shareJourney = (journeyId: string, shareType: "link" | "email") => {
+    const journey = journeys.find(j => j.id === journeyId);
+    if (journey) {
+      const shareUrl = `${window.location.origin}/journey/${journeyId}`;
+      
+      if (shareType === "link") {
+        navigator.clipboard.writeText(shareUrl);
+      }
+      
+      console.log(`Sharing journey "${journey.name}" via ${shareType}:`, shareUrl);
+      return shareUrl;
+    }
+  };
 
   return {
     journeys,
@@ -190,9 +202,7 @@ export const useJourneyData = () => {
     createJourney,
     updateJourney,
     deleteJourney,
-    addStageToJourney,
-    deleteStage,
-    addTouchpointToStage,
+    addStage,
     exportJourneyData,
     shareJourney
   };

@@ -1,198 +1,236 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useVoice } from "@/contexts/VoiceContext";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   BarChart3,
-  Box,
-  Database,
-  GitMerge,
-  Globe,
-  Layers,
-  LayoutDashboard,
-  MessagesSquare,
   Settings,
   Users,
+  FileText,
+  Zap,
+  Target,
+  GitBranch,
+  Activity,
+  Database,
+  TrendingUp,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
-import { useVoice } from "@/contexts/VoiceContext";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface SidebarProps {
-  className?: string;
-}
+const navigation = [
+  {
+    title: "Dashboard",
+    href: "/",
+    icon: BarChart3,
+    description: "Overview and key metrics"
+  },
+  {
+    title: "Process Manager",
+    href: "/process-manager", 
+    icon: GitBranch,
+    description: "Design and manage BPMN processes"
+  },
+  {
+    title: "Journey Modeler",
+    href: "/journey-modeler",
+    icon: Target,
+    description: "Map customer experiences"
+  },
+  {
+    title: "Collaboration Hub",
+    href: "/collaboration-hub",
+    icon: Users,
+    description: "Team discussions and approvals"
+  },
+  {
+    title: "Repository",
+    href: "/repository",
+    icon: Database,
+    description: "Process templates and assets"
+  },
+  {
+    title: "Process Intelligence",
+    href: "/process-intelligence",
+    icon: Activity,
+    description: "Advanced process analytics"
+  },
+  {
+    title: "Process Mining",
+    href: "/process-mining",
+    icon: Zap,
+    description: "Discover processes from event logs"
+  },
+  {
+    title: "Transformation Cockpit",
+    href: "/transformation-cockpit",
+    icon: TrendingUp,
+    description: "Digital transformation management"
+  },
+  {
+    title: "Reports",
+    href: "/reports",
+    icon: FileText,
+    description: "Analytics and reporting"
+  },
+  {
+    title: "Users",
+    href: "/users",
+    icon: Users,
+    description: "User management and permissions"
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
+    description: "Application configuration"
+  }
+];
 
-export function Sidebar({ className }: SidebarProps) {
-  const { speakModuleNavigation, speakModuleTooltip, cancelSpeech, isVoiceEnabled } = useVoice();
+export function Sidebar() {
   const location = useLocation();
-  
-  return (
-    <aside
-      className={cn(
-        "fixed top-0 left-0 h-screen bg-sidebar z-30 border-r border-sidebar-border w-[240px] transition-all duration-300 ease-in-out",
-        className
-      )}
-    >
-      <div className="flex items-center h-14 border-b border-sidebar-border px-4">
-        <div className="flex items-center flex-1 gap-2">
-          <GitMerge className="h-6 w-6 text-primary" />
-          <span className="font-semibold text-sidebar-foreground whitespace-nowrap">ProcessFlow</span>
-        </div>
-      </div>
+  const isMobile = useIsMobile();
+  const { speakText } = useVoice();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-      <div className="flex-1 overflow-auto py-4 px-3">
-        <nav className="flex flex-col gap-1">
-          <NavItem 
-            id="sidebar-dashboard" 
-            to="/" 
-            icon={LayoutDashboard} 
-            label="Dashboard" 
-            isActive={location.pathname === "/"}
-            onNavigate={() => speakModuleNavigation("sidebar-dashboard")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-dashboard")}
-            onLeave={() => cancelSpeech()}
+  const handleNavigation = (item: typeof navigation[0]) => {
+    speakText(`Navigating to ${item.title}. ${item.description}`);
+    if (isMobile) {
+      setIsMobileOpen(false);
+    }
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    speakText(isCollapsed ? "Sidebar expanded" : "Sidebar collapsed");
+  };
+
+  const toggleMobile = () => {
+    setIsMobileOpen(!isMobileOpen);
+  };
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile Menu Button */}
+        <div className="fixed top-4 left-4 z-50 md:hidden">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleMobile}
+            className="bg-background shadow-md"
+          >
+            {isMobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {/* Mobile Overlay */}
+        {isMobileOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMobileOpen(false)}
           />
-          <NavItem 
-            id="sidebar-process-manager" 
-            to="/process-manager" 
-            icon={GitMerge} 
-            label="Process Manager" 
-            isActive={location.pathname === "/process-manager"}
-            onNavigate={() => speakModuleNavigation("sidebar-processManager")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processManager")}
-            onLeave={() => cancelSpeech()}
-          />
-          <NavItem 
-            id="sidebar-journey-modeler" 
-            to="/journey-modeler" 
-            icon={Globe} 
-            label="Journey Modeler" 
-            isActive={location.pathname === "/journey-modeler"}
-            onNavigate={() => speakModuleNavigation("sidebar-journeyModeler")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-journeyModeler")}
-            onLeave={() => cancelSpeech()}
-          />
-          <NavItem 
-            id="sidebar-collaboration-hub" 
-            to="/collaboration-hub" 
-            icon={MessagesSquare} 
-            label="Collaboration Hub" 
-            isActive={location.pathname === "/collaboration-hub"}
-            onNavigate={() => speakModuleNavigation("sidebar-collaborationHub")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-collaborationHub")}
-            onLeave={() => cancelSpeech()}
-          />
-          <NavItem 
-            id="sidebar-repository" 
-            to="/repository" 
-            icon={Database} 
-            label="Repository" 
-            isActive={location.pathname === "/repository"}
-            onNavigate={() => speakModuleNavigation("sidebar-repository")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-repository")}
-            onLeave={() => cancelSpeech()}
-          />
-          <NavItem 
-            id="sidebar-process-intelligence" 
-            to="/process-intelligence" 
-            icon={BarChart3} 
-            label="Process Intelligence" 
-            isActive={location.pathname === "/process-intelligence"}
-            onNavigate={() => speakModuleNavigation("sidebar-processIntelligence")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processIntelligence")}
-            onLeave={() => cancelSpeech()}
-          />
-          <NavItem 
-            id="sidebar-process-mining" 
-            to="/process-mining" 
-            icon={Box} 
-            label="Process Mining" 
-            isActive={location.pathname === "/process-mining"}
-            onNavigate={() => speakModuleNavigation("sidebar-processMining")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-processMining")}
-            onLeave={() => cancelSpeech()}
-          />
-          <NavItem 
-            id="sidebar-transformation-cockpit" 
-            to="/transformation-cockpit" 
-            icon={Layers} 
-            label="Transformation Cockpit" 
-            isActive={location.pathname === "/transformation-cockpit"}
-            onNavigate={() => speakModuleNavigation("sidebar-transformationCockpit")}
-            onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-transformationCockpit")}
-            onLeave={() => cancelSpeech()}
-          />
+        )}
+
+        {/* Mobile Sidebar */}
+        <div className={cn(
+          "fixed left-0 top-0 z-50 h-full w-72 bg-background border-r transform transition-transform duration-200 md:hidden",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-semibold">BPM Platform</h2>
+            <Button variant="ghost" size="icon" onClick={toggleMobile}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <ScrollArea className="flex-1 p-4">
+            <nav className="space-y-2">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={() => handleNavigation(item)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
+                      isActive ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <div className="flex-1">
+                      <div className="font-medium">{item.title}</div>
+                      <div className="text-xs text-muted-foreground">{item.description}</div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </nav>
+          </ScrollArea>
+        </div>
+      </>
+    );
+  }
+
+  // Desktop Sidebar
+  return (
+    <div className={cn(
+      "fixed left-0 top-0 z-40 h-full bg-background border-r transition-all duration-200",
+      isCollapsed ? "w-16" : "w-72"
+    )}>
+      <div className="flex items-center justify-between p-4 border-b">
+        {!isCollapsed && (
+          <h2 className="text-lg font-semibold">BPM Platform</h2>
+        )}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleCollapse}
+          className="ml-auto"
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
+      </div>
+      
+      <ScrollArea className="flex-1 p-4">
+        <nav className="space-y-2">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href;
+            
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={() => handleNavigation(item)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent group",
+                  isActive ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                )}
+                title={isCollapsed ? `${item.title} - ${item.description}` : undefined}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {!isCollapsed && (
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{item.title}</div>
+                    <div className="text-xs text-muted-foreground truncate">{item.description}</div>
+                  </div>
+                )}
+              </Link>
+            );
+          })}
         </nav>
-        
-        <div className="mt-8 pt-6 border-t border-sidebar-border">
-          <span className="text-xs font-medium text-sidebar-foreground/50 px-3">
-            Administration
-          </span>
-          <nav className="mt-2 flex flex-col gap-1">
-            <NavItem 
-              id="sidebar-users" 
-              to="/users" 
-              icon={Users} 
-              label="User Management" 
-              isActive={location.pathname === "/users" || location.pathname === "/user-management"}
-              onNavigate={() => speakModuleNavigation("sidebar-users")}
-              onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-users")}
-              onLeave={() => cancelSpeech()}
-            />
-            <NavItem 
-              id="sidebar-settings" 
-              to="/settings" 
-              icon={Settings} 
-              label="Settings" 
-              isActive={location.pathname === "/settings"}
-              onNavigate={() => speakModuleNavigation("sidebar-settings")}
-              onHover={() => isVoiceEnabled && speakModuleTooltip("sidebar-settings")}
-              onLeave={() => cancelSpeech()}
-            />
-          </nav>
-        </div>
-      </div>
-
-      <div className="h-14 border-t border-sidebar-border flex items-center px-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
-            JD
-          </div>
-          <div>
-            <div className="text-sm font-medium text-sidebar-foreground truncate">John Doe</div>
-            <div className="text-xs text-sidebar-foreground/70 truncate">john.doe@example.com</div>
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-interface NavItemProps {
-  id: string;
-  to: string;
-  icon: React.FC<{ className?: string }>;
-  label: string;
-  isActive?: boolean;
-  onNavigate?: () => void;
-  onHover?: () => void;
-  onLeave?: () => void;
-}
-
-function NavItem({ id, to, icon: Icon, label, isActive = false, onNavigate, onHover, onLeave }: NavItemProps) {
-  return (
-    <Link
-      id={id}
-      to={to}
-      className={cn(
-        "flex items-center h-10 px-3 rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
-        isActive && "bg-sidebar-accent text-sidebar-foreground"
-      )}
-      onClick={onNavigate}
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
-    >
-      <Icon className="h-5 w-5 min-w-5" />
-      <span className="ml-3 truncate">{label}</span>
-    </Link>
+      </ScrollArea>
+    </div>
   );
 }

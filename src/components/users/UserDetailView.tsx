@@ -1,21 +1,10 @@
 
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar,
-  Activity,
-  FileText,
-  Users,
-  Edit
-} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { User, Mail, Phone, Building, FileText, Users } from "lucide-react";
 
 interface User {
   id: string;
@@ -37,150 +26,131 @@ interface UserDetailViewProps {
   onClose: () => void;
 }
 
-export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, open, onClose }) => {
+export const UserDetailView: React.FC<UserDetailViewProps> = ({
+  user,
+  open,
+  onClose
+}) => {
   if (!user) return null;
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Active": return "bg-green-100 text-green-800";
-      case "Inactive": return "bg-red-100 text-red-800";
-      case "Pending": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>User Profile</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            {user.name}
+          </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
-          {/* User Header */}
+          {/* Basic Info */}
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarFallback className="text-lg">{getInitials(user.name)}</AvatarFallback>
-            </Avatar>
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <span className="text-xl font-semibold">
+                {user.name.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold">{user.name}</h2>
+              <h3 className="text-lg font-semibold">{user.name}</h3>
               <p className="text-muted-foreground">{user.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 <Badge variant="outline">{user.role}</Badge>
-                <Badge className={getStatusColor(user.status)}>
+                <Badge variant={user.status === "Active" ? "default" : "secondary"}>
                   {user.status}
                 </Badge>
               </div>
             </div>
-            <Button variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
           </div>
 
+          <Separator />
+
           {/* Contact Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <h4 className="font-medium flex items-center gap-2">
+                <Mail className="h-4 w-4" />
                 Contact Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{user.email}</span>
-              </div>
-              {user.phone && (
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{user.phone}</span>
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Email:</span> {user.email}
                 </div>
-              )}
-              {user.department && (
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{user.department}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>Last login: {user.lastLogin}</span>
+                {user.phone && (
+                  <div>
+                    <span className="text-muted-foreground">Phone:</span> {user.phone}
+                  </div>
+                )}
+                {user.department && (
+                  <div>
+                    <span className="text-muted-foreground">Department:</span> {user.department}
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Activity
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Last Login:</span> {user.lastLogin}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Processes Owned:</span> {user.processesOwned || 0}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Collaborations:</span> {user.collaborations || 0}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Bio */}
           {user.bio && (
-            <Card>
-              <CardHeader>
-                <CardTitle>About</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{user.bio}</p>
-              </CardContent>
-            </Card>
+            <>
+              <Separator />
+              <div>
+                <h4 className="font-medium mb-2">About</h4>
+                <p className="text-sm text-muted-foreground">{user.bio}</p>
+              </div>
+            </>
           )}
 
-          {/* Activity Stats */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-4">
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-8 w-8 text-blue-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Processes Owned</p>
-                    <p className="text-2xl font-bold">{user.processesOwned || 0}</p>
-                  </div>
-                </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Processes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{user.processesOwned || 0}</div>
+                <p className="text-xs text-muted-foreground">Owned</p>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Users className="h-8 w-8 text-green-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Collaborations</p>
-                    <p className="text-2xl font-bold">{user.collaborations || 0}</p>
-                  </div>
-                </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Collaborations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{user.collaborations || 0}</div>
+                <p className="text-xs text-muted-foreground">Active</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Role</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-bold">{user.role}</div>
+                <p className="text-xs text-muted-foreground">Permission Level</p>
               </CardContent>
             </Card>
           </div>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-2 border rounded">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm">Updated Purchase Order Process</span>
-                  <span className="text-xs text-muted-foreground ml-auto">2 hours ago</span>
-                </div>
-                <div className="flex items-center gap-3 p-2 border rounded">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Commented on Invoice Processing discussion</span>
-                  <span className="text-xs text-muted-foreground ml-auto">1 day ago</span>
-                </div>
-                <div className="flex items-center gap-3 p-2 border rounded">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-sm">Created new workflow template</span>
-                  <span className="text-xs text-muted-foreground ml-auto">3 days ago</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </DialogContent>
     </Dialog>
