@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useDiscussions } from "./collaboration/useDiscussions";
-import { useTeamData } from "./collaboration/useTeamData";
+import { useTeamData, TeamMember, Activity } from "./collaboration/useTeamData";
 
 export interface ProcessReview {
   id: string;
@@ -93,5 +92,6 @@ export const useCollaborationData = () => {
 };
 
 // Re-export types for backward compatibility
-export type { Discussion, Reply, TeamMember, Activity } from "./collaboration/useDiscussions";
+export type { Discussion, Reply } from "./collaboration/useDiscussions";
+export type { TeamMember, Activity } from "./collaboration/useTeamData";
 export type { Discussion as DiscussionType } from "./collaboration/useDiscussions";
