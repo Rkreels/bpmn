@@ -43,7 +43,10 @@ export const CreateStageDialog: React.FC<CreateStageDialogProps> = ({
     addStageToJourney(journeyId, {
       ...formData,
       order: nextOrder,
-      touchpoints: []
+      touchpoints: [],
+      emotions: [],
+      painPoints: [],
+      opportunities: []
     });
 
     setFormData({

@@ -32,6 +32,8 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
     type: "digital" as "digital" | "physical" | "human",
     channel: "",
     satisfaction: 3,
+    effort: 3,
+    frequency: 50,
     emotion: "neutral" as Touchpoint["emotion"],
     duration: "",
     painPoints: "",
@@ -55,6 +57,8 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
       type: formData.type,
       channel: formData.channel,
       satisfaction: formData.satisfaction,
+      effort: formData.effort,
+      frequency: formData.frequency,
       emotion: formData.emotion,
       duration: formData.duration,
       painPoints: painPointsArray,
@@ -67,6 +71,8 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
       type: "digital",
       channel: "",
       satisfaction: 3,
+      effort: 3,
+      frequency: 50,
       emotion: "neutral",
       duration: "",
       painPoints: "",
@@ -152,14 +158,54 @@ export const CreateTouchpointDialog: React.FC<CreateTouchpointDialogProps> = ({
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="duration">Duration</Label>
-            <Input
-              id="duration"
-              value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-              placeholder="e.g., 5 minutes, 2 hours"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="satisfaction">Satisfaction (1-10)</Label>
+              <Input
+                id="satisfaction"
+                type="number"
+                min="1"
+                max="10"
+                value={formData.satisfaction}
+                onChange={(e) => setFormData({ ...formData, satisfaction: parseInt(e.target.value) })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="effort">Effort (1-10)</Label>
+              <Input
+                id="effort"
+                type="number"
+                min="1"
+                max="10"
+                value={formData.effort}
+                onChange={(e) => setFormData({ ...formData, effort: parseInt(e.target.value) })}
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="frequency">Frequency (%)</Label>
+              <Input
+                id="frequency"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.frequency}
+                onChange={(e) => setFormData({ ...formData, frequency: parseInt(e.target.value) })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duration</Label>
+              <Input
+                id="duration"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                placeholder="e.g., 5 minutes, 2 hours"
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
