@@ -26,7 +26,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
     name: "",
     description: "",
     personaId: "",
-    status: "draft" as "draft" | "active" | "archived"
+    status: "draft" as "draft" | "active" | "completed"
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,7 +56,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
   };
 
   const handleStatusChange = (value: string) => {
-    setFormData({ ...formData, status: value as "draft" | "active" | "archived" });
+    setFormData({ ...formData, status: value as "draft" | "active" | "completed" });
   };
 
   return (
@@ -128,7 +128,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
           </div>

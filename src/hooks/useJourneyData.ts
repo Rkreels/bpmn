@@ -31,6 +31,11 @@ export interface Touchpoint {
   satisfaction: number;
   effort: number;
   frequency: number;
+  emotion: "very-negative" | "negative" | "neutral" | "positive" | "very-positive";
+  duration: string;
+  description: string;
+  painPoints: string[];
+  opportunities: string[];
 }
 
 export interface Persona {
@@ -38,6 +43,9 @@ export interface Persona {
   name: string;
   age: number;
   role: string;
+  department: string;
+  techSavviness: "low" | "medium" | "high";
+  decisionInfluence: "low" | "medium" | "high";
   goals: string[];
   painPoints: string[];
   behaviors: string[];
@@ -68,7 +76,12 @@ export const useJourneyData = () => {
               type: "digital",
               satisfaction: 8,
               effort: 3,
-              frequency: 85
+              frequency: 85,
+              emotion: "positive",
+              duration: "5 minutes",
+              description: "Initial website exploration",
+              painPoints: ["information overload"],
+              opportunities: ["simplify messaging"]
             }
           ],
           emotions: ["curious", "hopeful"],
@@ -88,7 +101,12 @@ export const useJourneyData = () => {
               type: "human",
               satisfaction: 9,
               effort: 4,
-              frequency: 65
+              frequency: 65,
+              emotion: "very-positive",
+              duration: "30 minutes",
+              description: "Personal product demonstration",
+              painPoints: ["complex pricing"],
+              opportunities: ["clearer pricing"]
             }
           ],
           emotions: ["interested", "cautious"],
@@ -105,6 +123,9 @@ export const useJourneyData = () => {
       name: "Tech-Savvy Professional",
       age: 32,
       role: "Software Engineer",
+      department: "Engineering",
+      techSavviness: "high",
+      decisionInfluence: "medium",
       goals: ["Efficiency", "Innovation", "Growth"],
       painPoints: ["Complex interfaces", "Slow processes"],
       behaviors: ["Mobile-first", "Self-service preference"],
@@ -115,6 +136,9 @@ export const useJourneyData = () => {
       name: "Business Executive",
       age: 45,
       role: "VP of Operations",
+      department: "Operations",
+      techSavviness: "medium",
+      decisionInfluence: "high",
       goals: ["ROI", "Scalability", "Compliance"],
       painPoints: ["Lack of visibility", "Manual processes"],
       behaviors: ["Delegator", "Data-driven decisions"],
@@ -168,6 +192,46 @@ export const useJourneyData = () => {
     ));
   };
 
+  const addStageToJourney = (journeyId: string, stageData: Omit<JourneyStage, "id">) => {
+    addStage(journeyId, stageData);
+  };
+
+  const deleteStage = (journeyId: string, stageId: string) => {
+    setJourneys(prev => prev.map(journey =>
+      journey.id === journeyId
+        ? {
+            ...journey,
+            stages: journey.stages.filter(stage => stage.id !== stageId),
+            updatedAt: new Date().toISOString()
+          }
+        : journey
+    ));
+  };
+
+  const addTouchpointToStage = (journeyId: string, stageId: string, touchpointData: Omit<Touchpoint, "id">) => {
+    const newTouchpoint: Touchpoint = {
+      ...touchpointData,
+      id: Date.now().toString()
+    };
+
+    setJourneys(prev => prev.map(journey =>
+      journey.id === journeyId
+        ? {
+            ...journey,
+            stages: journey.stages.map(stage =>
+              stage.id === stageId
+                ? {
+                    ...stage,
+                    touchpoints: [...stage.touchpoints, newTouchpoint]
+                  }
+                : stage
+            ),
+            updatedAt: new Date().toISOString()
+          }
+        : journey
+    ));
+  };
+
   const exportJourneyData = (format: string) => {
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     const filename = `journey-maps-${timestamp}.${format}`;
@@ -203,6 +267,9 @@ export const useJourneyData = () => {
     updateJourney,
     deleteJourney,
     addStage,
+    addStageToJourney,
+    deleteStage,
+    addTouchpointToStage,
     exportJourneyData,
     shareJourney
   };
