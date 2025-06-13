@@ -1,266 +1,406 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Volume2, Volume1, VolumeX, Bell, Globe, Shield, Database, Share2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { 
+  Settings as SettingsIcon, 
+  User, 
+  Bell, 
+  Shield, 
+  Palette, 
+  Volume2,
+  Save,
+  RefreshCw
+} from "lucide-react";
 
 export default function Settings() {
-  const { isVoiceEnabled, toggleVoice, speakText } = useVoice();
-  const [activeTab, setActiveTab] = React.useState("general");
+  const { toast } = useToast();
+  const { speakText } = useVoice();
+  const [saving, setSaving] = useState(false);
 
-  const handleTestVoice = () => {
-    speakText("Voice navigation is now active. You will receive guidance as you navigate through the application.");
+  const [settings, setSettings] = useState({
+    profile: {
+      name: "John Doe",
+      email: "john@company.com",
+      department: "IT",
+      role: "Admin"
+    },
+    notifications: {
+      emailNotifications: true,
+      pushNotifications: true,
+      discussionUpdates: true,
+      processChanges: true,
+      weeklyDigest: false
+    },
+    preferences: {
+      theme: "light",
+      language: "en",
+      autoSave: true,
+      voiceGuidance: true,
+      compactMode: false
+    },
+    security: {
+      twoFactorAuth: false,
+      sessionTimeout: "30",
+      passwordExpiry: "90"
+    }
+  });
+
+  const handleSave = async (section: string) => {
+    setSaving(true);
+    speakText(`Saving ${section} settings`);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    setSaving(false);
     toast({
-      title: "Voice Test",
-      description: "Testing voice synthesis. If you don't hear anything, check your browser permissions.",
+      title: "Settings Saved",
+      description: `${section} settings have been updated successfully`
+    });
+    speakText(`${section} settings saved successfully`);
+  };
+
+  const updateSetting = (section: string, key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [key]: value
+      }
+    }));
+  };
+
+  const resetToDefaults = () => {
+    speakText("Resetting all settings to default values");
+    toast({
+      title: "Settings Reset",
+      description: "All settings have been reset to default values"
     });
   };
 
   return (
     <MainLayout pageTitle="Settings">
-      <div className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="localization">Localization</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="integrations">Integrations</TabsTrigger>
+      <div className="space-y-6 p-4 md:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <SettingsIcon className="h-6 w-6" />
+              Settings
+            </h1>
+            <p className="text-muted-foreground">Manage your account and application preferences</p>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={resetToDefaults}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reset to Defaults
+            </Button>
+          </div>
+        </div>
+
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <span className="hidden sm:inline">Notifications</span>
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">Preferences</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Security</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="general" className="space-y-4">
-            <Card id="settings-voice-section">
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
               <CardHeader>
-                <CardTitle>Voice Navigation</CardTitle>
-                <CardDescription>
-                  Control the voice guidance system that provides contextual information as you navigate through the application.
-                </CardDescription>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>Update your personal details and contact information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {isVoiceEnabled ? (
-                      <Volume2 className="h-5 w-5 text-primary" />
-                    ) : (
-                      <VolumeX className="h-5 w-5 text-muted-foreground" />
-                    )}
-                    <div>
-                      <p className="font-medium">Voice Navigation</p>
-                      <p className="text-sm text-muted-foreground">
-                        Receive spoken guidance when navigating between modules
-                      </p>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={settings.profile.name}
+                      onChange={(e) => updateSetting('profile', 'name', e.target.value)}
+                    />
                   </div>
-                  <Switch
-                    checked={isVoiceEnabled}
-                    onCheckedChange={toggleVoice}
-                    id="voice-toggle"
-                  />
-                </div>
-                
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleTestVoice}
-                    disabled={!isVoiceEnabled}
-                    className="flex items-center gap-2"
-                  >
-                    <Volume1 className="h-4 w-4" />
-                    Test Voice
-                  </Button>
-                </div>
-                
-                {!isVoiceEnabled && (
-                  <div className="rounded-md bg-muted p-3 text-sm">
-                    <p>Voice navigation is currently disabled. Enable it to receive contextual guidance as you navigate through the application.</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={settings.profile.email}
+                      onChange={(e) => updateSetting('profile', 'email', e.target.value)}
+                    />
                   </div>
-                )}
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Department</Label>
+                    <Input
+                      id="department"
+                      value={settings.profile.department}
+                      onChange={(e) => updateSetting('profile', 'department', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Select value={settings.profile.role} onValueChange={(value) => updateSetting('profile', 'role', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                        <SelectItem value="Editor">Editor</SelectItem>
+                        <SelectItem value="Viewer">Viewer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button onClick={() => handleSave('Profile')} disabled={saving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            {/* Additional general settings */}
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Preferences</CardTitle>
+                <CardDescription>Control how and when you receive notifications</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                    </div>
+                    <Switch
+                      id="email-notifications"
+                      checked={settings.notifications.emailNotifications}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'emailNotifications', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="push-notifications">Push Notifications</Label>
+                      <p className="text-sm text-muted-foreground">Receive browser push notifications</p>
+                    </div>
+                    <Switch
+                      id="push-notifications"
+                      checked={settings.notifications.pushNotifications}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'pushNotifications', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="discussion-updates">Discussion Updates</Label>
+                      <p className="text-sm text-muted-foreground">Notifications for discussion replies and mentions</p>
+                    </div>
+                    <Switch
+                      id="discussion-updates"
+                      checked={settings.notifications.discussionUpdates}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'discussionUpdates', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="process-changes">Process Changes</Label>
+                      <p className="text-sm text-muted-foreground">Notifications when processes are modified</p>
+                    </div>
+                    <Switch
+                      id="process-changes"
+                      checked={settings.notifications.processChanges}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'processChanges', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="weekly-digest">Weekly Digest</Label>
+                      <p className="text-sm text-muted-foreground">Weekly summary of activities</p>
+                    </div>
+                    <Switch
+                      id="weekly-digest"
+                      checked={settings.notifications.weeklyDigest}
+                      onCheckedChange={(checked) => updateSetting('notifications', 'weeklyDigest', checked)}
+                    />
+                  </div>
+                </div>
+                
+                <Button onClick={() => handleSave('Notifications')} disabled={saving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="preferences" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Application Preferences</CardTitle>
-                <CardDescription>Customize your experience with ProcessFlow</CardDescription>
+                <CardDescription>Customize your application experience</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Dark Mode</p>
-                    <p className="text-sm text-muted-foreground">Switch between light and dark themes</p>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Theme</Label>
+                    <Select value={settings.preferences.theme} onValueChange={(value) => updateSetting('preferences', 'theme', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="system">System</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Switch id="dark-mode-toggle" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Auto-save</p>
-                    <p className="text-sm text-muted-foreground">Automatically save changes every 2 minutes</p>
+                  
+                  <div className="space-y-2">
+                    <Label>Language</Label>
+                    <Select value={settings.preferences.language} onValueChange={(value) => updateSetting('preferences', 'language', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                        <SelectItem value="fr">French</SelectItem>
+                        <SelectItem value="de">German</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Switch id="auto-save-toggle" defaultChecked />
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notifications" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
-                  <CardTitle>Notification Settings</CardTitle>
-                </div>
-                <CardDescription>Configure how and when you receive notifications</CardDescription>
-              </CardHeader>
-              <CardContent>
+                
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">Email Notifications</p>
-                      <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                      <Label htmlFor="auto-save">Auto Save</Label>
+                      <p className="text-sm text-muted-foreground">Automatically save changes while editing</p>
                     </div>
-                    <Switch id="email-notifications" defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Process Updates</p>
-                      <p className="text-sm text-muted-foreground">Get notified when processes are updated</p>
-                    </div>
-                    <Switch id="process-updates" defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Compliance Alerts</p>
-                      <p className="text-sm text-muted-foreground">Receive alerts for compliance issues</p>
-                    </div>
-                    <Switch id="compliance-alerts" defaultChecked />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="localization" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  <CardTitle>Regional Settings</CardTitle>
-                </div>
-                <CardDescription>Customize language and date format preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Content for localization tab */}
-                <div className="space-y-4">
-                  <div className="grid gap-2">
-                    <label htmlFor="language" className="text-sm font-medium">Language</label>
-                    <select id="language" className="w-full p-2 border rounded-md">
-                      <option value="en">English</option>
-                      <option value="de">German</option>
-                      <option value="fr">French</option>
-                      <option value="es">Spanish</option>
-                    </select>
-                  </div>
-                  <div className="grid gap-2">
-                    <label htmlFor="date-format" className="text-sm font-medium">Date Format</label>
-                    <select id="date-format" className="w-full p-2 border rounded-md">
-                      <option value="mdy">MM/DD/YYYY</option>
-                      <option value="dmy">DD/MM/YYYY</option>
-                      <option value="ymd">YYYY-MM-DD</option>
-                    </select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="security" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  <CardTitle>Security Settings</CardTitle>
-                </div>
-                <CardDescription>Configure security and privacy preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Content for security tab */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Two-Factor Authentication</p>
-                      <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-                    </div>
-                    <Switch id="two-factor" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Session Timeout</p>
-                      <p className="text-sm text-muted-foreground">Automatically log out after inactivity</p>
-                    </div>
-                    <Switch id="session-timeout" defaultChecked />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="integrations" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  <CardTitle>System Integrations</CardTitle>
-                </div>
-                <CardDescription>Connect ProcessFlow with external systems</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Content for integrations tab */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded bg-blue-100 flex items-center justify-center">
-                        <Share2 className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">SAP ERP Integration</p>
-                        <p className="text-sm text-muted-foreground">Connect to SAP systems</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Switch
+                      id="auto-save"
+                      checked={settings.preferences.autoSave}
+                      onCheckedChange={(checked) => updateSetting('preferences', 'autoSave', checked)}
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded bg-blue-100 flex items-center justify-center">
-                        <Share2 className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Microsoft Teams</p>
-                        <p className="text-sm text-muted-foreground">Enable process sharing in Teams</p>
-                      </div>
+                    <div>
+                      <Label htmlFor="voice-guidance">Voice Guidance</Label>
+                      <p className="text-sm text-muted-foreground">Enable voice instructions and feedback</p>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Switch
+                      id="voice-guidance"
+                      checked={settings.preferences.voiceGuidance}
+                      onCheckedChange={(checked) => updateSetting('preferences', 'voiceGuidance', checked)}
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded bg-blue-100 flex items-center justify-center">
-                        <Share2 className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Jira Integration</p>
-                        <p className="text-sm text-muted-foreground">Map IT tickets to processes</p>
-                      </div>
+                    <div>
+                      <Label htmlFor="compact-mode">Compact Mode</Label>
+                      <p className="text-sm text-muted-foreground">Use compact interface layout</p>
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
+                    <Switch
+                      id="compact-mode"
+                      checked={settings.preferences.compactMode}
+                      onCheckedChange={(checked) => updateSetting('preferences', 'compactMode', checked)}
+                    />
                   </div>
                 </div>
+                
+                <Button onClick={() => handleSave('Preferences')} disabled={saving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Security Settings</CardTitle>
+                <CardDescription>Manage your account security and privacy</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="two-factor">Two-Factor Authentication</Label>
+                      <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                    </div>
+                    <Switch
+                      id="two-factor"
+                      checked={settings.security.twoFactorAuth}
+                      onCheckedChange={(checked) => updateSetting('security', 'twoFactorAuth', checked)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Session Timeout (minutes)</Label>
+                    <Select value={settings.security.sessionTimeout} onValueChange={(value) => updateSetting('security', 'sessionTimeout', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">15 minutes</SelectItem>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                        <SelectItem value="60">1 hour</SelectItem>
+                        <SelectItem value="120">2 hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Password Expiry (days)</Label>
+                    <Select value={settings.security.passwordExpiry} onValueChange={(value) => updateSetting('security', 'passwordExpiry', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30">30 days</SelectItem>
+                        <SelectItem value="60">60 days</SelectItem>
+                        <SelectItem value="90">90 days</SelectItem>
+                        <SelectItem value="180">180 days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <Button onClick={() => handleSave('Security')} disabled={saving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
