@@ -47,7 +47,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
 
   const [isCreating, setIsCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTag, setSelectedTag] = useState("");
+  const [selectedTag, setSelectedTag] = useState("all");
   const [sortBy, setSortBy] = useState<"recent" | "popular" | "replied">("recent");
   const [showResolved, setShowResolved] = useState(false);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
@@ -68,7 +68,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
     .filter(discussion => {
       const matchesSearch = discussion.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            discussion.content.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesTag = !selectedTag || discussion.tags.includes(selectedTag);
+      const matchesTag = selectedTag === "all" || discussion.tags.includes(selectedTag);
       const matchesResolved = showResolved || !discussion.isResolved;
       return matchesSearch && matchesTag && matchesResolved;
     })
@@ -202,7 +202,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
                 <SelectValue placeholder="Filter by tag" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Tags</SelectItem>
+                <SelectItem value="all">All Tags</SelectItem>
                 {allTags.map(tag => (
                   <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                 ))}
@@ -454,12 +454,12 @@ export const EnhancedProcessDiscussions: React.FC = () => {
             <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-semibold mb-2">No discussions found</h3>
             <p className="text-muted-foreground mb-4">
-              {searchTerm || selectedTag 
+              {searchTerm || selectedTag !== "all"
                 ? "Try adjusting your search criteria"
                 : "Start the first discussion about process improvements"
               }
             </p>
-            {!searchTerm && !selectedTag && (
+            {!searchTerm && selectedTag === "all" && (
               <Button onClick={() => setIsCreating(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Start Discussion
