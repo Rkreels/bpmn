@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
-import { ProcessHealthCharts } from "./ProcessHealthCharts";
+import { PerformanceChart, ComplianceChart, BottleneckChart } from "./ProcessHealthCharts";
 import { ActivityFeed } from "./ActivityFeed";
 import { InitiativesList } from "./InitiativesList";
 import { NotificationList } from "./NotificationList";
+import { useNotifications } from "@/hooks/useNotifications";
 import { 
   BarChart3, 
   Users, 
@@ -29,6 +29,7 @@ export const DashboardContent: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
+  const { notifications, markAsRead, clearAll } = useNotifications();
 
   const metrics = [
     { 
@@ -172,6 +173,11 @@ export const DashboardContent: React.FC = () => {
     }
   };
 
+  const handleNotificationClick = (id: string) => {
+    markAsRead(id);
+    speakText("Notification opened");
+  };
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
@@ -300,14 +306,43 @@ export const DashboardContent: React.FC = () => {
 
       {/* Additional Dashboard Components */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProcessHealthCharts />
+        <Card>
+          <CardHeader>
+            <CardTitle>Process Health</CardTitle>
+            <CardDescription>Performance overview</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PerformanceChart />
+          </CardContent>
+        </Card>
+        
         <div className="space-y-6">
           <ActivityFeed />
-          <NotificationList />
+          <Card>
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>Recent activity updates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <NotificationList 
+                notifications={notifications}
+                onClickNotification={handleNotificationClick}
+                onClearAll={clearAll}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
       
-      <InitiativesList />
+      <Card>
+        <CardHeader>
+          <CardTitle>Current Initiatives</CardTitle>
+          <CardDescription>Track progress of ongoing improvements</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InitiativesList />
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -55,7 +55,7 @@ export default function CollaborationHub() {
     },
     { 
       label: "Pending Reviews", 
-      value: processReviews.filter(r => r.status === "pending").length, 
+      value: processReviews.filter(r => r.status === "in-progress").length, 
       icon: FileText,
       color: "text-orange-600"
     },
@@ -84,11 +84,12 @@ export default function CollaborationHub() {
 
   const handleCreateReview = () => {
     const review = createProcessReview({
-      processId: "process-1",
       processName: "Sample Process",
-      reviewerIds: [currentUserId],
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      description: "Please review this process for accuracy and completeness"
+      reviewType: "Quality Assessment",
+      reviewer: "Current User",
+      status: "in-progress",
+      priority: "high",
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toDateString()
     });
     
     toast({
@@ -102,10 +103,12 @@ export default function CollaborationHub() {
   const handleScheduleEvent = () => {
     const event = createScheduleEvent({
       title: "Process Review Meeting",
-      description: "Weekly process review and planning session",
+      type: "meeting",
       startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       endTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(),
-      attendeeIds: teamMembers.slice(0, 3).map(m => m.id)
+      organizer: "Current User",
+      attendees: teamMembers.slice(0, 3).map(m => m.name),
+      isVirtual: true
     });
     
     toast({
@@ -180,18 +183,18 @@ export default function CollaborationHub() {
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                     {activity.type === 'discussion' && <MessageCircle className="h-4 w-4" />}
                     {activity.type === 'review' && <FileText className="h-4 w-4" />}
-                    {activity.type === 'event' && <Calendar className="h-4 w-4" />}
+                    {activity.type === 'approval' && <CheckCircle className="h-4 w-4" />}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm">{activity.description}</p>
+                    <p className="font-medium text-sm">{activity.title}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-xs text-muted-foreground">by {activity.userName}</p>
+                      <p className="text-xs text-muted-foreground">by {activity.user}</p>
                       <Badge variant="outline" className="text-xs">
                         {activity.type}
                       </Badge>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {activity.timestamp}
+                        {activity.time}
                       </span>
                     </div>
                   </div>

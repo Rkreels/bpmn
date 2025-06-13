@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 export interface Discussion {
@@ -40,10 +39,13 @@ export interface TeamMember {
 export interface Activity {
   id: string;
   title: string;
+  description: string;
   user: string;
+  userName: string;
   time: string;
+  timestamp: string;
   status: "approved" | "pending" | "rejected";
-  type: string;
+  type: "discussion" | "review" | "approval";
 }
 
 export interface ProcessReview {
@@ -152,24 +154,33 @@ export const useCollaborationData = () => {
     {
       id: "1",
       title: "Process workflow approved",
+      description: "Workflow for customer onboarding has been approved",
       user: "John Doe",
+      userName: "John Doe",
       time: "2 minutes ago",
+      timestamp: "2 minutes ago",
       status: "approved",
       type: "approval"
     },
     {
       id: "2",
       title: "New discussion started",
+      description: "Discussion about process optimization has been created",
       user: "Sarah Chen",
+      userName: "Sarah Chen",
       time: "15 minutes ago",
+      timestamp: "15 minutes ago",
       status: "pending",
       type: "discussion"
     },
     {
       id: "3",
       title: "Process review completed",
+      description: "Review of invoice processing workflow is complete",
       user: "Mike Johnson",
+      userName: "Mike Johnson",
       time: "1 hour ago",
+      timestamp: "1 hour ago",
       status: "approved",
       type: "review"
     }
