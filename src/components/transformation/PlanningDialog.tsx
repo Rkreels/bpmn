@@ -1,11 +1,12 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 
 interface PlanningDialogProps {
@@ -13,120 +14,106 @@ interface PlanningDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const PlanningDialog: React.FC<PlanningDialogProps> = ({ open, onOpenChange }) => {
-  const { toast } = useToast();
-  const [planData, setPlanData] = useState({
-    name: "",
-    description: "",
-    duration: "",
-    priority: "",
-    budget: "",
-    resources: "",
-    objectives: ""
-  });
+interface PlanningFormData {
+  planName: string;
+  description: string;
+  timeline: string;
+  priority: string;
+  assignee: string;
+}
 
-  const handleSave = () => {
+export const PlanningDialog: React.FC<PlanningDialogProps> = ({ open, onOpenChange }) => {
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<PlanningFormData>();
+  const { toast } = useToast();
+
+  const onSubmit = (data: PlanningFormData) => {
+    console.log("Planning data:", data);
     toast({
-      title: "Plan Created",
-      description: `Transformation plan "${planData.name}" has been created successfully.`
+      title: "Planning Created",
+      description: `${data.planName} has been added to your transformation roadmap.`
     });
+    reset();
     onOpenChange(false);
-    setPlanData({
-      name: "",
-      description: "",
-      duration: "",
-      priority: "",
-      budget: "",
-      resources: "",
-      objectives: ""
-    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create Transformation Plan</DialogTitle>
-          <DialogDescription>Define a new transformation planning initiative</DialogDescription>
+          <DialogDescription>
+            Define a new transformation planning item with timeline and priorities.
+          </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
             <Label htmlFor="planName">Plan Name</Label>
-            <Input
-              id="planName"
-              value={planData.name}
-              onChange={(e) => setPlanData(prev => ({ ...prev, name: e.target.value }))}
+            <Input 
+              id="planName" 
+              {...register("planName", { required: "Plan name is required" })}
               placeholder="Enter plan name"
             />
+            {errors.planName && <p className="text-sm text-red-500 mt-1">{errors.planName.message}</p>}
           </div>
-          <div className="grid gap-2">
+          
+          <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={planData.description}
-              onChange={(e) => setPlanData(prev => ({ ...prev, description: e.target.value }))}
+            <Textarea 
+              id="description" 
+              {...register("description")}
               placeholder="Describe the transformation plan"
+              rows={3}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label>Priority</Label>
-              <Select value={planData.priority} onValueChange={(value) => setPlanData(prev => ({ ...prev, priority: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="duration">Duration (months)</Label>
-              <Input
-                id="duration"
-                value={planData.duration}
-                onChange={(e) => setPlanData(prev => ({ ...prev, duration: e.target.value }))}
-                placeholder="6"
-                type="number"
-              />
-            </div>
+          
+          <div>
+            <Label htmlFor="timeline">Timeline</Label>
+            <Select {...register("timeline", { required: "Timeline is required" })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select timeline" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="q1">Q1 2024</SelectItem>
+                <SelectItem value="q2">Q2 2024</SelectItem>
+                <SelectItem value="q3">Q3 2024</SelectItem>
+                <SelectItem value="q4">Q4 2024</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.timeline && <p className="text-sm text-red-500 mt-1">{errors.timeline.message}</p>}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="budget">Budget</Label>
-              <Input
-                id="budget"
-                value={planData.budget}
-                onChange={(e) => setPlanData(prev => ({ ...prev, budget: e.target.value }))}
-                placeholder="$500,000"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="resources">Required Resources</Label>
-              <Input
-                id="resources"
-                value={planData.resources}
-                onChange={(e) => setPlanData(prev => ({ ...prev, resources: e.target.value }))}
-                placeholder="10 people"
-              />
-            </div>
+          
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <Select {...register("priority", { required: "Priority is required" })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.priority && <p className="text-sm text-red-500 mt-1">{errors.priority.message}</p>}
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="objectives">Key Objectives</Label>
-            <Textarea
-              id="objectives"
-              value={planData.objectives}
-              onChange={(e) => setPlanData(prev => ({ ...prev, objectives: e.target.value }))}
-              placeholder="List key objectives and success criteria"
+          
+          <div>
+            <Label htmlFor="assignee">Assignee</Label>
+            <Input 
+              id="assignee" 
+              {...register("assignee")}
+              placeholder="Enter assignee name"
             />
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Create Plan</Button>
-        </DialogFooter>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Create Plan</Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

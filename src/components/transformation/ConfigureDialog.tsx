@@ -1,11 +1,12 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 
 interface ConfigureDialogProps {
@@ -13,109 +14,130 @@ interface ConfigureDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const ConfigureDialog: React.FC<ConfigureDialogProps> = ({ open, onOpenChange }) => {
-  const { toast } = useToast();
-  const [config, setConfig] = useState({
-    autoApproval: false,
-    notificationsEnabled: true,
-    approvalThreshold: "10000",
-    reportingFrequency: "weekly",
-    integrationEndpoint: "",
-    dataRetention: "12"
-  });
+interface ConfigurationData {
+  autoSync: boolean;
+  notifications: boolean;
+  reportFrequency: string;
+  dataRetention: string;
+  accessLevel: string;
+}
 
-  const handleSave = () => {
+export const ConfigureDialog: React.FC<ConfigureDialogProps> = ({ open, onOpenChange }) => {
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ConfigurationData>({
+    defaultValues: {
+      autoSync: true,
+      notifications: true,
+      reportFrequency: "weekly",
+      dataRetention: "12months",
+      accessLevel: "team"
+    }
+  });
+  const { toast } = useToast();
+
+  const onSubmit = (data: ConfigurationData) => {
+    console.log("Configuration data:", data);
     toast({
-      title: "Configuration Saved",
-      description: "Transformation cockpit settings have been updated successfully."
+      title: "Configuration Updated",
+      description: "Transformation settings have been saved successfully."
     });
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Configure Transformation Settings</DialogTitle>
-          <DialogDescription>Customize your transformation cockpit preferences</DialogDescription>
+          <DialogDescription>
+            Customize your transformation cockpit settings and preferences.
+          </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="space-y-4">
-            <h4 className="font-medium">Approval Settings</h4>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Auto-approval for small changes</Label>
-                <p className="text-sm text-muted-foreground">Automatically approve changes below threshold</p>
-              </div>
-              <Switch
-                checked={config.autoApproval}
-                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, autoApproval: checked }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="threshold">Approval Threshold ($)</Label>
-              <Input
-                id="threshold"
-                value={config.approvalThreshold}
-                onChange={(e) => setConfig(prev => ({ ...prev, approvalThreshold: e.target.value }))}
-                type="number"
-              />
-            </div>
-          </div>
+        
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+          </TabsList>
           
-          <div className="space-y-4">
-            <h4 className="font-medium">Notifications</h4>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Enable notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive updates on initiative progress</p>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <TabsContent value="general" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="autoSync">Auto-sync Data</Label>
+                <Switch 
+                  id="autoSync"
+                  checked={watch("autoSync")}
+                  onCheckedChange={(checked) => setValue("autoSync", checked)}
+                />
               </div>
-              <Switch
-                checked={config.notificationsEnabled}
-                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, notificationsEnabled: checked }))}
-              />
+              
+              <div>
+                <Label htmlFor="reportFrequency">Report Frequency</Label>
+                <select 
+                  id="reportFrequency"
+                  {...register("reportFrequency")}
+                  className="w-full mt-1 p-2 border rounded-md"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                </select>
+              </div>
+              
+              <div>
+                <Label htmlFor="dataRetention">Data Retention</Label>
+                <select 
+                  id="dataRetention"
+                  {...register("dataRetention")}
+                  className="w-full mt-1 p-2 border rounded-md"
+                >
+                  <option value="3months">3 Months</option>
+                  <option value="6months">6 Months</option>
+                  <option value="12months">12 Months</option>
+                  <option value="24months">24 Months</option>
+                </select>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="notifications" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="notifications">Enable Notifications</Label>
+                <Switch 
+                  id="notifications"
+                  checked={watch("notifications")}
+                  onCheckedChange={(checked) => setValue("notifications", checked)}
+                />
+              </div>
+              
+              <div className="text-sm text-gray-600">
+                <p>Notification preferences for transformation updates, milestones, and alerts.</p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="security" className="space-y-4">
+              <div>
+                <Label htmlFor="accessLevel">Access Level</Label>
+                <select 
+                  id="accessLevel"
+                  {...register("accessLevel")}
+                  className="w-full mt-1 p-2 border rounded-md"
+                >
+                  <option value="personal">Personal</option>
+                  <option value="team">Team</option>
+                  <option value="organization">Organization</option>
+                </select>
+              </div>
+            </TabsContent>
+            
+            <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Configuration</Button>
             </div>
-            <div className="grid gap-2">
-              <Label>Reporting Frequency</Label>
-              <Select value={config.reportingFrequency} onValueChange={(value) => setConfig(prev => ({ ...prev, reportingFrequency: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <h4 className="font-medium">Integration Settings</h4>
-            <div className="grid gap-2">
-              <Label htmlFor="endpoint">API Endpoint</Label>
-              <Input
-                id="endpoint"
-                value={config.integrationEndpoint}
-                onChange={(e) => setConfig(prev => ({ ...prev, integrationEndpoint: e.target.value }))}
-                placeholder="https://api.example.com"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="retention">Data Retention (months)</Label>
-              <Input
-                id="retention"
-                value={config.dataRetention}
-                onChange={(e) => setConfig(prev => ({ ...prev, dataRetention: e.target.value }))}
-                type="number"
-              />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save Configuration</Button>
-        </DialogFooter>
+          </form>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

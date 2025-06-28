@@ -12,17 +12,3 @@ export interface RepositoryItemType {
   status: "active" | "draft" | "archived";
   size: string;
 }
-
-export interface RepositoryStats {
-  totalItems: number;
-  processesByCategory: Record<string, number>;
-  recentActivity: ActivityItem[];
-}
-
-export interface ActivityItem {
-  id: string;
-  action: string;
-  item: string;
-  user: string;
-  timestamp: string;
-}

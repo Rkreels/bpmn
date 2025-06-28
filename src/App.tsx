@@ -3,7 +3,6 @@ import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { VoiceProvider } from "@/contexts/VoiceContext";
 import { VoiceTrainerProvider } from "@/contexts/VoiceTrainerContext";
-import { VoiceTrainerToggle } from "@/components/voice/VoiceTrainerToggle";
 
 // Import pages
 import Dashboard from "@/pages/Dashboard";
@@ -38,7 +37,6 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <VoiceTrainerToggle />
           <Toaster />
         </div>
       </VoiceTrainerProvider>

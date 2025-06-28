@@ -4,7 +4,6 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { VoiceTrainerToggle } from "../voice/VoiceTrainerToggle";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -25,7 +24,12 @@ export function MainLayout({
     <div className="min-h-screen bg-background flex">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content area that adjusts to sidebar */}
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0 transition-all duration-300",
+        // Add left margin to account for sidebar on desktop
+        "md:ml-64"
+      )}>
         <Header 
           pageTitle={pageTitle}
           showPageTitle={showPageTitle} 
@@ -38,8 +42,6 @@ export function MainLayout({
         )}>
           {children}
         </main>
-        
-        <VoiceTrainerToggle />
       </div>
     </div>
   );

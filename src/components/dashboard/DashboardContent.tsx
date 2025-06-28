@@ -1,217 +1,196 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useVoice } from "@/contexts/VoiceContext";
-import { useToast } from "@/hooks/use-toast";
-import { PerformanceChart } from "./ProcessHealthCharts";
-import { ActivityFeed } from "./ActivityFeed";
-import { InitiativesList } from "./InitiativesList";
-import { NotificationList } from "./NotificationList";
-import { useNotifications } from "@/hooks/useNotifications";
 import { DashboardHeader } from "./DashboardHeader";
 import { MetricsCards } from "./MetricsCards";
 import { QuickActions } from "./QuickActions";
 import { RecentProjects } from "./RecentProjects";
+import { ProcessHealthCharts } from "./ProcessHealthCharts";
+import { NotificationList, Notification } from "./NotificationList";
+import { useToast } from "@/hooks/use-toast";
+import { useVoice } from "@/contexts/VoiceContext";
 import { 
-  BarChart3, 
+  Workflow, 
+  Route, 
   Users, 
-  FileText, 
-  TrendingUp, 
-  Plus
+  Database,
+  BarChart3,
+  Search,
+  Target,
+  FileText 
 } from "lucide-react";
 
 export const DashboardContent: React.FC = () => {
-  const { speakText } = useVoice();
-  const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
-  const { notifications, markAsRead, clearAll } = useNotifications();
-
-  const metrics = [
-    { 
-      label: "Active Processes", 
-      value: "24", 
-      change: "+12%", 
-      trend: "up", 
-      icon: BarChart3,
-      link: "/process-manager",
-      color: "text-blue-600"
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: "1",
+      title: "Process Optimization Complete",
+      message: "Customer onboarding process has been optimized with 23% improvement in efficiency.",
+      type: "success",
+      timestamp: new Date().toISOString(),
+      read: false
     },
-    { 
-      label: "Team Members", 
-      value: "18", 
-      change: "+3", 
-      trend: "up", 
-      icon: Users,
-      link: "/users",
-      color: "text-green-600"
+    {
+      id: "2", 
+      title: "System Maintenance Scheduled",
+      message: "Planned maintenance window scheduled for tonight 2AM-4AM EST.",
+      type: "warning",
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      read: false
     },
-    { 
-      label: "Process Models", 
-      value: "156", 
-      change: "+8%", 
-      trend: "up", 
-      icon: FileText,
-      link: "/repository",
-      color: "text-purple-600"
-    },
-    { 
-      label: "Efficiency Score", 
-      value: "87%", 
-      change: "+5%", 
-      trend: "up", 
-      icon: TrendingUp,
-      link: "/process-intelligence",
-      color: "text-orange-600"
+    {
+      id: "3",
+      title: "New Process Template Available", 
+      message: "Invoice processing template v2.1 is now available in the repository.",
+      type: "info",
+      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      read: true
     }
-  ];
+  ]);
+  
+  const { toast } = useToast();
+  const { speakText, isVoiceEnabled } = useVoice();
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    setRefreshing(false);
+    toast({
+      title: "Dashboard Refreshed",
+      description: "All data has been updated successfully."
+    });
+    
+    if (isVoiceEnabled) {
+      speakText("Dashboard refreshed successfully. All metrics and data are now up to date.");
+    }
+  };
 
   const quickActions = [
-    { 
-      title: "Create Process", 
-      description: "Start modeling a new business process",
-      icon: Plus,
+    {
+      title: "Create Process",
+      description: "Design a new business process",
+      icon: Workflow,
       link: "/process-manager",
       color: "bg-blue-500"
     },
-    { 
-      title: "View Analytics", 
-      description: "Analyze process performance",
-      icon: BarChart3,
-      link: "/process-intelligence",
+    {
+      title: "Map Journey",
+      description: "Create customer journey map", 
+      icon: Route,
+      link: "/journey-modeler",
       color: "bg-green-500"
     },
-    { 
-      title: "Collaborate", 
+    {
+      title: "Team Collaboration",
       description: "Work with your team",
       icon: Users,
-      link: "/collaboration-hub",
+      link: "/collaboration-hub", 
       color: "bg-purple-500"
     },
-    { 
-      title: "Generate Report", 
-      description: "Create process reports",
+    {
+      title: "Browse Repository",
+      description: "Access process assets",
+      icon: Database,
+      link: "/repository",
+      color: "bg-orange-500"
+    },
+    {
+      title: "View Analytics",
+      description: "Process intelligence insights",
+      icon: BarChart3,
+      link: "/process-intelligence",
+      color: "bg-indigo-500"
+    },
+    {
+      title: "Process Mining",
+      description: "Discover process patterns",
+      icon: Search,
+      link: "/process-mining",
+      color: "bg-teal-500"
+    },
+    {
+      title: "Transformation",
+      description: "Digital transformation hub",
+      icon: Target,
+      link: "/transformation-cockpit",
+      color: "bg-red-500"
+    },
+    {
+      title: "Generate Reports",
+      description: "Create detailed reports",
       icon: FileText,
       link: "/reports",
-      color: "bg-orange-500"
+      color: "bg-gray-500"
     }
   ];
 
-  const recentProjects = [
-    { 
-      id: "1", 
-      name: "Customer Onboarding Process", 
-      status: "In Progress", 
-      progress: 75, 
-      team: ["John", "Sarah", "Mike"],
-      lastUpdated: "2 hours ago"
-    },
-    { 
-      id: "2", 
-      name: "Invoice Processing Workflow", 
-      status: "Review", 
-      progress: 90, 
-      team: ["Anna", "David"],
-      lastUpdated: "1 day ago"
-    },
-    { 
-      id: "3", 
-      name: "Employee Feedback System", 
-      status: "Completed", 
-      progress: 100, 
-      team: ["Lisa", "Tom", "Emma"],
-      lastUpdated: "3 days ago"
-    }
-  ];
-
-  const handleMetricClick = (link: string, label: string) => {
-    speakText(`Navigating to ${label} dashboard`);
+  const handleActionClick = (action: any) => {
     toast({
-      title: "Navigation",
-      description: `Opening ${label} dashboard`
-    });
-  };
-
-  const handleQuickAction = (action: any) => {
-    speakText(`Executing ${action.title}: ${action.description}`);
-    toast({
-      title: action.title,
+      title: "Opening " + action.title,
       description: action.description
     });
+    
+    if (isVoiceEnabled) {
+      speakText(`Opening ${action.title}. ${action.description}`);
+    }
   };
 
-  const handleProjectClick = (project: any) => {
-    speakText(`Opening project: ${project.name}`);
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read
+    setNotifications(prev => 
+      prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+    );
+    
     toast({
-      title: "Project Details",
-      description: `Opening ${project.name} details`
+      title: "Notification",
+      description: notification.message
     });
+    
+    if (isVoiceEnabled) {
+      speakText(`Notification: ${notification.title}. ${notification.message}`);
+    }
   };
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    speakText("Refreshing dashboard data");
-    setTimeout(() => {
-      setRefreshing(false);
-      toast({
-        title: "Dashboard Refreshed",
-        description: "All data has been updated successfully"
-      });
-    }, 2000);
-  };
-
-  const handleNotificationClick = (id: string) => {
-    markAsRead(id);
-    speakText("Notification opened");
+  const handleClearAllNotifications = () => {
+    setNotifications([]);
+    toast({
+      title: "Notifications Cleared",
+      description: "All notifications have been cleared."
+    });
+    
+    if (isVoiceEnabled) {
+      speakText("All notifications cleared.");
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <DashboardHeader onRefresh={handleRefresh} refreshing={refreshing} />
-
-      <MetricsCards metrics={metrics} onMetricClick={handleMetricClick} />
-
-      <QuickActions actions={quickActions} onActionClick={handleQuickAction} />
-
-      <RecentProjects projects={recentProjects} onProjectClick={handleProjectClick} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Process Health</CardTitle>
-            <CardDescription>Performance overview</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PerformanceChart />
-          </CardContent>
-        </Card>
-        
-        <div className="space-y-6">
-          <ActivityFeed />
-          <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Recent activity updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <NotificationList 
-                notifications={notifications}
-                onClickNotification={handleNotificationClick}
-                onClearAll={clearAll}
-              />
-            </CardContent>
-          </Card>
+      
+      <MetricsCards />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <QuickActions 
+            actions={quickActions} 
+            onActionClick={handleActionClick}
+          />
+        </div>
+        <div>
+          <NotificationList 
+            notifications={notifications}
+            onClickNotification={handleNotificationClick}
+            onClearAll={handleClearAllNotifications}
+          />
         </div>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Initiatives</CardTitle>
-          <CardDescription>Track progress of ongoing improvements</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <InitiativesList />
-        </CardContent>
-      </Card>
+      <RecentProjects />
+      
+      <ProcessHealthCharts />
     </div>
   );
 };
