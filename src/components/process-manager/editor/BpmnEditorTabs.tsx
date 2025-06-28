@@ -50,6 +50,7 @@ interface BpmnEditorTabsProps {
   onRedo: () => void;
   onToggleSnapToGrid: () => void;
   onImportClick: () => void;
+  onLoadTemplate: (templateId: string) => void;
 }
 
 export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
@@ -92,7 +93,8 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
   onUndo,
   onRedo,
   onToggleSnapToGrid,
-  onImportClick
+  onImportClick,
+  onLoadTemplate
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full min-h-[600px]">

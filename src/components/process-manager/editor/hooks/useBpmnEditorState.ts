@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
 import { complexProcessTemplates, generateBpmnXml, ProcessTemplate } from "@/data/processTemplates";
