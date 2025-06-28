@@ -1,320 +1,163 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { Play, Pause, RotateCcw, Activity, Clock, Users, AlertTriangle } from "lucide-react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Play, Pause, Square, RotateCcw } from 'lucide-react';
 
-interface SimulationResult {
-  elementId: string;
-  elementName: string;
-  executionTime: number;
-  throughput: number;
-  utilizationRate: number;
-  bottleneck: boolean;
+interface SimulationViewProps {
+  elements: any[];
+  connections: any[];
 }
 
-export const SimulationView: React.FC = () => {
+export const SimulationView: React.FC<SimulationViewProps> = ({
+  elements,
+  connections
+}) => {
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [simulationResults, setSimulationResults] = useState<SimulationResult[]>([]);
-  const [currentStep, setCurrentStep] = useState("");
+  const [currentElement, setCurrentElement] = useState<string | null>(null);
 
-  // Mock simulation data
-  const mockResults: SimulationResult[] = [
-    {
-      elementId: "task-001",
-      elementName: "Initial Document Review",
-      executionTime: 45,
-      throughput: 12,
-      utilizationRate: 85,
-      bottleneck: false
-    },
-    {
-      elementId: "task-003",
-      elementName: "KYC Verification",
-      executionTime: 120,
-      throughput: 8,
-      utilizationRate: 95,
-      bottleneck: true
-    },
-    {
-      elementId: "task-004",
-      elementName: "Manual Review",
-      executionTime: 180,
-      throughput: 5,
-      utilizationRate: 78,
-      bottleneck: true
-    },
-    {
-      elementId: "task-005",
-      elementName: "Create Customer Account",
-      executionTime: 30,
-      throughput: 15,
-      utilizationRate: 65,
-      bottleneck: false
-    }
-  ];
-
-  const throughputData = [
-    { time: "09:00", throughput: 5 },
-    { time: "10:00", throughput: 8 },
-    { time: "11:00", throughput: 12 },
-    { time: "12:00", throughput: 15 },
-    { time: "13:00", throughput: 10 },
-    { time: "14:00", throughput: 7 },
-    { time: "15:00", throughput: 9 }
-  ];
-
-  const utilizationData = [
-    { name: "High (>90%)", value: 15, color: "#ef4444" },
-    { name: "Medium (70-90%)", value: 45, color: "#f59e0b" },
-    { name: "Low (<70%)", value: 40, color: "#10b981" }
-  ];
-
-  const runSimulation = async () => {
+  const handleStart = () => {
     setIsRunning(true);
     setProgress(0);
-    setSimulationResults([]);
     
-    const steps = [
-      "Initializing simulation...",
-      "Processing start events...",
-      "Analyzing task execution...",
-      "Evaluating gateways...",
-      "Calculating throughput...",
-      "Identifying bottlenecks...",
-      "Generating report..."
-    ];
-    
-    for (let i = 0; i < steps.length; i++) {
-      setCurrentStep(steps[i]);
-      setProgress((i + 1) / steps.length * 100);
-      await new Promise(resolve => setTimeout(resolve, 800));
-    }
-    
-    setSimulationResults(mockResults);
-    setCurrentStep("Simulation completed");
+    // Simulate process execution
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = prev + 10;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setIsRunning(false);
+          return 100;
+        }
+        return newProgress;
+      });
+    }, 500);
+  };
+
+  const handlePause = () => {
     setIsRunning(false);
   };
 
-  const stopSimulation = () => {
+  const handleStop = () => {
     setIsRunning(false);
     setProgress(0);
-    setCurrentStep("");
+    setCurrentElement(null);
   };
 
-  const resetSimulation = () => {
-    setProgress(0);
-    setSimulationResults([]);
-    setCurrentStep("");
+  const handleReset = () => {
+    handleStop();
   };
 
   return (
-    <div className="space-y-6 p-4">
-      {/* Control Panel */}
+    <div className="h-full p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Process Simulation</h3>
+          <p className="text-sm text-muted-foreground">
+            Simulate process execution and analyze performance
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleStart}
+            disabled={isRunning}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Start
+          </Button>
+          <Button
+            onClick={handlePause}
+            disabled={!isRunning}
+            variant="outline"
+          >
+            <Pause className="h-4 w-4 mr-2" />
+            Pause
+          </Button>
+          <Button
+            onClick={handleStop}
+            variant="outline"
+          >
+            <Square className="h-4 w-4 mr-2" />
+            Stop
+          </Button>
+          <Button
+            onClick={handleReset}
+            variant="outline"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Execution Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Progress value={progress} className="w-full" />
+            <p className="text-sm text-muted-foreground mt-2">
+              {progress}% Complete
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Process Elements</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{elements.length}</p>
+            <p className="text-sm text-muted-foreground">Total Elements</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Connections</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{connections.length}</p>
+            <p className="text-sm text-muted-foreground">Total Connections</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Process Simulation
-          </CardTitle>
+          <CardTitle>Simulation Results</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
-            <Button 
-              onClick={runSimulation} 
-              disabled={isRunning}
-              className="gap-2"
-            >
-              <Play className="h-4 w-4" />
-              {isRunning ? "Running..." : "Start Simulation"}
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={stopSimulation}
-              disabled={!isRunning}
-              className="gap-2"
-            >
-              <Pause className="h-4 w-4" />
-              Stop
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={resetSimulation}
-              className="gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset
-            </Button>
-          </div>
-          
-          {(isRunning || progress > 0) && (
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>{currentStep}</span>
-                <span>{Math.round(progress)}%</span>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium">Performance Metrics</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-blue-600">2.5s</p>
+                  <p className="text-sm text-muted-foreground">Avg Duration</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">95%</p>
+                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-orange-600">24</p>
+                  <p className="text-sm text-muted-foreground">Cases/Hour</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-600">0.5s</p>
+                  <p className="text-sm text-muted-foreground">Wait Time</p>
+                </div>
               </div>
-              <Progress value={progress} className="h-2" />
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
-
-      {/* Results */}
-      {simulationResults.length > 0 && (
-        <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-blue-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Avg. Cycle Time</p>
-                    <p className="text-2xl font-bold">94 min</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-green-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Throughput</p>
-                    <p className="text-2xl font-bold">10/hr</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-purple-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Utilization</p>
-                    <p className="text-2xl font-bold">81%</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Bottlenecks</p>
-                    <p className="text-2xl font-bold">2</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Detailed Results */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Execution Times */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Task Execution Times</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    executionTime: { label: "Execution Time (min)", color: "#3b82f6" }
-                  }}
-                  className="h-64"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={simulationResults}>
-                      <XAxis dataKey="elementName" angle={-45} textAnchor="end" height={80} />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="executionTime" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            {/* Throughput Over Time */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Throughput Over Time</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    throughput: { label: "Cases/Hour", color: "#10b981" }
-                  }}
-                  className="h-64"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={throughputData}>
-                      <XAxis dataKey="time" />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line type="monotone" dataKey="throughput" stroke="#10b981" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Task Analysis Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Task Analysis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Task</th>
-                      <th className="text-right p-2">Execution Time</th>
-                      <th className="text-right p-2">Throughput</th>
-                      <th className="text-right p-2">Utilization</th>
-                      <th className="text-center p-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {simulationResults.map((result) => (
-                      <tr key={result.elementId} className="border-b hover:bg-muted/50">
-                        <td className="p-2 font-medium">{result.elementName}</td>
-                        <td className="p-2 text-right">{result.executionTime} min</td>
-                        <td className="p-2 text-right">{result.throughput}/hr</td>
-                        <td className="p-2 text-right">{result.utilizationRate}%</td>
-                        <td className="p-2 text-center">
-                          {result.bottleneck ? (
-                            <Badge variant="destructive" className="text-xs">
-                              Bottleneck
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="text-xs">
-                              Normal
-                            </Badge>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
     </div>
   );
 };

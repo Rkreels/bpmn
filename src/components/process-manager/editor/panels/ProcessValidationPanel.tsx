@@ -1,9 +1,17 @@
 
-import React, { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle, XCircle, Info, X } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle, CheckCircle, XCircle, Info, X } from 'lucide-react';
+
+interface ValidationIssue {
+  id: string;
+  type: 'error' | 'warning' | 'info';
+  message: string;
+  elementId?: string;
+  suggestion?: string;
+}
 
 interface ProcessValidationPanelProps {
   elements: any[];
@@ -11,142 +19,82 @@ interface ProcessValidationPanelProps {
   onClose: () => void;
 }
 
-interface ValidationIssue {
-  id: string;
-  type: 'error' | 'warning' | 'info';
-  element?: string;
-  message: string;
-  description?: string;
-}
-
 export const ProcessValidationPanel: React.FC<ProcessValidationPanelProps> = ({
   elements,
   connections,
   onClose
 }) => {
-  const validationResults = useMemo(() => {
+  // Mock validation logic
+  const validateProcess = (): ValidationIssue[] => {
     const issues: ValidationIssue[] = [];
-
-    // Check for orphaned elements
-    const connectedElements = new Set();
-    connections.forEach(conn => {
-      connectedElements.add(conn.source);
-      connectedElements.add(conn.target);
-    });
-
-    elements.forEach(element => {
-      if (!connectedElements.has(element.id) && element.type !== 'start-event' && element.type !== 'end-event') {
-        issues.push({
-          id: `orphaned-${element.id}`,
-          type: 'warning',
-          element: element.id,
-          message: `Orphaned element: ${element.name}`,
-          description: 'This element is not connected to any other elements in the process flow.'
-        });
-      }
-    });
-
-    // Check for missing start events
+    
+    // Check for start events
     const startEvents = elements.filter(el => el.type === 'start-event');
     if (startEvents.length === 0) {
       issues.push({
-        id: 'no-start-event',
+        id: 'no-start',
         type: 'error',
-        message: 'Missing start event',
-        description: 'Every process must have at least one start event to define the entry point.'
-      });
-    } else if (startEvents.length > 1) {
-      issues.push({
-        id: 'multiple-start-events',
-        type: 'warning',
-        message: 'Multiple start events',
-        description: 'Consider if multiple start events are necessary for this process.'
+        message: 'Process must have at least one start event',
+        suggestion: 'Add a start event to begin the process flow'
       });
     }
-
-    // Check for missing end events
+    
+    // Check for end events
     const endEvents = elements.filter(el => el.type === 'end-event');
     if (endEvents.length === 0) {
       issues.push({
-        id: 'no-end-event',
+        id: 'no-end',
         type: 'error',
-        message: 'Missing end event',
-        description: 'Every process must have at least one end event to define the completion point.'
+        message: 'Process must have at least one end event',
+        suggestion: 'Add an end event to complete the process flow'
       });
     }
-
-    // Check for elements without names
+    
+    // Check for disconnected elements
     elements.forEach(element => {
-      if (!element.name || element.name.trim() === '') {
+      const hasIncoming = connections.some(conn => conn.target === element.id);
+      const hasOutgoing = connections.some(conn => conn.source === element.id);
+      
+      if (!hasIncoming && element.type !== 'start-event') {
         issues.push({
-          id: `unnamed-${element.id}`,
+          id: `disconnected-${element.id}`,
           type: 'warning',
-          element: element.id,
-          message: `Unnamed ${element.type}`,
-          description: 'Elements should have descriptive names for better process understanding.'
+          message: `Element "${element.name}" has no incoming connections`,
+          elementId: element.id,
+          suggestion: 'Connect this element to ensure proper process flow'
         });
       }
-    });
-
-    // Check for gateways without proper connections
-    const gateways = elements.filter(el => el.type === 'exclusive-gateway' || el.type === 'parallel-gateway');
-    gateways.forEach(gateway => {
-      const incomingConnections = connections.filter(conn => conn.target === gateway.id);
-      const outgoingConnections = connections.filter(conn => conn.source === gateway.id);
-
-      if (incomingConnections.length === 0) {
+      
+      if (!hasOutgoing && element.type !== 'end-event') {
         issues.push({
-          id: `gateway-no-input-${gateway.id}`,
-          type: 'error',
-          element: gateway.id,
-          message: `Gateway ${gateway.name} has no incoming connections`,
-          description: 'Gateways must have at least one incoming connection.'
-        });
-      }
-
-      if (outgoingConnections.length < 2) {
-        issues.push({
-          id: `gateway-insufficient-output-${gateway.id}`,
+          id: `no-outgoing-${element.id}`,
           type: 'warning',
-          element: gateway.id,
-          message: `Gateway ${gateway.name} should have multiple outgoing paths`,
-          description: 'Gateways typically split the flow into multiple paths.'
+          message: `Element "${element.name}" has no outgoing connections`,
+          elementId: element.id,
+          suggestion: 'Add connections to continue the process flow'
         });
       }
     });
-
-    // Check for tasks without assignees
-    const tasks = elements.filter(el => el.type === 'user-task');
-    tasks.forEach(task => {
-      if (!task.assignee || task.assignee.trim() === '') {
-        issues.push({
-          id: `task-no-assignee-${task.id}`,
-          type: 'info',
-          element: task.id,
-          message: `Task ${task.name} has no assignee`,
-          description: 'Consider assigning tasks to specific roles or users for better accountability.'
-        });
-      }
-    });
-
-    // Performance recommendations
-    if (elements.length > 20) {
+    
+    // Add some info messages
+    if (elements.length > 10) {
       issues.push({
         id: 'complex-process',
         type: 'info',
-        message: 'Complex process detected',
-        description: 'Consider breaking down complex processes into sub-processes for better maintainability.'
+        message: 'Process has many elements - consider breaking into sub-processes',
+        suggestion: 'Use sub-processes to improve readability and maintainability'
       });
     }
-
+    
     return issues;
-  }, [elements, connections]);
+  };
 
-  const errorCount = validationResults.filter(issue => issue.type === 'error').length;
-  const warningCount = validationResults.filter(issue => issue.type === 'warning').length;
-  const infoCount = validationResults.filter(issue => issue.type === 'info').length;
+  const issues = validateProcess();
+  const errorCount = issues.filter(i => i.type === 'error').length;
+  const warningCount = issues.filter(i => i.type === 'warning').length;
+  const infoCount = issues.filter(i => i.type === 'info').length;
 
-  const getIconForType = (type: string) => {
+  const getIssueIcon = (type: string) => {
     switch (type) {
       case 'error': return <XCircle className="h-4 w-4 text-red-500" />;
       case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
@@ -155,85 +103,65 @@ export const ProcessValidationPanel: React.FC<ProcessValidationPanelProps> = ({
     }
   };
 
-  const getBadgeVariant = (type: string) => {
+  const getIssueColor = (type: string) => {
     switch (type) {
-      case 'error': return 'destructive';
-      case 'warning': return 'secondary';
-      case 'info': return 'outline';
-      default: return 'default';
+      case 'error': return 'border-l-red-500 bg-red-50';
+      case 'warning': return 'border-l-yellow-500 bg-yellow-50';
+      case 'info': return 'border-l-blue-500 bg-blue-50';
+      default: return 'border-l-green-500 bg-green-50';
     }
   };
 
   return (
-    <Card className="fixed right-4 top-32 w-80 max-h-[60vh] overflow-hidden z-30 shadow-lg">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <CheckCircle className="h-5 w-5" />
-            Process Validation
-          </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex gap-2 mt-2">
-          {errorCount > 0 && (
-            <Badge variant="destructive" className="text-xs">
-              {errorCount} Errors
-            </Badge>
-          )}
-          {warningCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {warningCount} Warnings
-            </Badge>
-          )}
-          {infoCount > 0 && (
-            <Badge variant="outline" className="text-xs">
-              {infoCount} Info
-            </Badge>
-          )}
-          {validationResults.length === 0 && (
-            <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-              All Good ✓
-            </Badge>
-          )}
-        </div>
+    <Card className="absolute right-4 top-4 w-96 max-h-96 overflow-y-auto z-20">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Process Validation</CardTitle>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
       </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1">
+            <XCircle className="h-4 w-4 text-red-500" />
+            <span>{errorCount} Errors</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <span>{warningCount} Warnings</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Info className="h-4 w-4 text-blue-500" />
+            <span>{infoCount} Info</span>
+          </div>
+        </div>
 
-      <CardContent className="pt-0 max-h-[40vh] overflow-y-auto">
-        {validationResults.length === 0 ? (
-          <div className="text-center py-4">
-            <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No validation issues found. Your process looks good!
-            </p>
+        {issues.length === 0 ? (
+          <div className="text-center py-8">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
+            <p className="font-medium">Process is valid!</p>
+            <p className="text-sm text-muted-foreground">No issues found</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {validationResults.map((issue) => (
+          <div className="space-y-2">
+            {issues.map((issue) => (
               <div
                 key={issue.id}
-                className="border rounded-lg p-3 text-sm hover:bg-muted/50 transition-colors"
+                className={`p-3 border-l-4 rounded-r ${getIssueColor(issue.type)}`}
               >
                 <div className="flex items-start gap-2">
-                  {getIconForType(issue.type)}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{issue.message}</span>
-                      <Badge variant={getBadgeVariant(issue.type)} className="text-xs">
-                        {issue.type}
-                      </Badge>
-                    </div>
-                    {issue.description && (
-                      <p className="text-muted-foreground text-xs leading-relaxed">
-                        {issue.description}
+                  {getIssueIcon(issue.type)}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{issue.message}</p>
+                    {issue.suggestion && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {issue.suggestion}
                       </p>
                     )}
-                    {issue.element && (
-                      <p className="text-muted-foreground text-xs mt-1">
-                        Element: {issue.element}
-                      </p>
+                    {issue.elementId && (
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {issue.elementId}
+                      </Badge>
                     )}
                   </div>
                 </div>

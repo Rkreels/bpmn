@@ -1,30 +1,51 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface VoiceContextType {
   isVoiceEnabled: boolean;
+  setIsVoiceEnabled: (enabled: boolean) => void;
   speakText: (text: string) => void;
-  toggleVoice: () => void;
+  stopSpeaking: () => void;
+  isSupported: boolean;
 }
 
 const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 
-export const VoiceProvider = ({ children }: { children: ReactNode }) => {
+export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isSupported] = useState(typeof window !== 'undefined' && 'speechSynthesis' in window);
 
-  const speakText = (text: string) => {
-    if (isVoiceEnabled && 'speechSynthesis' in window) {
+  const speakText = useCallback((text: string) => {
+    if (!isVoiceEnabled || !isSupported || !text) return;
+    
+    try {
+      window.speechSynthesis.cancel(); // Stop any ongoing speech
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 0.8;
       window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.warn('Speech synthesis failed:', error);
     }
-  };
+  }, [isVoiceEnabled, isSupported]);
 
-  const toggleVoice = () => {
-    setIsVoiceEnabled(!isVoiceEnabled);
-  };
+  const stopSpeaking = useCallback(() => {
+    if (isSupported) {
+      window.speechSynthesis.cancel();
+    }
+  }, [isSupported]);
 
   return (
-    <VoiceContext.Provider value={{ isVoiceEnabled, speakText, toggleVoice }}>
+    <VoiceContext.Provider 
+      value={{
+        isVoiceEnabled,
+        setIsVoiceEnabled,
+        speakText,
+        stopSpeaking,
+        isSupported
+      }}
+    >
       {children}
     </VoiceContext.Provider>
   );

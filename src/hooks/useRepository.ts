@@ -1,90 +1,69 @@
 
-import { useState, useMemo } from "react";
-import { RepositoryItemType } from "@/types/repository";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useMemo } from 'react';
+import { RepositoryItemType } from '@/types/repository';
+import { useToast } from '@/hooks/use-toast';
+import { useVoice } from '@/contexts/VoiceContext';
 
-// Mock repository data
+// Mock data for repository items
 const mockRepositoryItems: RepositoryItemType[] = [
   {
-    id: "1",
-    name: "Customer Onboarding Process",
-    type: "process",
-    description: "Complete customer onboarding workflow with verification steps",
-    owner: "Sarah Johnson",
-    lastModified: "2024-01-15T10:30:00Z",
-    category: "operations",
-    tags: ["onboarding", "customer", "verification"],
-    version: "2.1",
-    status: "active",
-    size: "2.3 MB"
+    id: '1',
+    name: 'Customer Onboarding Process',
+    description: 'Complete workflow for new customer registration and verification',
+    type: 'process',
+    category: 'customer',
+    version: '2.1',
+    status: 'active',
+    owner: 'John Smith',
+    size: '245 KB',
+    lastModified: '2024-01-15T10:30:00Z',
+    tags: ['customer', 'onboarding', 'compliance']
   },
   {
-    id: "2",
-    name: "Invoice Processing Template",
-    type: "template",
-    description: "Automated invoice processing with approval workflow",
-    owner: "Mike Chen",
-    lastModified: "2024-01-14T15:45:00Z",
-    category: "finance",
-    tags: ["invoice", "automation", "approval"],
-    version: "1.5",
-    status: "active",
-    size: "1.8 MB"
+    id: '2',
+    name: 'Invoice Processing Template',
+    description: 'Standardized template for automated invoice processing',
+    type: 'template',
+    category: 'finance',
+    version: '1.5',
+    status: 'active',
+    owner: 'Sarah Johnson',
+    size: '128 KB',
+    lastModified: '2024-01-12T14:20:00Z',
+    tags: ['finance', 'automation', 'invoice']
   },
   {
-    id: "3",
-    name: "HR Recruitment Framework",
-    type: "framework",
-    description: "End-to-end recruitment process framework",
-    owner: "Lisa Wang",
-    lastModified: "2024-01-13T09:15:00Z",
-    category: "hr",
-    tags: ["recruitment", "hiring", "framework"],
-    version: "3.0",
-    status: "draft",
-    size: "3.1 MB"
-  },
-  {
-    id: "4",
-    name: "Compliance Audit Model",
-    type: "model",
-    description: "Regulatory compliance audit process model",
-    owner: "David Brown",
-    lastModified: "2024-01-12T14:20:00Z",
-    category: "compliance",
-    tags: ["audit", "compliance", "regulatory"],
-    version: "1.2",
-    status: "active",
-    size: "2.7 MB"
-  },
-  {
-    id: "5",
-    name: "Customer Service Handbook",
-    type: "document",
-    description: "Complete customer service procedures and guidelines",
-    owner: "Emma Davis",
-    lastModified: "2024-01-11T11:00:00Z",
-    category: "customer",
-    tags: ["service", "procedures", "guidelines"],
-    version: "4.0",
-    status: "active",
-    size: "5.2 MB"
+    id: '3',
+    name: 'Risk Assessment Framework',
+    description: 'Comprehensive framework for business risk evaluation',
+    type: 'framework',
+    category: 'compliance',
+    version: '3.0',
+    status: 'draft',
+    owner: 'Mike Wilson',
+    size: '512 KB',
+    lastModified: '2024-01-10T09:15:00Z',
+    tags: ['risk', 'compliance', 'assessment']
   }
 ];
 
 export const useRepository = () => {
   const [items] = useState<RepositoryItemType[]>(mockRepositoryItems);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
   const { toast } = useToast();
+  const { speakText } = useVoice();
 
   const filteredItems = useMemo(() => {
     return items.filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
+      
+      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      
       return matchesSearch && matchesCategory;
     });
   }, [items, searchTerm, selectedCategory]);
@@ -94,13 +73,15 @@ export const useRepository = () => {
       title: "Opening Item",
       description: `Opening ${item.name} for viewing`
     });
+    speakText(`Opening ${item.name} for detailed view`);
   };
 
   const handleEditItem = (item: RepositoryItemType) => {
     toast({
       title: "Edit Mode",
-      description: `Editing ${item.name}`
+      description: `Opening ${item.name} for editing`
     });
+    speakText(`Opening ${item.name} for editing`);
   };
 
   const handleRenameItem = (item: RepositoryItemType) => {
@@ -112,9 +93,10 @@ export const useRepository = () => {
 
   const handleShareItem = (item: RepositoryItemType) => {
     toast({
-      title: "Share Link Generated",
-      description: `Sharing link for ${item.name} copied to clipboard`
+      title: "Share Item",
+      description: `Sharing ${item.name} with team members`
     });
+    speakText(`Sharing ${item.name} with your team`);
   };
 
   const handleDownloadItem = (item: RepositoryItemType) => {
@@ -122,25 +104,29 @@ export const useRepository = () => {
       title: "Download Started",
       description: `Downloading ${item.name} (${item.size})`
     });
+    speakText(`Starting download of ${item.name}`);
   };
 
-  const deleteItem = (id: string) => {
-    const item = items.find(i => i.id === id);
-    toast({
-      title: "Item Deleted",
-      description: `${item?.name} has been moved to trash`
-    });
+  const deleteItem = (itemId: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (item) {
+      toast({
+        title: "Item Deleted",
+        description: `${item.name} has been deleted`
+      });
+      speakText(`${item.name} has been deleted from the repository`);
+    }
   };
 
   return {
     items,
-    viewMode,
-    setViewMode,
     filteredItems,
     searchTerm,
     setSearchTerm,
     selectedCategory,
     setSelectedCategory,
+    viewMode,
+    setViewMode,
     handleViewItem,
     handleEditItem,
     handleRenameItem,
