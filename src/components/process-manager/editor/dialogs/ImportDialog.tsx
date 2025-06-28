@@ -29,28 +29,30 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import Process</DialogTitle>
+          <DialogTitle>Import BPMN Process</DialogTitle>
         </DialogHeader>
+        
         <div className="space-y-4">
           <div>
-            <Label htmlFor="import-source">BPMN XML or JSON</Label>
+            <Label htmlFor="import-source">BPMN XML Content</Label>
             <Textarea
               id="import-source"
               value={importSource}
               onChange={(e) => setImportSource(e.target.value)}
-              placeholder="Paste your BPMN XML or JSON here..."
-              rows={10}
+              placeholder="Paste your BPMN XML content here..."
+              rows={12}
               className="font-mono text-sm"
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleImport} disabled={!importSource.trim()}>
-              Import
-            </Button>
-          </div>
+        </div>
+        
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleImport} disabled={!importSource.trim()}>
+            Import Process
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

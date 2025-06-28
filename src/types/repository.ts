@@ -2,13 +2,13 @@
 export interface RepositoryItemType {
   id: string;
   name: string;
-  type: "process" | "model" | "template" | "framework" | "document";
   description: string;
-  owner: string;
-  lastModified: string;
+  type: 'process' | 'template' | 'framework';
   category: string;
-  tags: string[];
   version: string;
-  status: "active" | "draft" | "archived";
+  status: 'active' | 'draft' | 'archived';
+  owner: string;
   size: string;
+  lastModified: string;
+  tags: string[];
 }

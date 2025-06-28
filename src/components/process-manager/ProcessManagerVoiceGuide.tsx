@@ -1,40 +1,27 @@
 
-import { useEffect } from "react";
-import { useVoice } from "@/contexts/VoiceContext";
-import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
+import React, { useEffect } from 'react';
+import { useVoice } from '@/contexts/VoiceContext';
+import { useLocation } from 'react-router-dom';
 
-export const ProcessManagerVoiceGuide = () => {
-  const { speakText } = useVoice();
-  const { isTrainerEnabled } = useVoiceTrainer();
+export const ProcessManagerVoiceGuide: React.FC = () => {
+  const { isVoiceEnabled, speakText } = useVoice();
+  const location = useLocation();
 
   useEffect(() => {
-    if (isTrainerEnabled) {
-      const welcomeMessage = `Welcome to Process Manager! This is your comprehensive platform for designing, managing, and optimizing business process models using BPMN standards.
+    if (isVoiceEnabled && location.pathname === '/') {
+      const welcomeMessage = `Welcome to the Process Manager. You are now in the enterprise BPMN process modeling environment. 
+        This tool allows you to design, simulate, and optimize business processes. 
+        You can switch between the visual editor, process properties, repository, and analytics tabs. 
+        Use the element palette to add tasks, gateways, events, and other BPMN elements to your process model. 
+        Voice guidance is active to help you navigate and understand the interface.`;
       
-      Here you can:
-      - Create and edit process diagrams using drag-and-drop BPMN elements
-      - Manage process templates and reusable components in the repository
-      - Set process properties including ownership, classification, and metadata
-      - Validate process models for correctness and compliance
-      - Simulate process execution to identify bottlenecks and optimization opportunities
-      - Export processes in multiple formats including BPMN XML, JSON, and PDF
-      - Collaborate with team members on process improvement initiatives
-      
-      The Editor tab provides a visual canvas with element palette for modeling.
-      Properties tab allows you to configure process metadata and business rules.
-      Repository tab contains templates and reusable process components.
-      
-      All modeling actions provide voice feedback and the system guides you through best practices.
-      Use the element palette to add tasks, gateways, events, and connectors to your process flow.`;
-
-      // Delay the welcome message slightly to allow page to load
-      const timer = setTimeout(() => {
+      // Delay the welcome message to avoid conflicts with other voice announcements
+      setTimeout(() => {
         speakText(welcomeMessage);
-      }, 1500);
-
-      return () => clearTimeout(timer);
+      }, 1000);
     }
-  }, [isTrainerEnabled, speakText]);
+  }, [isVoiceEnabled, location.pathname, speakText]);
 
-  return null; // This component only provides voice guidance
+  // This component doesn't render anything visible
+  return null;
 };
