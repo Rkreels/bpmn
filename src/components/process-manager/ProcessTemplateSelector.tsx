@@ -34,7 +34,7 @@ export const ProcessTemplateSelector: React.FC<ProcessTemplateSelectorProps> = (
               <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
                 <span>Complexity: {template.properties.complexity}</span>
                 <span>•</span>
-                <span>Time: {template.properties.estimatedTime}</span>
+                <span>Industry: {template.properties.industry}</span>
               </div>
               <div className="flex gap-2">
                 <Button 

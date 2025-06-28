@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 interface VoiceContextType {
   isVoiceEnabled: boolean;
   setIsVoiceEnabled: (enabled: boolean) => void;
+  toggleVoice: () => void;
   speakText: (text: string) => void;
   stopSpeaking: () => void;
   isSupported: boolean;
@@ -14,6 +15,10 @@ const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [isSupported] = useState(typeof window !== 'undefined' && 'speechSynthesis' in window);
+
+  const toggleVoice = useCallback(() => {
+    setIsVoiceEnabled(prev => !prev);
+  }, []);
 
   const speakText = useCallback((text: string) => {
     if (!isVoiceEnabled || !isSupported || !text) return;
@@ -41,6 +46,7 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         isVoiceEnabled,
         setIsVoiceEnabled,
+        toggleVoice,
         speakText,
         stopSpeaking,
         isSupported
