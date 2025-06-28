@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,9 +12,12 @@ import { useVoice } from "@/contexts/VoiceContext";
 import { useProcessManagerData } from "@/hooks/useProcessManagerData";
 import { EditorToolbar } from "@/components/process-manager/EditorToolbar";
 import { EditorTabView } from "@/components/process-manager/EditorTabView";
-import { ProcessContent } from "@/components/process-manager/ProcessContent";
+import { BpmnEditor } from "@/components/process-manager/BpmnEditor";
+import { ProcessTemplateSelector } from "@/components/process-manager/ProcessTemplateSelector";
+import { EnterpriseProcessManager } from "@/components/process-manager/editor/EnterpriseProcessManager";
 import { ProcessManagerVoiceGuide } from "@/components/process-manager/ProcessManagerVoiceGuide";
 import { VoiceTrainerToggle } from "@/components/voice/VoiceTrainerToggle";
+import { complexProcessTemplates } from "@/data/processTemplates";
 import { 
   Save, 
   Download, 
@@ -29,19 +33,23 @@ import {
   Trash2,
   Search,
   Filter,
-  TrendingUp
+  TrendingUp,
+  BarChart3,
+  Settings,
+  Workflow
 } from "lucide-react";
 
 export default function ProcessManager() {
   const [activeTab, setActiveTab] = useState("editor");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(true);
-  const [processName, setProcessName] = useState("Order to Cash Process");
-  const [processOwner, setProcessOwner] = useState("John Doe");
+  const [processName, setProcessName] = useState("Enterprise Process Model");
+  const [processOwner, setProcessOwner] = useState("Process Manager");
   const [isSimulating, setIsSimulating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { speakText } = useVoice();
@@ -59,40 +67,44 @@ export default function ProcessManager() {
     exportProcess
   } = useProcessManagerData();
   
-  // Dynamic process metrics based on actual data
+  // Enhanced process metrics with real-time data
   const processMetrics = [
     { 
-      label: "Active Templates", 
-      value: templates.filter(t => t.status === "active").length.toString(), 
-      icon: Activity, 
+      label: "Process Templates", 
+      value: complexProcessTemplates.length.toString(), 
+      icon: Workflow, 
       color: "text-blue-600",
-      trend: "+12%"
+      trend: "+18%",
+      description: "Available templates"
     },
     { 
-      label: "Running Projects", 
+      label: "Active Processes", 
       value: projects.filter(p => p.status === "active").length.toString(), 
-      icon: Clock, 
+      icon: Activity, 
       color: "text-green-600",
-      trend: "+8%"
+      trend: "+12%",
+      description: "Currently running"
     },
     { 
       label: "Completion Rate", 
-      value: `${Math.round(projects.filter(p => p.status === "completed").length / projects.length * 100)}%`, 
+      value: `${Math.round(projects.filter(p => p.status === "completed").length / Math.max(projects.length, 1) * 100)}%`, 
       icon: CheckCircle, 
       color: "text-emerald-600",
-      trend: "+5%"
+      trend: "+5%",
+      description: "Process success rate"
     },
     { 
-      label: "Team Collaboration", 
+      label: "Team Members", 
       value: projects.reduce((acc, p) => acc + p.team.length, 0).toString(), 
       icon: Users, 
       color: "text-purple-600",
-      trend: "+15%"
+      trend: "+25%",
+      description: "Collaborating users"
     }
   ];
 
   // Filter templates based on search and category
-  const filteredTemplates = templates.filter(template => {
+  const filteredTemplates = complexProcessTemplates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          template.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === "all" || template.category === filterCategory;
@@ -100,7 +112,7 @@ export default function ProcessManager() {
   });
 
   // Get unique categories for filter
-  const categories = ["all", ...Array.from(new Set(templates.map(t => t.category)))];
+  const categories = ["all", ...Array.from(new Set(complexProcessTemplates.map(t => t.category)))];
 
   useEffect(() => {
     if (!isAutoSaveEnabled) return;
@@ -115,9 +127,10 @@ export default function ProcessManager() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     const tabNames = {
-      editor: "Process Editor - Design and model your business processes",
-      properties: "Process Properties - Configure metadata and business rules",
-      repository: "Process Repository - Manage templates and reusable components"
+      editor: "Process Editor - Design and model your business processes visually",
+      properties: "Process Properties - Configure metadata, compliance, and governance",
+      repository: "Process Repository - Manage templates, versions, and reusable components",
+      analytics: "Process Analytics - Monitor performance, compliance, and optimization opportunities"
     };
     speakText(`Switched to ${tabNames[tab as keyof typeof tabNames]}`);
   };
@@ -139,34 +152,34 @@ export default function ProcessManager() {
       setLastSaved(new Date());
       setIsLoading(false);
       toast({
-        title: "Process Saved",
-        description: "Your process model has been saved successfully.",
+        title: "Process Saved Successfully",
+        description: "Your process model and all configurations have been saved.",
       });
-      speakText("Process model saved successfully");
-    }, 500);
+      speakText("Process model saved successfully with all configurations and metadata");
+    }, 800);
   };
 
   const handleSimulation = async () => {
     setIsSimulating(true);
     toast({
-      title: "Starting Simulation",
-      description: "Process simulation is starting..."
+      title: "Starting Advanced Simulation",
+      description: "Analyzing process flow, performance metrics, and bottlenecks..."
     });
-    speakText("Starting process simulation to analyze performance and identify bottlenecks");
+    speakText("Starting comprehensive process simulation to analyze performance, identify bottlenecks, and optimize workflow efficiency");
     
     try {
       const results = await simulateProcess("current-process");
       setIsSimulating(false);
       toast({
         title: "Simulation Complete",
-        description: `Simulation completed. Execution time: ${(results as any).executionTime.toFixed(1)}s, Throughput: ${(results as any).throughput} cases/hour`
+        description: `Analysis complete. Execution time: ${(results as any).executionTime.toFixed(1)}s, Throughput: ${(results as any).throughput} cases/hour, Efficiency: ${(results as any).efficiency}%`
       });
-      speakText(`Simulation complete. Average execution time is ${(results as any).executionTime.toFixed(1)} seconds with ${(results as any).throughput} cases per hour throughput.`);
+      speakText(`Simulation complete. Average execution time is ${(results as any).executionTime.toFixed(1)} seconds with ${(results as any).throughput} cases per hour throughput and ${(results as any).efficiency} percent efficiency rating.`);
     } catch (error) {
       setIsSimulating(false);
       toast({
         title: "Simulation Error",
-        description: "An error occurred during simulation"
+        description: "An error occurred during simulation analysis"
       });
     }
   };
@@ -174,24 +187,26 @@ export default function ProcessManager() {
   const handleExport = () => {
     setIsLoading(true);
     const filename = exportProcess("current-process", "bpmn");
-    speakText(`Exporting process model as ${filename}`);
+    speakText(`Exporting enterprise process model as ${filename} with full metadata and configurations`);
     
     setTimeout(() => {
       setIsLoading(false);
       toast({
         title: "Export Complete",
-        description: `Process model exported as ${filename}`
+        description: `Process model exported as ${filename} with complete metadata`
       });
-    }, 2000);
+    }, 1500);
   };
 
   const handleValidateProcess = () => {
     const mockProcessData = {
       name: processName,
       elements: [
-        { type: "start-event", name: "Start" },
-        { type: "task", name: "Process Order" },
-        { type: "end-event", name: "End" }
+        { type: "start-event", name: "Process Start" },
+        { type: "user-task", name: "Review Request" },
+        { type: "service-task", name: "Automated Processing" },
+        { type: "exclusive-gateway", name: "Decision Point" },
+        { type: "end-event", name: "Process Complete" }
       ]
     };
     
@@ -200,116 +215,127 @@ export default function ProcessManager() {
     if (validation.isValid) {
       toast({
         title: "Validation Successful",
-        description: "Process model is valid and ready for deployment."
+        description: "Process model meets all enterprise standards and BPMN compliance requirements."
       });
-      speakText("Process validation successful. Your model follows BPMN standards and best practices.");
+      speakText("Process validation successful. Your model follows BPMN 2.0 standards, enterprise governance requirements, and best practices for production deployment.");
     } else {
       toast({
         title: "Validation Issues Found",
-        description: `Found ${validation.errors.length} errors and ${validation.warnings.length} warnings.`
+        description: `Found ${validation.errors.length} critical errors and ${validation.warnings.length} warnings that require attention.`
       });
-      speakText(`Validation found ${validation.errors.length} errors and ${validation.warnings.length} warnings that need attention.`);
+      speakText(`Validation identified ${validation.errors.length} critical errors and ${validation.warnings.length} warnings. Please review the validation panel for detailed recommendations.`);
     }
   };
 
-  const handleUseTemplate = (template: any) => {
-    toast({
-      title: "Using Template",
-      description: `Loading ${template.name} template...`
-    });
-    speakText(`Loading ${template.name} template. This includes ${template.elements} pre-configured elements.`);
+  const handleLoadTemplate = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    const template = complexProcessTemplates.find(t => t.id === templateId);
+    if (template) {
+      toast({
+        title: "Template Loading",
+        description: `Loading ${template.name} with ${template.elements.length} elements and ${template.connections.length} connections...`
+      });
+      speakText(`Loading ${template.name} template. This ${template.properties.complexity} complexity process includes ${template.elements.length} elements and ${template.connections.length} connections from the ${template.category} domain.`);
+    }
   };
 
-  const handleCreateTemplate = () => {
-    const newTemplate = createTemplate({
-      name: "New Process Template",
-      description: "Custom process template",
-      category: "General"
+  const handleCreateTemplate = (template: any) => {
+    const newTemplate = createTemplate(template);
+    toast({
+      title: "Template Created",
+      description: `Successfully created ${newTemplate.name} template`
     });
-    speakText(`Created new template: ${newTemplate.name}. You can now customize it in the editor.`);
+    speakText(`Created new enterprise template: ${newTemplate.name}. You can now customize it in the process editor.`);
   };
 
   const handleCreateProject = () => {
     const newProject = createProject({
-      name: "New Process Project",
-      description: "Process improvement initiative",
-      priority: "medium"
+      name: "New Enterprise Process Initiative",
+      description: "Strategic process improvement and optimization project",
+      priority: "high"
     });
-    speakText(`Created new project: ${newProject.name}. Added to active projects list.`);
+    speakText(`Created new enterprise project: ${newProject.name}. Added to active projects portfolio with high priority status.`);
   };
 
   return (
-    <MainLayout pageTitle="Process Manager">
+    <MainLayout pageTitle="Enterprise Process Manager">
       <ProcessManagerVoiceGuide />
       
       <div className="w-full min-h-screen space-y-6 animate-fade-in p-4 md:p-6">
-        {/* Header */}
+        {/* Enhanced Header */}
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="space-y-2">
-            <h1 className="text-2xl md:text-3xl font-bold">Process Manager</h1>
-            <p className="text-muted-foreground text-sm md:text-base">Design and optimize business processes with BPMN</p>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Enterprise Process Manager
+            </h1>
+            <p className="text-muted-foreground text-base md:text-lg">
+              Design, optimize, and govern business processes with enterprise-grade BPMN tools
+            </p>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <Button 
               variant="outline" 
               onClick={handleValidateProcess} 
-              className="hover-scale text-xs md:text-sm"
+              className="hover-scale text-sm"
               size="sm"
             >
               <CheckCircle className="h-4 w-4 mr-2" />
-              Validate
+              Validate & Analyze
             </Button>
             <Button 
               variant="outline" 
               onClick={handleExport} 
-              className="hover-scale text-xs md:text-sm"
+              className="hover-scale text-sm"
               size="sm"
               disabled={isLoading}
             >
               <Download className="h-4 w-4 mr-2" />
-              Export
+              Export BPMN
             </Button>
             <Button 
               variant="outline" 
               onClick={handleSimulation}
               disabled={isSimulating}
-              className="hover-scale text-xs md:text-sm"
+              className="hover-scale text-sm"
               size="sm"
             >
               <Play className="h-4 w-4 mr-2" />
-              {isSimulating ? "Simulating..." : "Simulate"}
+              {isSimulating ? "Analyzing..." : "Simulate Process"}
             </Button>
             <Button 
               onClick={handleManualSave} 
-              className="hover-scale text-xs md:text-sm"
+              className="hover-scale text-sm bg-gradient-to-r from-blue-600 to-purple-600"
               size="sm"
               disabled={isLoading}
             >
               <Save className="h-4 w-4 mr-2" />
-              {isLoading ? "Saving..." : "Save"}
+              {isLoading ? "Saving..." : "Save Process"}
             </Button>
           </div>
         </div>
 
-        {/* Dynamic Process Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* Enhanced Process Metrics Dashboard */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           {processMetrics.map((metric, index) => {
             const IconComponent = metric.icon;
             return (
-              <Card key={index} className="hover:shadow-md transition-shadow hover-scale cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <IconComponent className={`h-5 w-5 ${metric.color} flex-shrink-0`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs md:text-sm text-muted-foreground truncate">{metric.label}</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-lg md:text-xl font-bold">{metric.value}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {metric.trend}
-                        </Badge>
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 hover-scale cursor-pointer border-l-4 border-l-blue-500">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-full bg-gray-100 ${metric.color}`}>
+                        <IconComponent className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{metric.label}</p>
+                        <p className="text-2xl font-bold">{metric.value}</p>
+                        <p className="text-xs text-muted-foreground">{metric.description}</p>
                       </div>
                     </div>
+                    <Badge variant="outline" className="text-green-600 border-green-200">
+                      {metric.trend}
+                    </Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -320,7 +346,24 @@ export default function ProcessManager() {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
             <div className="w-full overflow-x-auto">
-              <EditorTabView activeTab={activeTab} onTabChange={handleTabChange} />
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="editor" className="text-sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Process Editor
+                </TabsTrigger>
+                <TabsTrigger value="properties" className="text-sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Properties
+                </TabsTrigger>
+                <TabsTrigger value="repository" className="text-sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Repository
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="text-sm">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Analytics
+                </TabsTrigger>
+              </TabsList>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
               {lastSaved && (
@@ -340,30 +383,32 @@ export default function ProcessManager() {
                   Auto-save
                 </label>
               </div>
-              <EditorToolbar />
             </div>
           </div>
 
           <TabsContent value="editor" className="mt-6 w-full">
-            <ProcessContent />
+            <BpmnEditor activeTool="select" />
           </TabsContent>
           
           <TabsContent value="properties" className="mt-6 w-full">
             <Card className="w-full">
               <CardHeader>
-                <CardTitle>Process Properties</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Process Properties & Governance
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Basic Information</h4>
-                    <div className="space-y-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <h4 className="font-semibold text-lg">Basic Information</h4>
+                    <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium">Process ID</label>
                         <Input 
                           type="text" 
                           className="mt-1" 
-                          defaultValue="PROC-2023-001" 
+                          defaultValue="PROC-ENT-2024-001" 
                         />
                       </div>
                       <div>
@@ -388,60 +433,72 @@ export default function ProcessManager() {
                         <label className="text-sm font-medium">Description</label>
                         <Textarea 
                           className="mt-1" 
-                          placeholder="Describe this process..."
-                          rows={3}
+                          placeholder="Comprehensive process description with business objectives..."
+                          rows={4}
                         />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Process Classification</h4>
-                    <div className="space-y-3">
+                  <div className="space-y-6">
+                    <h4 className="font-semibold text-lg">Enterprise Classification</h4>
+                    <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium">Process Category</label>
                         <select className="w-full px-3 py-2 border rounded-md mt-1">
-                          <option>Core Process</option>
+                          <option>Core Business Process</option>
                           <option>Support Process</option>
                           <option>Management Process</option>
+                          <option>Regulatory Process</option>
                         </select>
                       </div>
                       <div>
                         <label className="text-sm font-medium">Business Domain</label>
                         <select className="w-full px-3 py-2 border rounded-md mt-1">
-                          <option>Sales</option>
-                          <option>Finance</option>
-                          <option>Operations</option>
+                          <option>Customer Operations</option>
+                          <option>Financial Management</option>
+                          <option>Supply Chain</option>
                           <option>Human Resources</option>
+                          <option>IT Operations</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Compliance Level</label>
+                        <select className="w-full px-3 py-2 border rounded-md mt-1">
+                          <option>SOX Compliant</option>
+                          <option>ISO 9001</option>
+                          <option>GDPR Compliant</option>
+                          <option>Industry Standard</option>
                         </select>
                       </div>
                       <div>
                         <label className="text-sm font-medium">Risk Level</label>
                         <select className="w-full px-3 py-2 border rounded-md mt-1">
-                          <option>Low</option>
-                          <option>Medium</option>
-                          <option>High</option>
+                          <option>Low Risk</option>
+                          <option>Medium Risk</option>
+                          <option>High Risk</option>
                           <option>Critical</option>
                         </select>
                       </div>
                       <div>
                         <label className="text-sm font-medium">Status</label>
-                        <div className="mt-2">
-                          <Badge variant="outline">Active</Badge>
+                        <div className="mt-2 flex gap-2">
+                          <Badge variant="default">Active</Badge>
+                          <Badge variant="outline">Version 2.1</Badge>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="mt-6 pt-4 border-t">
+                <div className="mt-8 pt-6 border-t">
                   <Button 
                     onClick={handleManualSave} 
                     className="hover-scale"
                     disabled={isLoading}
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? "Saving..." : "Save Properties"}
+                    {isLoading ? "Saving Properties..." : "Save All Properties"}
                   </Button>
                 </div>
               </CardContent>
@@ -449,129 +506,46 @@ export default function ProcessManager() {
           </TabsContent>
           
           <TabsContent value="repository" className="mt-6 w-full">
-            <Card className="w-full">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Process Repository</CardTitle>
-                <div className="flex gap-2">
-                  <Button onClick={handleCreateProject} size="sm" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Project
-                  </Button>
-                  <Button onClick={handleCreateTemplate} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Template
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                {/* Search and Filter Controls */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search templates..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                  <select 
-                    className="px-3 py-2 border rounded-md"
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                  >
-                    {categories.map(category => (
-                      <option key={category} value={category}>
-                        {category === "all" ? "All Categories" : category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <EnterpriseProcessManager
+              onLoadTemplate={handleLoadTemplate}
+              onCreateTemplate={handleCreateTemplate}
+              onUpdateTemplate={updateTemplate}
+              onDeleteTemplate={deleteTemplate}
+            />
+          </TabsContent>
 
-                {/* Dynamic Templates Grid */}
-                <div className="space-y-4">
-                  <p className="text-muted-foreground">
-                    Browse and manage {filteredTemplates.length} process templates in the repository.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredTemplates.map((template) => (
-                      <Card key={template.id} className="hover:shadow-md transition-shadow cursor-pointer hover-scale">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-medium text-sm">{template.name}</h4>
-                            <Badge 
-                              variant={template.status === "active" ? "default" : template.status === "draft" ? "secondary" : "outline"}
-                              className="text-xs"
-                            >
-                              {template.status}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{template.description}</p>
-                          <div className="text-xs text-muted-foreground mb-3">
-                            <div>Category: {template.category}</div>
-                            <div>Elements: {template.elements} • Usage: {template.usage}</div>
-                            <div>Version: {template.version} • By: {template.author}</div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-xs flex-1"
-                              onClick={() => handleUseTemplate(template)}
-                            >
-                              Use
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-xs flex-1"
-                              onClick={() => toast({ title: "Preview", description: `Previewing ${template.name}` })}
-                            >
-                              Preview
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                  
-                  {/* Active Projects */}
-                  <div className="mt-8">
-                    <h4 className="font-medium mb-3">Active Projects ({projects.filter(p => p.status === "active").length})</h4>
-                    <div className="border rounded-md divide-y">
-                      {projects.filter(p => p.status === "active").map((project) => (
-                        <div key={project.id} className="p-3 flex justify-between items-center hover:bg-muted/50">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h5 className="font-medium text-sm">{project.name}</h5>
-                              <Badge 
-                                variant={project.priority === "high" ? "destructive" : project.priority === "medium" ? "secondary" : "outline"}
-                                className="text-xs"
-                              >
-                                {project.priority}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mb-1">{project.description}</p>
-                            <div className="text-xs text-muted-foreground">
-                              Owner: {project.owner} • Team: {project.team.length} members • Progress: {project.progress}%
-                            </div>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="hover-scale ml-4 flex-shrink-0"
-                            onClick={() => toast({ title: "Opening Project", description: `Loading ${project.name}` })}
-                          >
-                            Open
-                          </Button>
-                        </div>
-                      ))}
+          <TabsContent value="analytics" className="mt-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Process Performance Analytics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="h-64 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <BarChart3 className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+                      <p className="text-lg font-medium">Performance Dashboard</p>
+                      <p className="text-muted-foreground">Real-time process metrics and KPIs</p>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Optimization Opportunities</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="h-64 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <TrendingUp className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                      <p className="text-lg font-medium">AI-Powered Insights</p>
+                      <p className="text-muted-foreground">Automated optimization recommendations</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

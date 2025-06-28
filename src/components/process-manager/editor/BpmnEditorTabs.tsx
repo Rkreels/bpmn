@@ -1,13 +1,16 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EditorToolbar } from "./EditorToolbar";
 import { ElementTools } from "./ElementTools";
 import { BpmnCanvas } from "./BpmnCanvas";
 import { XmlSourceView } from "./XmlSourceView";
 import { SimulationView } from "./SimulationView";
 import { BpmnElementPalette } from "../BpmnElementPalette";
+import { ProcessTemplateSelector } from "../ProcessTemplateSelector";
+import { FileTemplate, Layout } from "lucide-react";
 
 interface BpmnEditorTabsProps {
   activeTab: string;
@@ -96,16 +99,43 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
   onImportClick,
   onLoadTemplate
 }) => {
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full min-h-[600px]">
       <div className="bg-white border rounded-md flex flex-col h-full">
         <div className="border-b p-2 flex justify-between items-center">
-          <TabsList>
-            <TabsTrigger value="editor">Editor</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-            <TabsTrigger value="xml">XML</TabsTrigger>
-            <TabsTrigger value="simulation">Simulation</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center gap-4">
+            <TabsList>
+              <TabsTrigger value="editor">Editor</TabsTrigger>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="xml">XML</TabsTrigger>
+              <TabsTrigger value="simulation">Simulation</TabsTrigger>
+            </TabsList>
+            
+            <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FileTemplate className="h-4 w-4 mr-2" />
+                  Templates
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Select Process Template</DialogTitle>
+                </DialogHeader>
+                <ProcessTemplateSelector
+                  onLoadTemplate={(templateId) => {
+                    onLoadTemplate(templateId);
+                    setIsTemplateDialogOpen(false);
+                  }}
+                  onPreviewTemplate={(templateId) => {
+                    console.log("Preview template:", templateId);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
           
           <EditorToolbar 
             zoomLevel={zoomLevel}
@@ -160,7 +190,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
               <div className="border-t p-3 bg-muted/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <span className="text-xs text-muted-foreground">Process ID: Process_1</span>
+                    <span className="text-xs text-muted-foreground">Elements: {elements.length} | Connections: {connections.length}</span>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
@@ -205,32 +235,45 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
           
           <TabsContent value="preview" className="flex-1 flex items-center justify-center p-4 h-full m-0">
             <div className="w-full h-full flex flex-col items-center justify-center border rounded-md bg-slate-50 p-6">
-              <div className="w-full max-w-3xl">
+              <div className="w-full max-w-4xl">
                 <h3 className="text-lg font-medium mb-4">Process Preview</h3>
-                <div className="border rounded-md bg-white p-8 flex items-center justify-center">
-                  <div className="text-muted-foreground flex flex-col items-center">
-                    <p>[BPMN Preview - Shows a read-only rendered version of the BPMN diagram]</p>
-                    <div className="mt-4 flex items-center gap-6">
-                      <div className="flex flex-col items-center">
-                        <div className="w-8 h-8 rounded-full border border-black flex items-center justify-center text-xs mb-2">S</div>
-                        <span className="text-xs">Start</span>
+                <div className="border rounded-md bg-white p-8 flex items-center justify-center min-h-[400px]">
+                  {elements.length > 0 ? (
+                    <div className="w-full">
+                      <div className="text-center mb-6">
+                        <h4 className="text-md font-medium mb-2">Process Flow Diagram</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {elements.length} elements • {connections.length} connections
+                        </p>
                       </div>
-                      <div className="w-12 h-0.5 bg-black"></div>
-                      <div className="flex flex-col items-center">
-                        <div className="w-16 h-12 rounded-md border border-black flex items-center justify-center text-xs mb-2">Process</div>
-                        <span className="text-xs">Activity</span>
-                      </div>
-                      <div className="w-12 h-0.5 bg-black"></div>
-                      <div className="flex flex-col items-center">
-                        <div className="w-8 h-8 rounded-full border border-black flex items-center justify-center text-xs mb-2">E</div>
-                        <span className="text-xs">End</span>
+                      
+                      <div className="flex items-center justify-center gap-8 flex-wrap">
+                        {elements.slice(0, 5).map((element, index) => (
+                          <div key={element.id} className="flex flex-col items-center">
+                            <div className="w-16 h-12 rounded-md border-2 border-blue-500 flex items-center justify-center text-xs mb-2 bg-blue-50">
+                              {element.type.includes('start') ? 'START' : 
+                               element.type.includes('end') ? 'END' : 
+                               element.type.includes('gateway') ? 'GATE' : 'TASK'}
+                            </div>
+                            <span className="text-xs text-center max-w-20 truncate">{element.name}</span>
+                            {index < elements.length - 1 && index < 4 && (
+                              <div className="w-8 h-0.5 bg-blue-500 mt-2"></div>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      <Layout className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                      <p>No elements to preview</p>
+                      <p className="text-sm">Add elements to see the process flow</p>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="flex justify-end mt-4">
-                  <Button variant="outline" className="mr-2">Full Screen</Button>
+                <div className="flex justify-end mt-4 gap-2">
+                  <Button variant="outline">Full Screen</Button>
                   <Button>Run Simulation</Button>
                 </div>
               </div>
