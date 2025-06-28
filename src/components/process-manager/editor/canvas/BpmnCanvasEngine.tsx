@@ -34,7 +34,6 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
   onCanvasClick
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragElement, setDragElement] = useState<string | null>(null);
@@ -44,64 +43,6 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
     const gridSize = 20;
     return Math.round(pos / gridSize) * gridSize;
   }, [snapToGrid]);
-
-  const getElementStyle = (elementType: string) => {
-    const baseStyle = {
-      border: '2px solid #374151',
-      backgroundColor: '#ffffff',
-      borderRadius: '4px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '12px',
-      fontWeight: '500',
-      textAlign: 'center' as const,
-      cursor: selectedTool === 'select' ? 'move' : 'pointer',
-      userSelect: 'none' as const,
-      transition: 'all 0.2s ease'
-    };
-
-    switch (elementType) {
-      case 'start-event':
-        return {
-          ...baseStyle,
-          borderRadius: '50%',
-          backgroundColor: '#dcfce7',
-          borderColor: '#16a34a'
-        };
-      case 'end-event':
-        return {
-          ...baseStyle,
-          borderRadius: '50%',
-          backgroundColor: '#fef2f2',
-          borderColor: '#dc2626',
-          borderWidth: '3px'
-        };
-      case 'task':
-      case 'user-task':
-        return {
-          ...baseStyle,
-          backgroundColor: '#f0f9ff',
-          borderColor: '#0ea5e9'
-        };
-      case 'service-task':
-        return {
-          ...baseStyle,
-          backgroundColor: '#fef3c7',
-          borderColor: '#f59e0b'
-        };
-      case 'exclusive-gateway':
-      case 'parallel-gateway':
-        return {
-          ...baseStyle,
-          transform: 'rotate(45deg)',
-          backgroundColor: '#f3e8ff',
-          borderColor: '#8b5cf6'
-        };
-      default:
-        return baseStyle;
-    }
-  };
 
   const handleElementMouseDown = (e: React.MouseEvent, element: BpmnElement) => {
     e.stopPropagation();
@@ -167,8 +108,7 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
           y1={sourceY}
           x2={targetX}
           y2={targetY}
-          stroke="#374151"
-          strokeWidth="2"
+          className="connection-line"
           markerEnd="url(#arrowhead)"
         />
         {connection.name && (
@@ -189,34 +129,21 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
   const renderElement = (element: BpmnElement) => {
     const isSelected = selectedElement === element.id;
     const isConnecting = connectingElement === element.id;
-    const elementStyle = getElementStyle(element.type);
 
     return (
       <div
         key={element.id}
         className={`bpmn-element ${isSelected ? 'selected' : ''} ${isConnecting ? 'connecting' : ''}`}
+        data-type={element.type}
         style={{
-          position: 'absolute',
           left: element.x,
           top: element.y,
           width: element.width || 100,
           height: element.height || 50,
-          ...elementStyle,
-          ...(isSelected && {
-            boxShadow: '0 0 0 2px #3b82f6',
-            borderColor: '#3b82f6'
-          }),
-          ...(isConnecting && {
-            boxShadow: '0 0 0 2px #8b5cf6',
-            borderColor: '#8b5cf6'
-          })
         }}
         onMouseDown={(e) => handleElementMouseDown(e, element)}
       >
-        <div style={{ 
-          transform: element.type.includes('gateway') ? 'rotate(-45deg)' : 'none',
-          padding: '4px'
-        }}>
+        <div>
           {element.name}
         </div>
       </div>
@@ -228,16 +155,11 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
       ref={canvasRef}
       className={`bpmn-canvas ${showGrid ? 'with-grid' : ''}`}
       style={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-        cursor: selectedTool === 'select' ? 'default' : 'crosshair',
         transform: `scale(${zoomLevel / 100})`,
         transformOrigin: '0 0',
-        backgroundImage: showGrid ? 
-          'radial-gradient(circle, #e5e7eb 1px, transparent 1px)' : 'none',
-        backgroundSize: showGrid ? '20px 20px' : 'auto'
+        minHeight: '500px',
+        width: '100%',
+        height: '100%'
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -245,15 +167,14 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
     >
       {/* SVG for connections */}
       <svg
-        ref={svgRef}
+        className="connections-layer"
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
           height: '100%',
-          pointerEvents: 'none',
-          zIndex: 1
+          pointerEvents: 'none'
         }}
       >
         <defs>
@@ -286,7 +207,7 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
       </svg>
 
       {/* Elements layer */}
-      <div style={{ position: 'relative', zIndex: 2 }}>
+      <div className="elements-layer">
         {elements.map(renderElement)}
       </div>
     </div>
