@@ -14,10 +14,7 @@ interface BpmnEditorProps {
 }
 
 export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" }) => {
-  // Get all state from the custom hook
   const state = useBpmnEditorState({ activeTool });
-  
-  // Get all actions from the custom hook
   const actions = useBpmnEditorActions({
     elements: state.elements,
     connections: state.connections,
@@ -32,7 +29,6 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     isDragging: state.isDragging,
     isVoiceEnabled: state.isVoiceEnabled,
     
-    // Setters
     setElements: state.setElements,
     setConnections: state.setConnections,
     setSelectedElement: state.setSelectedElement,
@@ -52,15 +48,12 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     setIsImportDialogOpen: state.setIsImportDialogOpen,
     setImportSource: state.setImportSource,
     
-    // Functions
     saveToHistory: state.saveToHistory,
     toast: state.toast,
     speakText: state.speakText
   });
 
-  // Create a wrapper function to adapt the signature for onAddElement
   const handleAddElement = (elementType: string) => {
-    // Use default coordinates for the center of the canvas when adding from palette
     actions.handleAddElement(elementType, 300, 200);
   };
 
@@ -83,7 +76,6 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         history={state.history}
         snapToGrid={state.snapToGrid}
         
-        // Enhanced handlers
         onZoomIn={actions.handleZoomIn}
         onZoomOut={actions.handleZoomOut}
         onToggleGrid={actions.handleToggleGrid}
@@ -112,7 +104,6 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onConnectionCreate={actions.handleConnectionCreate}
       />
       
-      {/* Element Properties Dialog */}
       <ElementPropertiesDialog
         open={state.isEditDialogOpen}
         onOpenChange={state.setIsEditDialogOpen}
@@ -121,7 +112,6 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onUpdateProperties={(props: ElementProperties) => actions.handleUpdateElementProperties(props)}
       />
       
-      {/* Import Dialog */}
       <ImportDialog
         open={state.isImportDialogOpen}
         onOpenChange={state.setIsImportDialogOpen}
@@ -130,12 +120,10 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onImportConfirm={actions.handleImportConfirm}
       />
 
-      {/* Template Selector Dialog */}
       <TemplateSelector
         onLoadTemplate={state.loadTemplate}
       />
 
-      {/* Process Validation Panel */}
       {state.showValidation && (
         <ProcessValidationPanel
           elements={state.elements}
