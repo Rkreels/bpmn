@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { DashboardHeader } from "./DashboardHeader";
 import { MetricsCards } from "./MetricsCards";
@@ -75,7 +74,7 @@ export const DashboardContent: React.FC = () => {
       label: "Active Processes",
       value: "24",
       change: "+12%",
-      trend: "up",
+      trend: "up" as const,
       icon: Workflow,
       link: "/process-manager",
       color: "text-blue-500"
@@ -84,7 +83,7 @@ export const DashboardContent: React.FC = () => {
       label: "Team Members",
       value: "18",
       change: "+3",
-      trend: "up", 
+      trend: "up" as const, 
       icon: Users,
       link: "/collaboration-hub",
       color: "text-green-500"
@@ -93,7 +92,7 @@ export const DashboardContent: React.FC = () => {
       label: "Repository Items",
       value: "156",
       change: "+8",
-      trend: "up",
+      trend: "up" as const,
       icon: Database,
       link: "/repository",
       color: "text-purple-500"
@@ -102,7 +101,7 @@ export const DashboardContent: React.FC = () => {
       label: "Avg Performance",
       value: "87%",
       change: "+5%",
-      trend: "up",
+      trend: "up" as const,
       icon: BarChart3,
       link: "/process-intelligence",
       color: "text-orange-500"

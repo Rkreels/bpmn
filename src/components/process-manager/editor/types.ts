@@ -1,23 +1,12 @@
 
-// Define the types for BPMN elements and connections
-
-export interface ElementPosition {
-  x: number;
-  y: number;
-}
-
-export interface MousePosition {
-  x: number;
-  y: number;
-}
-
 export interface ElementProperties {
   id: string;
   name: string;
   type: string;
-  description?: string;
-  color?: string;
-  custom?: Record<string, any>;
+  documentation: string;
+  assignee: string;
+  dueDate: string;
+  implementation: string;
 }
 
 export interface BpmnElement {
@@ -26,21 +15,35 @@ export interface BpmnElement {
   name: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
-  position: ElementPosition; // Added position property to match interface
-  properties?: {
-    description?: string;
-    color?: string;
-    custom?: Record<string, any>;
-  };
+  width?: number;
+  height?: number;
+  properties?: Record<string, any>;
 }
 
 export interface BpmnConnection {
   id: string;
   source: string;
   target: string;
-  sourceId: string; // Added to match interface
-  targetId: string; // Added to match interface
-  type?: string;
+  type: string;
+  waypoints?: Array<{ x: number; y: number }>;
+}
+
+export interface ProcessValidation {
+  isValid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}
+
+export interface ValidationError {
+  id: string;
+  elementId: string;
+  message: string;
+  severity: "error" | "warning";
+}
+
+export interface ValidationWarning {
+  id: string;
+  elementId: string;
+  message: string;
+  type: string;
 }
