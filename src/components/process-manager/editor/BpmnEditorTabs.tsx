@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { XmlSourceView } from "./XmlSourceView";
 import { SimulationView } from "./SimulationView";
 import { BpmnElementPalette } from "../BpmnElementPalette";
 import { ProcessTemplateSelector } from "../ProcessTemplateSelector";
-import { FileTemplate, Layout } from "lucide-react";
+import { FileText, Layout } from "lucide-react";
 
 interface BpmnEditorTabsProps {
   activeTab: string;
@@ -116,7 +115,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
             <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <FileTemplate className="h-4 w-4 mr-2" />
+                  <FileText className="h-4 w-4 mr-2" />
                   Templates
                 </Button>
               </DialogTrigger>

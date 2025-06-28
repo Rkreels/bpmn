@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
+import { ProcessTemplate } from "@/hooks/process-manager/useProcessTemplates";
 import { 
   Plus, 
   Save, 
@@ -23,23 +24,6 @@ import {
   Building,
   Tag
 } from "lucide-react";
-
-interface ProcessTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  industry: string;
-  complexity: 'simple' | 'medium' | 'complex';
-  status: 'draft' | 'active' | 'archived';
-  version: string;
-  author: string;
-  created: string;
-  modified: string;
-  elements: any[];
-  connections: any[];
-  tags: string[];
-}
 
 interface EnterpriseProcessManagerProps {
   onLoadTemplate: (templateId: string) => void;
@@ -60,9 +44,7 @@ export const EnterpriseProcessManager: React.FC<EnterpriseProcessManagerProps> =
     name: "",
     description: "",
     category: "General",
-    industry: "General",
-    complexity: "medium",
-    tags: []
+    status: "draft"
   });
 
   const { toast } = useToast();
@@ -81,19 +63,6 @@ export const EnterpriseProcessManager: React.FC<EnterpriseProcessManagerProps> =
     "General"
   ];
 
-  const industries = [
-    "Financial Services",
-    "Banking",
-    "Healthcare",
-    "Manufacturing",
-    "Retail",
-    "Technology",
-    "Insurance",
-    "Government",
-    "Education",
-    "General"
-  ];
-
   const handleCreateTemplate = useCallback(() => {
     if (!newTemplate.name || !newTemplate.description) {
       toast({
@@ -109,11 +78,11 @@ export const EnterpriseProcessManager: React.FC<EnterpriseProcessManagerProps> =
       id: `custom-${Date.now()}`,
       version: "1.0",
       author: "Current User",
-      created: new Date().toISOString(),
-      modified: new Date().toISOString(),
+      createdDate: new Date().toISOString().split('T')[0],
+      lastModified: new Date().toISOString().split('T')[0],
       status: 'draft' as const,
-      elements: [],
-      connections: []
+      elements: 0,
+      usage: 0
     };
 
     onCreateTemplate(templateToCreate);
@@ -121,9 +90,7 @@ export const EnterpriseProcessManager: React.FC<EnterpriseProcessManagerProps> =
       name: "",
       description: "",
       category: "General",
-      industry: "General", 
-      complexity: "medium",
-      tags: []
+      status: "draft"
     });
     setIsCreating(false);
 
@@ -143,8 +110,8 @@ export const EnterpriseProcessManager: React.FC<EnterpriseProcessManagerProps> =
       id: `${template.id}-copy-${Date.now()}`,
       name: `${template.name} (Copy)`,
       version: "1.0",
-      created: new Date().toISOString(),
-      modified: new Date().toISOString(),
+      createdDate: new Date().toISOString().split('T')[0],
+      lastModified: new Date().toISOString().split('T')[0],
       status: 'draft' as const
     };
 
@@ -162,15 +129,6 @@ export const EnterpriseProcessManager: React.FC<EnterpriseProcessManagerProps> =
       case 'draft': return <Edit className="h-4 w-4 text-yellow-500" />;
       case 'archived': return <AlertCircle className="h-4 w-4 text-gray-500" />;
       default: return <Clock className="h-4 w-4 text-blue-500" />;
-    }
-  };
-
-  const getComplexityColor = (complexity: string) => {
-    switch (complexity) {
-      case 'simple': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800'; 
-      case 'complex': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -216,38 +174,6 @@ export const EnterpriseProcessManager: React.FC<EnterpriseProcessManagerProps> =
                     {categories.map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Industry</label>
-                <Select 
-                  value={newTemplate.industry} 
-                  onValueChange={(value) => setNewTemplate(prev => ({ ...prev, industry: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {industries.map(ind => (
-                      <SelectItem key={ind} value={ind}>{ind}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Complexity</label>
-                <Select 
-                  value={newTemplate.complexity} 
-                  onValueChange={(value: 'simple' | 'medium' | 'complex') => setNewTemplate(prev => ({ ...prev, complexity: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="simple">Simple</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="complex">Complex</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
