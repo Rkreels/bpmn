@@ -5,7 +5,10 @@ import { useBpmnEditorActions } from "./editor/hooks/useBpmnEditorActions";
 import { BpmnEditorTabs } from "./editor/BpmnEditorTabs";
 import { ElementPropertiesDialog } from "./editor/dialogs/ElementPropertiesDialog";
 import { ImportDialog } from "./editor/dialogs/ImportDialog";
+import { TemplateSelector } from "./editor/dialogs/TemplateSelector";
+import { ProcessValidationPanel } from "./editor/panels/ProcessValidationPanel";
 import { ElementProperties } from "./editor/types";
+import { complexProcessTemplates } from "@/data/processTemplates";
 
 interface BpmnEditorProps {
   activeTool?: string;
@@ -62,6 +65,38 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
     actions.handleAddElement(elementType, 300, 200);
   };
 
+  // Enhanced template loading with synchronization
+  const handleLoadTemplate = (templateId: string) => {
+    const template = complexProcessTemplates.find(t => t.id === templateId);
+    if (template) {
+      // Convert template elements to match editor format
+      const convertedElements = template.elements.map(el => ({
+        ...el,
+        position: { x: el.x, y: el.y }
+      }));
+
+      const convertedConnections = template.connections.map(conn => ({
+        ...conn,
+        sourceId: conn.source,
+        targetId: conn.target
+      }));
+
+      state.setElements(convertedElements);
+      state.setConnections(convertedConnections);
+      state.setSelectedElement(null);
+      state.saveToHistory(convertedElements, convertedConnections);
+      
+      state.toast({
+        title: "Template Loaded",
+        description: `Successfully loaded ${template.name} with ${template.elements.length} elements`
+      });
+
+      if (state.isVoiceEnabled) {
+        state.speakText(`Loaded ${template.name} template with ${template.elements.length} process elements`);
+      }
+    }
+  };
+
   return (
     <>
       <BpmnEditorTabs
@@ -105,6 +140,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onRedo={actions.handleRedo}
         onToggleSnapToGrid={actions.handleToggleSnapToGrid}
         onImportClick={actions.handleImportClick}
+        onLoadTemplate={handleLoadTemplate}
       />
       
       {/* Element Properties Dialog */}
@@ -124,6 +160,20 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         setImportSource={state.setImportSource}
         onImportConfirm={actions.handleImportConfirm}
       />
+
+      {/* Template Selector Dialog */}
+      <TemplateSelector
+        onLoadTemplate={handleLoadTemplate}
+      />
+
+      {/* Process Validation Panel */}
+      {state.showValidation && (
+        <ProcessValidationPanel
+          elements={state.elements}
+          connections={state.connections}
+          onClose={() => state.setShowValidation(false)}
+        />
+      )}
     </>
   );
 };
