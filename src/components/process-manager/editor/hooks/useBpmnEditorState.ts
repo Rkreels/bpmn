@@ -10,9 +10,58 @@ interface BpmnEditorStateOptions {
 }
 
 export const useBpmnEditorState = ({ activeTool }: BpmnEditorStateOptions) => {
-  // Initialize with empty canvas for better user experience
-  const [elements, setElements] = useState<any[]>([]);
-  const [connections, setConnections] = useState<any[]>([]);
+  // Initialize with a simple working example
+  const [elements, setElements] = useState<any[]>([
+    { 
+      id: "StartEvent_1", 
+      type: "start-event", 
+      name: "Start", 
+      x: 100, 
+      y: 100, 
+      width: 36, 
+      height: 36, 
+      position: { x: 100, y: 100 } 
+    },
+    { 
+      id: "Task_1", 
+      type: "task", 
+      name: "Process Task", 
+      x: 200, 
+      y: 80, 
+      width: 100, 
+      height: 80, 
+      position: { x: 200, y: 80 } 
+    },
+    { 
+      id: "EndEvent_1", 
+      type: "end-event", 
+      name: "End", 
+      x: 360, 
+      y: 100, 
+      width: 36, 
+      height: 36, 
+      position: { x: 360, y: 100 } 
+    }
+  ]);
+  const [connections, setConnections] = useState<any[]>([
+    { 
+      id: "Flow_1", 
+      source: "StartEvent_1", 
+      target: "Task_1", 
+      type: "sequence-flow", 
+      sourceId: "StartEvent_1", 
+      targetId: "Task_1" 
+    },
+    { 
+      id: "Flow_2", 
+      source: "Task_1", 
+      target: "EndEvent_1", 
+      type: "sequence-flow", 
+      sourceId: "Task_1", 
+      targetId: "EndEvent_1" 
+    }
+  ]);
+  
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState(activeTool);
   const [connectingElement, setConnectingElement] = useState<string | null>(null);
@@ -46,8 +95,8 @@ export const useBpmnEditorState = ({ activeTool }: BpmnEditorStateOptions) => {
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [currentElementPosition, setCurrentElementPosition] = useState<{ x: number; y: number } | null>(null);
   
-  // History management - initialize with empty state
-  const [history, setHistory] = useState([{ elements: [], connections: [] }]);
+  // History management - initialize with current state
+  const [history, setHistory] = useState([{ elements, connections }]);
   const [historyIndex, setHistoryIndex] = useState(0);
   
   // Current template tracking
@@ -122,41 +171,6 @@ export const useBpmnEditorState = ({ activeTool }: BpmnEditorStateOptions) => {
     }
   }, [toast, speakText, isVoiceEnabled]);
 
-  // Update XML when elements or connections change
-  const updateXmlFromModel = useCallback(() => {
-    if (elements.length === 0 && connections.length === 0) {
-      setXmlSource('<?xml version="1.0" encoding="UTF-8"?>\n<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">\n  <bpmn:process id="Process_1" isExecutable="false">\n  </bpmn:process>\n</bpmn:definitions>');
-      return;
-    }
-
-    const workingTemplate: ProcessTemplate = {
-      id: currentTemplate?.id || "working-process",
-      name: currentTemplate?.name || "Working Process",
-      description: currentTemplate?.description || "Process in development",
-      category: currentTemplate?.category || "Working",
-      elements,
-      connections,
-      properties: {
-        processId: currentTemplate?.properties.processId || "working-process",
-        version: currentTemplate?.properties.version || "1.0",
-        author: currentTemplate?.properties.author || "User",
-        created: currentTemplate?.properties.created || new Date().toISOString(),
-        modified: new Date().toISOString(),
-        complexity: currentTemplate?.properties.complexity || 'medium',
-        industry: currentTemplate?.properties.industry || 'General',
-        tags: currentTemplate?.properties.tags || []
-      }
-    };
-    
-    const newXml = generateBpmnXml(workingTemplate);
-    setXmlSource(newXml);
-  }, [elements, connections, currentTemplate]);
-
-  // Auto-update XML when model changes
-  React.useEffect(() => {
-    updateXmlFromModel();
-  }, [updateXmlFromModel]);
-
   // Undo functionality
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -190,28 +204,6 @@ export const useBpmnEditorState = ({ activeTool }: BpmnEditorStateOptions) => {
       });
     }
   }, [history, historyIndex, toast]);
-
-  // Clear canvas
-  const clearCanvas = useCallback(() => {
-    setElements([]);
-    setConnections([]);
-    setSelectedElement(null);
-    setCurrentTemplate(null);
-    setIsModified(false);
-    
-    const newHistory = [{ elements: [], connections: [] }];
-    setHistory(newHistory);
-    setHistoryIndex(0);
-    
-    toast({
-      title: "Canvas Cleared",
-      description: "All elements have been removed"
-    });
-    
-    if (isVoiceEnabled) {
-      speakText("Canvas cleared. Ready to create a new process or load a template.");
-    }
-  }, [toast, isVoiceEnabled, speakText]);
 
   return {
     // State
@@ -264,10 +256,8 @@ export const useBpmnEditorState = ({ activeTool }: BpmnEditorStateOptions) => {
     // Functions
     saveToHistory,
     loadTemplate,
-    updateXmlFromModel,
     undo,
     redo,
-    clearCanvas,
     toast,
     speakText,
     
