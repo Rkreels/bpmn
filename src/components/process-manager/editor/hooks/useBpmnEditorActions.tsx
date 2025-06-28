@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { ElementProperties } from "../types";
@@ -129,6 +128,10 @@ export const useBpmnEditorActions = ({
           id: element.id,
           type: element.type,
           name: element.name || '',
+          documentation: element.documentation || '',
+          assignee: element.assignee || '',
+          dueDate: element.dueDate || '',
+          implementation: element.implementation || '',
           description: element.description || '',
           color: element.color || '#ffffff',
         });
@@ -142,6 +145,10 @@ export const useBpmnEditorActions = ({
         id: '',
         type: '',
         name: '',
+        documentation: '',
+        assignee: '',
+        dueDate: '',
+        implementation: '',
         description: '',
         color: '#ffffff',
       });
@@ -272,6 +279,10 @@ export const useBpmnEditorActions = ({
           ? { 
               ...el, 
               name: props.name,
+              documentation: props.documentation,
+              assignee: props.assignee,
+              dueDate: props.dueDate,
+              implementation: props.implementation,
               description: props.description,
               color: props.color
             } 
@@ -285,6 +296,10 @@ export const useBpmnEditorActions = ({
             ? { 
                 ...el, 
                 name: props.name,
+                documentation: props.documentation,
+                assignee: props.assignee,
+                dueDate: props.dueDate,
+                implementation: props.implementation,
                 description: props.description,
                 color: props.color
               } 
@@ -313,6 +328,10 @@ export const useBpmnEditorActions = ({
           id: element.id,
           type: element.type,
           name: element.name || '',
+          documentation: element.documentation || '',
+          assignee: element.assignee || '',
+          dueDate: element.dueDate || '',
+          implementation: element.implementation || '',
           description: element.description || '',
           color: element.color || '#ffffff',
         });
@@ -698,4 +717,3 @@ export const useBpmnEditorActions = ({
     handleRedo
   };
 };
-
