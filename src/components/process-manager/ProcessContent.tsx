@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BpmnEditor } from "./BpmnEditor";
+import { ProcessTemplateSelector } from "./ProcessTemplateSelector";
 import { 
   Share2, Download, Save, Upload, FileJson, FileCode, 
   History, Users, Database, FileSearch, Settings,
-  Shield, Link, Copy, Edit, Trash2
+  Shield, Link, Copy, Edit, Trash2, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ export const ProcessContent: React.FC = () => {
   const [tempProcessName, setTempProcessName] = useState(processName);
   const [activeTool, setActiveTool] = useState<string>("select");
   const [isLoading, setIsLoading] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
   const handleSaveProcess = async () => {
     setIsLoading(true);
@@ -158,6 +160,25 @@ export const ProcessContent: React.FC = () => {
     }
   };
 
+  const handleLoadTemplate = (templateId: string) => {
+    setShowTemplateSelector(false);
+    toast({
+      title: "Template Loading",
+      description: "Loading process template into editor..."
+    });
+    
+    if (isVoiceEnabled) {
+      speakText("Loading process template into editor. The template includes pre-configured elements and connections.");
+    }
+  };
+
+  const handlePreviewTemplate = (templateId: string) => {
+    toast({
+      title: "Template Preview",
+      description: "Opening template preview..."
+    });
+  };
+
   return (
     <ErrorBoundary>
       <Card>
@@ -218,6 +239,15 @@ export const ProcessContent: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1" 
+                onClick={() => setShowTemplateSelector(!showTemplateSelector)}
+              >
+                <Layers className="h-4 w-4" />
+                Templates
+              </Button>
               <Button variant="outline" size="sm" className="gap-1" onClick={() => {}}>
                 <Upload className="h-4 w-4" />
                 Import
@@ -280,6 +310,15 @@ export const ProcessContent: React.FC = () => {
               </DropdownMenu>
             </div>
           </div>
+          
+          {showTemplateSelector && (
+            <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+              <ProcessTemplateSelector 
+                onLoadTemplate={handleLoadTemplate}
+                onPreviewTemplate={handlePreviewTemplate}
+              />
+            </div>
+          )}
           
           <Separator className="my-4" />
           
