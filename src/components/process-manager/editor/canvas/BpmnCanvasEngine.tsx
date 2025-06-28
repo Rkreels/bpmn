@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { BpmnElement, BpmnConnection } from '../types';
 
 interface BpmnCanvasEngineProps {
@@ -13,6 +13,9 @@ interface BpmnCanvasEngineProps {
   connectingElement: string | null;
   mousePosition: { x: number; y: number };
   onElementSelect: (id: string | null) => void;
+  onElementDragStart: (e: React.MouseEvent, elementId: string) => void;
+  onElementDragMove: (e: React.MouseEvent) => void;
+  onElementDragEnd: () => void;
   onElementUpdate: (elementId: string, updates: any) => void;
   onConnectionCreate: (sourceId: string, targetId: string) => void;
   onCanvasClick: (e: React.MouseEvent) => void;
@@ -29,187 +32,249 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
   connectingElement,
   mousePosition,
   onElementSelect,
+  onElementDragStart,
+  onElementDragMove,
+  onElementDragEnd,
   onElementUpdate,
   onConnectionCreate,
   onCanvasClick
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [draggedElement, setDraggedElement] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [dragElement, setDragElement] = useState<string | null>(null);
 
-  const snapToGridPos = useCallback((pos: number) => {
-    if (!snapToGrid) return pos;
-    const gridSize = 20;
-    return Math.round(pos / gridSize) * gridSize;
-  }, [snapToGrid]);
-
-  const handleElementMouseDown = (e: React.MouseEvent, element: BpmnElement) => {
+  const handleElementClick = (e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
     
-    if (selectedTool === 'connector') {
-      if (connectingElement && connectingElement !== element.id) {
-        onConnectionCreate(connectingElement, element.id);
-      } else {
-        onElementSelect(element.id);
-      }
-      return;
+    if (selectedTool === 'connector' && connectingElement && connectingElement !== elementId) {
+      onConnectionCreate(connectingElement, elementId);
+    } else {
+      onElementSelect(elementId);
     }
+  };
 
-    onElementSelect(element.id);
-    
+  const handleElementMouseDown = (e: React.MouseEvent, elementId: string) => {
     if (selectedTool === 'select') {
-      const rect = canvasRef.current!.getBoundingClientRect();
-      const scale = zoomLevel / 100;
-      
-      setDragOffset({
-        x: (e.clientX - rect.left) / scale - element.x,
-        y: (e.clientY - rect.top) / scale - element.y
-      });
-      setIsDragging(true);
-      setDragElement(element.id);
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        setDraggedElement(elementId);
+        setDragOffset({
+          x: e.clientX - element.x,
+          y: e.clientY - element.y
+        });
+        onElementDragStart(e, elementId);
+      }
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!canvasRef.current || !isDragging || !dragElement) return;
+    if (draggedElement && selectedTool === 'select') {
+      const element = elements.find(el => el.id === draggedElement);
+      if (element) {
+        let newX = e.clientX - dragOffset.x;
+        let newY = e.clientY - dragOffset.y;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scale = zoomLevel / 100;
-    const x = (e.clientX - rect.left) / scale - dragOffset.x;
-    const y = (e.clientY - rect.top) / scale - dragOffset.y;
+        if (snapToGrid) {
+          newX = Math.round(newX / 20) * 20;
+          newY = Math.round(newY / 20) * 20;
+        }
 
-    const newX = snapToGridPos(Math.max(0, x));
-    const newY = snapToGridPos(Math.max(0, y));
-    
-    onElementUpdate(dragElement, { x: newX, y: newY });
+        onElementUpdate(draggedElement, { x: newX, y: newY });
+      }
+      onElementDragMove(e);
+    }
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
-    setDragElement(null);
-  };
-
-  const renderConnection = (connection: BpmnConnection) => {
-    const sourceElement = elements.find(el => el.id === connection.source);
-    const targetElement = elements.find(el => el.id === connection.target);
-
-    if (!sourceElement || !targetElement) return null;
-
-    const sourceX = sourceElement.x + (sourceElement.width || 100) / 2;
-    const sourceY = sourceElement.y + (sourceElement.height || 50) / 2;
-    const targetX = targetElement.x + (targetElement.width || 100) / 2;
-    const targetY = targetElement.y + (targetElement.height || 50) / 2;
-
-    return (
-      <g key={connection.id}>
-        <line
-          x1={sourceX}
-          y1={sourceY}
-          x2={targetX}
-          y2={targetY}
-          className="connection-line"
-          markerEnd="url(#arrowhead)"
-        />
-        {connection.name && (
-          <text
-            x={(sourceX + targetX) / 2}
-            y={(sourceY + targetY) / 2 - 10}
-            textAnchor="middle"
-            fontSize="11"
-            fill="#6b7280"
-          >
-            {connection.name}
-          </text>
-        )}
-      </g>
-    );
+    if (draggedElement) {
+      setDraggedElement(null);
+      onElementDragEnd();
+    }
   };
 
   const renderElement = (element: BpmnElement) => {
     const isSelected = selectedElement === element.id;
     const isConnecting = connectingElement === element.id;
+    
+    let shapeContent;
+    const baseClasses = `absolute border-2 cursor-pointer transition-all duration-200 ${
+      isSelected ? 'border-blue-500 shadow-lg' : 'border-gray-400'
+    } ${isConnecting ? 'border-green-500 shadow-green-200' : ''}`;
+
+    switch (element.type) {
+      case 'start-event':
+        shapeContent = (
+          <div 
+            className={`${baseClasses} bg-green-100 rounded-full flex items-center justify-center`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height
+            }}
+          >
+            <span className="text-xs font-medium text-green-800">S</span>
+          </div>
+        );
+        break;
+      
+      case 'end-event':
+        shapeContent = (
+          <div 
+            className={`${baseClasses} bg-red-100 rounded-full flex items-center justify-center border-4`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height
+            }}
+          >
+            <span className="text-xs font-medium text-red-800">E</span>
+          </div>
+        );
+        break;
+      
+      case 'exclusive-gateway':
+        shapeContent = (
+          <div 
+            className={`${baseClasses} bg-yellow-100 transform rotate-45 flex items-center justify-center`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height
+            }}
+          >
+            <span className="text-xs font-bold text-yellow-800 transform -rotate-45">X</span>
+          </div>
+        );
+        break;
+      
+      case 'parallel-gateway':
+        shapeContent = (
+          <div 
+            className={`${baseClasses} bg-blue-100 transform rotate-45 flex items-center justify-center`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height
+            }}
+          >
+            <span className="text-xs font-bold text-blue-800 transform -rotate-45">+</span>
+          </div>
+        );
+        break;
+      
+      default: // tasks
+        shapeContent = (
+          <div 
+            className={`${baseClasses} bg-blue-50 rounded-lg flex flex-col items-center justify-center p-2`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height
+            }}
+          >
+            <span className="text-xs font-medium text-blue-800 text-center leading-tight">
+              {element.name}
+            </span>
+          </div>
+        );
+    }
 
     return (
       <div
         key={element.id}
-        className={`bpmn-element ${isSelected ? 'selected' : ''} ${isConnecting ? 'connecting' : ''}`}
-        data-type={element.type}
-        style={{
-          left: element.x,
-          top: element.y,
-          width: element.width || 100,
-          height: element.height || 50,
-        }}
-        onMouseDown={(e) => handleElementMouseDown(e, element)}
+        onClick={(e) => handleElementClick(e, element.id)}
+        onMouseDown={(e) => handleElementMouseDown(e, element.id)}
       >
-        <div>
-          {element.name}
-        </div>
+        {shapeContent}
       </div>
+    );
+  };
+
+  const renderConnection = (connection: BpmnConnection) => {
+    const sourceElement = elements.find(el => el.id === connection.source);
+    const targetElement = elements.find(el => el.id === connection.target);
+    
+    if (!sourceElement || !targetElement) return null;
+
+    const startX = sourceElement.x + sourceElement.width / 2;
+    const startY = sourceElement.y + sourceElement.height / 2;
+    const endX = targetElement.x + targetElement.width / 2;
+    const endY = targetElement.y + targetElement.height / 2;
+
+    return (
+      <svg
+        key={connection.id}
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: 1 }}
+      >
+        <defs>
+          <marker
+            id={`arrowhead-${connection.id}`}
+            markerWidth="10"
+            markerHeight="7"
+            refX="9"
+            refY="3.5"
+            orient="auto"
+          >
+            <polygon
+              points="0 0, 10 3.5, 0 7"
+              fill="#374151"
+            />
+          </marker>
+        </defs>
+        <line
+          x1={startX}
+          y1={startY}
+          x2={endX}
+          y2={endY}
+          stroke="#374151"
+          strokeWidth="2"
+          markerEnd={`url(#arrowhead-${connection.id})`}
+        />
+      </svg>
     );
   };
 
   return (
     <div
       ref={canvasRef}
-      className={`bpmn-canvas ${showGrid ? 'with-grid' : ''}`}
-      style={{
+      className="relative w-full h-full bg-white overflow-hidden"
+      style={{ 
         transform: `scale(${zoomLevel / 100})`,
-        transformOrigin: '0 0',
-        minHeight: '500px',
-        width: '100%',
-        height: '100%'
+        transformOrigin: 'top left',
+        backgroundImage: showGrid ? 
+          'radial-gradient(circle, #e5e7eb 1px, transparent 1px)' : 'none',
+        backgroundSize: showGrid ? '20px 20px' : 'auto'
       }}
+      onClick={onCanvasClick}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onClick={onCanvasClick}
     >
-      {/* SVG for connections */}
-      <svg
-        className="connections-layer"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none'
-        }}
-      >
-        <defs>
-          <marker
-            id="arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-            fill="#374151"
-          >
-            <polygon points="0 0, 10 3.5, 0 7" />
-          </marker>
-        </defs>
-        {connections.map(renderConnection)}
-        
-        {/* Connection preview */}
-        {connectingElement && selectedTool === 'connector' && (
+      {/* Render connections first (behind elements) */}
+      {connections.map(renderConnection)}
+      
+      {/* Render elements */}
+      {elements.map(renderElement)}
+      
+      {/* Connection preview line */}
+      {connectingElement && selectedTool === 'connector' && (
+        <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
           <line
-            x1={elements.find(el => el.id === connectingElement)?.x! + (elements.find(el => el.id === connectingElement)?.width! || 100) / 2}
-            y1={elements.find(el => el.id === connectingElement)?.y! + (elements.find(el => el.id === connectingElement)?.height! || 50) / 2}
-            x2={mousePosition.x / (zoomLevel / 100)}
-            y2={mousePosition.y / (zoomLevel / 100)}
-            stroke="#8b5cf6"
+            x1={elements.find(el => el.id === connectingElement)?.x! + 50}
+            y1={elements.find(el => el.id === connectingElement)?.y! + 40}
+            x2={mousePosition.x}
+            y2={mousePosition.y}
+            stroke="#10b981"
             strokeWidth="2"
             strokeDasharray="5,5"
           />
-        )}
-      </svg>
-
-      {/* Elements layer */}
-      <div className="elements-layer">
-        {elements.map(renderElement)}
-      </div>
+        </svg>
+      )}
     </div>
   );
 };

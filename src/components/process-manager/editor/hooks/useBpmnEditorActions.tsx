@@ -86,6 +86,7 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
       y,
       width: getElementWidth(elementType),
       height: getElementHeight(elementType),
+      position: { x, y }, // Fixed: Added missing position property
       properties: {}
     };
 
@@ -100,7 +101,11 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
 
   const handleElementUpdate = useCallback((elementId: string, updates: any) => {
     const newElements = elements.map(el => 
-      el.id === elementId ? { ...el, ...updates, position: { x: updates.x || el.x, y: updates.y || el.y } } : el
+      el.id === elementId ? { 
+        ...el, 
+        ...updates, 
+        position: { x: updates.x || el.x, y: updates.y || el.y } 
+      } : el
     );
     setElements(newElements);
   }, [elements, setElements]);
@@ -110,6 +115,8 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
       id: `Flow_${Date.now()}`,
       source: sourceId,
       target: targetId,
+      sourceId, // Fixed: Added missing sourceId property
+      targetId, // Fixed: Added missing targetId property
       type: 'sequence-flow',
       name: ''
     };
