@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BpmnCanvasEngine } from './canvas/BpmnCanvasEngine';
 
@@ -20,6 +21,7 @@ interface BpmnConnection {
   sourceId: string;
   targetId: string;
   type: string;
+  name?: string;
 }
 
 interface BpmnCanvasProps {
@@ -29,6 +31,7 @@ interface BpmnCanvasProps {
   selectedTool: string;
   zoomLevel: number;
   showGrid: boolean;
+  snapToGrid: boolean;
   connectingElement: string | null;
   mousePosition: { x: number; y: number };
   onElementSelect: (id: string | null) => void;
@@ -37,6 +40,7 @@ interface BpmnCanvasProps {
   onElementDragEnd: () => void;
   onElementUpdate: (elementId: string, updates: any) => void;
   onConnectionCreate: (sourceId: string, targetId: string) => void;
+  onCanvasClick: (e: React.MouseEvent) => void;
 }
 
 export const BpmnCanvas: React.FC<BpmnCanvasProps> = (props) => {

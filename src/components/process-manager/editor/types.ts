@@ -27,6 +27,7 @@ export interface BpmnConnection {
   source: string;
   target: string;
   type: string;
+  name?: string;
   waypoints?: Array<{ x: number; y: number }>;
 }
 

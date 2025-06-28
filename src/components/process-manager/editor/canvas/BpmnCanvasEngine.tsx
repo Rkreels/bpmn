@@ -49,10 +49,10 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
   const getElementBounds = (element: BpmnElement) => ({
     left: element.x,
     top: element.y,
-    right: element.x + element.width,
-    bottom: element.y + element.height,
-    centerX: element.x + element.width / 2,
-    centerY: element.y + element.height / 2
+    right: element.x + (element.width || 100),
+    bottom: element.y + (element.height || 50),
+    centerX: element.x + (element.width || 100) / 2,
+    centerY: element.y + (element.height || 50) / 2
   });
 
   const findConnectionPoints = (source: BpmnElement, target: BpmnElement) => {
@@ -183,8 +183,8 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
           position: 'absolute',
           left: element.x,
           top: element.y,
-          width: element.width,
-          height: element.height,
+          width: element.width || 100,
+          height: element.height || 50,
           transform: `scale(${zoomLevel / 100})`,
           transformOrigin: 'top left'
         }}
@@ -258,8 +258,8 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
         {/* Connection preview */}
         {connectingElement && selectedTool === 'connector' && (
           <line
-            x1={elements.find(el => el.id === connectingElement)?.x! + elements.find(el => el.id === connectingElement)?.width! / 2}
-            y1={elements.find(el => el.id === connectingElement)?.y! + elements.find(el => el.id === connectingElement)?.height! / 2}
+            x1={elements.find(el => el.id === connectingElement)?.x! + (elements.find(el => el.id === connectingElement)?.width! || 100) / 2}
+            y1={elements.find(el => el.id === connectingElement)?.y! + (elements.find(el => el.id === connectingElement)?.height! || 50) / 2}
             x2={mousePosition.x}
             y2={mousePosition.y}
             stroke="#8b5cf6"

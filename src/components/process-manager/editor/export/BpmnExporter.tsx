@@ -47,12 +47,12 @@ export class BpmnExporter {
           name: el.name,
           type: el.type,
           position: { x: el.x, y: el.y },
-          size: { width: el.width, height: el.height },
+          size: { width: el.width || 100, height: el.height || 50 },
           properties: el.properties || {}
         })),
         connections: connections.map(conn => ({
           id: conn.id,
-          name: conn.name,
+          name: conn.name || '',
           type: conn.type,
           source: conn.source,
           target: conn.target
@@ -126,7 +126,7 @@ export class BpmnExporter {
 
   private static elementToDiagram(element: BpmnElement): string {
     return `<bpmndi:BPMNShape id="${element.id}_di" bpmnElement="${element.id}">
-        <dc:Bounds x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" />
+        <dc:Bounds x="${element.x}" y="${element.y}" width="${element.width || 100}" height="${element.height || 50}" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>`;
   }
@@ -137,10 +137,10 @@ export class BpmnExporter {
     
     if (!sourceElement || !targetElement) return '';
     
-    const sourceX = sourceElement.x + sourceElement.width / 2;
-    const sourceY = sourceElement.y + sourceElement.height / 2;
-    const targetX = targetElement.x + targetElement.width / 2;
-    const targetY = targetElement.y + targetElement.height / 2;
+    const sourceX = sourceElement.x + (sourceElement.width || 100) / 2;
+    const sourceY = sourceElement.y + (sourceElement.height || 50) / 2;
+    const targetX = targetElement.x + (targetElement.width || 100) / 2;
+    const targetY = targetElement.y + (targetElement.height || 50) / 2;
     
     return `<bpmndi:BPMNEdge id="${connection.id}_di" bpmnElement="${connection.id}">
         <di:waypoint x="${sourceX}" y="${sourceY}" />
