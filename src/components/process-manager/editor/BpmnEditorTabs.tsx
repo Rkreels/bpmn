@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,10 +6,13 @@ import { EditorToolbar } from "./EditorToolbar";
 import { ElementTools } from "./ElementTools";
 import { BpmnCanvas } from "./BpmnCanvas";
 import { XmlSourceView } from "./XmlSourceView";
-import { SimulationView } from "./SimulationView";
 import { BpmnElementPalette } from "../BpmnElementPalette";
 import { ProcessTemplateSelector } from "../ProcessTemplateSelector";
-import { FileText, Layout } from "lucide-react";
+import { ProcessValidator } from "./validation/ProcessValidator";
+import { ProcessSimulator } from "./simulation/ProcessSimulator";
+import { BpmnExporter } from "./export/BpmnExporter";
+import { useToast } from "@/hooks/use-toast";
+import { FileText, Download, Share2, Layout } from "lucide-react";
 
 interface BpmnEditorTabsProps {
   activeTab: string;
@@ -104,6 +106,56 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
   onConnectionCreate
 }) => {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [highlightedElement, setHighlightedElement] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleExportBpmn = () => {
+    try {
+      const xml = BpmnExporter.exportToBpmn20Xml(elements, connections, 'Business Process');
+      const blob = new Blob([xml], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `process-${Date.now()}.bpmn`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "BPMN Export Complete",
+        description: "Process exported as BPMN 2.0 XML file"
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not export process model",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExportJson = () => {
+    try {
+      const json = BpmnExporter.exportToJson(elements, connections);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `process-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "JSON Export Complete",
+        description: "Process exported as JSON file"
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not export process model",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full min-h-[600px]">
@@ -115,6 +167,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
               <TabsTrigger value="preview">Preview</TabsTrigger>
               <TabsTrigger value="xml">XML</TabsTrigger>
               <TabsTrigger value="simulation">Simulation</TabsTrigger>
+              <TabsTrigger value="validation">Validation</TabsTrigger>
             </TabsList>
             
             <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
@@ -139,6 +192,16 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                 />
               </DialogContent>
             </Dialog>
+
+            <Button variant="outline" size="sm" onClick={handleExportBpmn}>
+              <Download className="h-4 w-4 mr-2" />
+              Export BPMN
+            </Button>
+
+            <Button variant="outline" size="sm" onClick={handleExportJson}>
+              <Share2 className="h-4 w-4 mr-2" />
+              Export JSON
+            </Button>
           </div>
           
           <EditorToolbar 
@@ -151,7 +214,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
             onToggleValidation={onToggleValidation}
             onSaveModel={onSaveModel}
             onExportXml={onExportXml}
-            onExportJson={onExportJson}
+            onExportJson={handleExportJson}
           />
         </div>
         
@@ -170,7 +233,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
               <BpmnElementPalette onAddElement={onAddElement} />
               
               <div 
-                className={`flex-1 overflow-auto relative ${showGrid ? 'bg-grid' : 'bg-slate-50'}`}
+                className={`flex-1 overflow-auto relative ${showGrid ? 'bg-grid-pattern' : 'bg-slate-50'}`}
                 style={{ height: 'calc(100% - 50px)' }}
                 onClick={onCanvasClick}
                 onMouseMove={onMouseMove}
@@ -178,10 +241,11 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                 <BpmnCanvas 
                   elements={elements}
                   connections={connections}
-                  selectedElement={selectedElement}
+                  selectedElement={highlightedElement || selectedElement}
                   selectedTool={selectedTool}
                   zoomLevel={zoomLevel}
                   showGrid={showGrid}
+                  snapToGrid={snapToGrid}
                   connectingElement={connectingElement}
                   mousePosition={mousePosition}
                   onElementSelect={onElementSelect}
@@ -190,6 +254,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                   onElementDragEnd={onElementDragEnd}
                   onElementUpdate={onElementUpdate}
                   onConnectionCreate={onConnectionCreate}
+                  onCanvasClick={onCanvasClick}
                 />
               </div>
               
@@ -291,21 +356,33 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
           
           <TabsContent value="xml" className="flex-1 h-full m-0 p-4">
             <XmlSourceView 
-              xmlSource={xmlSource}
+              xmlSource={BpmnExporter.exportToBpmn20Xml(elements, connections)}
               onXmlChange={onXmlChange}
             />
             
             <div className="mt-4 flex justify-between">
               <Button variant="outline" onClick={onImportClick}>Import XML</Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={onExportXml}>Export XML</Button>
+                <Button variant="outline" onClick={handleExportBpmn}>Export BPMN</Button>
                 <Button onClick={onSaveModel}>Apply Changes</Button>
               </div>
             </div>
           </TabsContent>
           
-          <TabsContent value="simulation" className="flex-1 flex flex-col p-4 h-full m-0">
-            <SimulationView />
+          <TabsContent value="simulation" className="flex-1 h-full m-0 p-4">
+            <ProcessSimulator 
+              elements={elements}
+              connections={connections}
+              onElementHighlight={setHighlightedElement}
+            />
+          </TabsContent>
+
+          <TabsContent value="validation" className="flex-1 h-full m-0 p-4">
+            <ProcessValidator 
+              elements={elements}
+              connections={connections}
+              onElementHighlight={setHighlightedElement}
+            />
           </TabsContent>
         </div>
       </div>
