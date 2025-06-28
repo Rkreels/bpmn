@@ -326,6 +326,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                           selectedTool="select"
                           zoomLevel={30}
                           showGrid={false}
+                          snapToGrid={false}
                           connectingElement={null}
                           mousePosition={{ x: 0, y: 0 }}
                           onElementSelect={() => {}}
@@ -334,6 +335,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                           onElementDragEnd={() => {}}
                           onElementUpdate={() => {}}
                           onConnectionCreate={() => {}}
+                          onCanvasClick={() => {}}
                         />
                       </div>
                     </div>
