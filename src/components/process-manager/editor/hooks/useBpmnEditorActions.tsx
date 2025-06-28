@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { BpmnElement, BpmnConnection, ElementProperties } from "../types";
 
@@ -109,8 +110,6 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
       id: `Flow_${Date.now()}`,
       source: sourceId,
       target: targetId,
-      sourceId,
-      targetId,
       type: 'sequence-flow',
       name: ''
     };
@@ -150,16 +149,16 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
   }, [zoomLevel, setZoomLevel]);
 
   const handleToggleGrid = useCallback(() => {
-    setShowGrid(prev => !prev);
-  }, [setShowGrid]);
+    setShowGrid(!snapToGrid);
+  }, [snapToGrid, setShowGrid]);
 
   const handleToggleValidation = useCallback(() => {
-    setShowValidation(prev => !prev);
+    setShowValidation(false);
   }, [setShowValidation]);
 
   const handleToggleSnapToGrid = useCallback(() => {
-    setSnapToGrid(prev => !prev);
-  }, [setSnapToGrid]);
+    setSnapToGrid(!snapToGrid);
+  }, [snapToGrid, setSnapToGrid]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
