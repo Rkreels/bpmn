@@ -7,7 +7,8 @@ import { BpmnElementPalette } from '../BpmnElementPalette';
 import { EditorToolbar } from './EditorToolbar';
 import { XmlSourceView } from './XmlSourceView';
 import { SimulationView } from './SimulationView';
-import { ZoomIn, ZoomOut, Grid, Play, Save, Download } from 'lucide-react';
+import { ZoomIn, ZoomOut, Grid, Play, Save, Download, Upload, Lock } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BpmnEditorTabsProps {
   activeTab: string;
@@ -25,6 +26,9 @@ interface BpmnEditorTabsProps {
   historyIndex: number;
   history: any[];
   snapToGrid: boolean;
+  canEdit: boolean;
+  canExport: boolean;
+  canImport: boolean;
   
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -55,13 +59,15 @@ interface BpmnEditorTabsProps {
 }
 
 export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = (props) => {
+  const { user } = useAuth();
+
   return (
-    <div className="w-full h-full">
-      <Tabs value={props.activeTab} onValueChange={props.setActiveTab} className="w-full h-full">
-        <div className="flex items-center justify-between p-4 border-b">
+    <div className="w-full h-full flex flex-col">
+      <Tabs value={props.activeTab} onValueChange={props.setActiveTab} className="w-full h-full flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b bg-white">
           <TabsList>
             <TabsTrigger value="editor">Visual Editor</TabsTrigger>
-            <TabsTrigger value="xml">XML Source</TabsTrigger>
+            <TabsTrigger value="xml" disabled={!props.canExport}>XML Source</TabsTrigger>
             <TabsTrigger value="simulation">Simulation</TabsTrigger>
           </TabsList>
           
@@ -69,7 +75,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = (props) => {
             <Button variant="outline" size="sm" onClick={props.onZoomOut}>
               <ZoomOut className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium">{props.zoomLevel}%</span>
+            <span className="text-sm font-medium min-w-[60px] text-center">{props.zoomLevel}%</span>
             <Button variant="outline" size="sm" onClick={props.onZoomIn}>
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -80,19 +86,34 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = (props) => {
             >
               <Grid className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={props.onSaveModel}>
-              <Save className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={props.onExportXml}>
-              <Download className="h-4 w-4" />
-            </Button>
+            {props.canEdit && (
+              <Button variant="outline" size="sm" onClick={props.onSaveModel}>
+                <Save className="h-4 w-4" />
+              </Button>
+            )}
+            {props.canExport && (
+              <Button variant="outline" size="sm" onClick={props.onExportXml}>
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            {props.canImport && (
+              <Button variant="outline" size="sm" onClick={props.onImportClick}>
+                <Upload className="h-4 w-4" />
+              </Button>
+            )}
+            {!props.canEdit && (
+              <div className="flex items-center text-orange-600 text-sm">
+                <Lock className="h-4 w-4 mr-1" />
+                Read Only
+              </div>
+            )}
           </div>
         </div>
 
-        <TabsContent value="editor" className="relative h-full">
-          <div className="flex h-full">
-            <BpmnElementPalette onAddElement={props.onAddElement} />
-            <div className="flex-1 relative">
+        <TabsContent value="editor" className="flex-1 flex h-full m-0 p-0">
+          <div className="flex h-full w-full">
+            {props.canEdit && <BpmnElementPalette onAddElement={props.onAddElement} />}
+            <div className="flex-1 relative h-full">
               <EditorToolbar
                 selectedTool={props.selectedTool}
                 onSelectTool={props.onSelectTool}
@@ -104,37 +125,41 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = (props) => {
                 onDuplicateElement={props.onDuplicateElement}
                 onDeleteElement={props.onDeleteElement}
                 hasSelectedElement={!!props.selectedElement}
+                canEdit={props.canEdit}
               />
-              <BpmnCanvas
-                elements={props.elements}
-                connections={props.connections}
-                selectedElement={props.selectedElement}
-                selectedTool={props.selectedTool}
-                zoomLevel={props.zoomLevel}
-                showGrid={props.showGrid}
-                snapToGrid={props.snapToGrid}
-                connectingElement={props.connectingElement}
-                mousePosition={props.mousePosition}
-                onElementSelect={props.onElementSelect}
-                onElementDragStart={props.onElementDragStart}
-                onElementDragMove={props.onElementDragMove}
-                onElementDragEnd={props.onElementDragEnd}
-                onElementUpdate={props.onElementUpdate}
-                onConnectionCreate={props.onConnectionCreate}
-                onCanvasClick={props.onCanvasClick}
-              />
+              <div className="w-full h-full">
+                <BpmnCanvas
+                  elements={props.elements}
+                  connections={props.connections}
+                  selectedElement={props.selectedElement}
+                  selectedTool={props.selectedTool}
+                  zoomLevel={props.zoomLevel}
+                  showGrid={props.showGrid}
+                  snapToGrid={props.snapToGrid}
+                  connectingElement={props.connectingElement}
+                  mousePosition={props.mousePosition}
+                  onElementSelect={props.onElementSelect}
+                  onElementDragStart={props.onElementDragStart}
+                  onElementDragMove={props.onElementDragMove}
+                  onElementDragEnd={props.onElementDragEnd}
+                  onElementUpdate={props.onElementUpdate}
+                  onConnectionCreate={props.onConnectionCreate}
+                  onCanvasClick={props.onCanvasClick}
+                />
+              </div>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="xml" className="h-full">
+        <TabsContent value="xml" className="flex-1 h-full m-0 p-0">
           <XmlSourceView 
             xmlSource={props.xmlSource}
             onXmlChange={props.onXmlChange}
+            readOnly={!props.canEdit}
           />
         </TabsContent>
 
-        <TabsContent value="simulation" className="h-full">
+        <TabsContent value="simulation" className="flex-1 h-full m-0 p-0">
           <SimulationView 
             elements={props.elements}
             connections={props.connections}

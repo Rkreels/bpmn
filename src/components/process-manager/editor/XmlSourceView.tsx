@@ -2,116 +2,88 @@
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Upload, FileText } from 'lucide-react';
+import { Copy, Download, Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface XmlSourceViewProps {
   xmlSource: string;
   onXmlChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  readOnly?: boolean;
 }
 
-export const XmlSourceView: React.FC<XmlSourceViewProps> = ({
-  xmlSource,
-  onXmlChange
+export const XmlSourceView: React.FC<XmlSourceViewProps> = ({ 
+  xmlSource, 
+  onXmlChange, 
+  readOnly = false 
 }) => {
-  const handleExportXml = () => {
-    const blob = new Blob([xmlSource || getDefaultXml()], { type: 'application/xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `process-model-${Date.now()}.bpmn`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  const { toast } = useToast();
 
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const content = event.target?.result as string;
-        // Simulate the textarea change event
-        const syntheticEvent = {
-          target: { value: content }
-        } as React.ChangeEvent<HTMLTextAreaElement>;
-        onXmlChange(syntheticEvent);
-      };
-      reader.readAsText(file);
+  const handleCopyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(xmlSource);
+      toast({
+        title: "Copied to Clipboard",
+        description: "XML source has been copied to clipboard"
+      });
+    } catch (err) {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy XML to clipboard",
+        variant: "destructive"
+      });
     }
   };
 
-  const getDefaultXml = () => {
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
-                  id="Definitions_1" 
-                  targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="Start">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:task id="Task_1" name="Sample Task">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:task>
-    <bpmn:endEvent id="EndEvent_1" name="End">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_1" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_1" targetRef="EndEvent_1" />
-  </bpmn:process>
-</bpmn:definitions>`;
+  const handleDownload = () => {
+    const blob = new Blob([xmlSource], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'process-model.bpmn';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Download Started",
+      description: "BPMN file download has started"
+    });
   };
 
   return (
-    <div className="h-full p-4">
-      <Card className="h-full">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              BPMN XML Source
-            </CardTitle>
-            <div className="flex gap-2">
-              <input
-                type="file"
-                accept=".bpmn,.xml"
-                onChange={handleImportFile}
-                className="hidden"
-                id="xml-file-input"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => document.getElementById('xml-file-input')?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportXml}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="h-full">
-          <Textarea
-            value={xmlSource || getDefaultXml()}
-            onChange={onXmlChange}
-            className="h-full font-mono text-sm resize-none"
-            placeholder="BPMN XML source code will appear here..."
-          />
-        </CardContent>
-      </Card>
+    <div className="h-full w-full flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center space-x-2">
+          <h3 className="text-lg font-semibold">XML Source</h3>
+          {readOnly && (
+            <span className="text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded">
+              Read Only
+            </span>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
+            <Copy className="h-4 w-4 mr-2" />
+            Copy
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownload}>
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex-1 p-4">
+        <Textarea
+          value={xmlSource}
+          onChange={onXmlChange}
+          readOnly={readOnly}
+          placeholder="BPMN XML source will appear here..."
+          className="w-full h-full font-mono text-sm resize-none"
+          style={{ minHeight: '500px' }}
+        />
+      </div>
     </div>
   );
 };

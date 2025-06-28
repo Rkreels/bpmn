@@ -9,35 +9,29 @@ interface MainLayoutProps {
   children: React.ReactNode;
   pageTitle: string;
   className?: string;
-  showPageTitle?: boolean;
+  fullHeight?: boolean;
 }
 
 export function MainLayout({ 
   children, 
   pageTitle, 
-  className, 
-  showPageTitle = true 
+  className,
+  fullHeight = false
 }: MainLayoutProps) {
   const isMobile = useIsMobile();
   
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full">
       <Sidebar />
       
       {/* Main content area that adjusts to sidebar */}
-      <div className={cn(
-        "flex-1 flex flex-col min-w-0 transition-all duration-300",
-        // Add left margin to account for sidebar on desktop
-        "md:ml-64"
-      )}>
-        <Header 
-          pageTitle={pageTitle}
-          showPageTitle={showPageTitle} 
-        />
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        <Header pageTitle={pageTitle} />
         
         <main className={cn(
-          "flex-1 overflow-auto",
-          isMobile ? "p-3" : "p-6",
+          "flex-1 overflow-hidden", // Changed from overflow-auto to overflow-hidden for canvas
+          fullHeight ? "h-full" : "min-h-0",
+          isMobile ? "p-3" : fullHeight ? "p-0" : "p-6", // No padding for full height canvas
           className
         )}>
           {children}
