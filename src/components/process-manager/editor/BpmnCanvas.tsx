@@ -1,33 +1,22 @@
 
-import React from "react";
-
-interface BpmnElement {
-  id: string;
-  type: string;
-  name: string;
-  position: { x: number; y: number };
-}
-
-interface BpmnConnection {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  type: string;
-}
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import { cn } from "@/lib/utils";
 
 interface BpmnCanvasProps {
-  elements: BpmnElement[];
-  connections: BpmnConnection[];
+  elements: any[];
+  connections: any[];
   selectedElement: string | null;
   selectedTool: string;
   zoomLevel: number;
   showGrid: boolean;
-  connectingElement?: string | null;
-  mousePosition?: { x: number; y: number };
-  onElementSelect: (elementId: string) => void;
+  connectingElement: string | null;
+  mousePosition: { x: number; y: number };
+  onElementSelect: (elementId: string | null) => void;
   onElementDragStart: (e: React.MouseEvent, elementId: string) => void;
   onElementDragMove: (e: React.MouseEvent) => void;
   onElementDragEnd: () => void;
+  onElementUpdate: (elementId: string, updates: any) => void;
+  onConnectionCreate: (sourceId: string, targetId: string) => void;
 }
 
 export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
@@ -37,326 +26,377 @@ export const BpmnCanvas: React.FC<BpmnCanvasProps> = ({
   selectedTool,
   zoomLevel,
   showGrid,
-  connectingElement = null,
-  mousePosition = { x: 0, y: 0 },
+  connectingElement,
+  mousePosition,
   onElementSelect,
   onElementDragStart,
   onElementDragMove,
   onElementDragEnd,
+  onElementUpdate,
+  onConnectionCreate
 }) => {
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [editingElement, setEditingElement] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
 
-  // Helper to get element center position
-  const getElementCenter = (element: BpmnElement) => {
-    if (!element || !element.position) {
-      return { x: 0, y: 0 }; // Safe fallback when element or position is undefined
+  const scale = zoomLevel / 100;
+
+  // Handle element click
+  const handleElementClick = useCallback((e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    
+    if (selectedTool === "connector" && connectingElement) {
+      if (connectingElement !== elementId) {
+        onConnectionCreate(connectingElement, elementId);
+      }
+      return;
     }
     
-    const elementType = element.type;
-    let centerX = element.position.x;
-    let centerY = element.position.y;
-    
-    if (elementType === 'task') {
-      centerX += 60; // half of typical task width
-      centerY += 40; // half of typical task height
-    } else if (elementType === 'gateway') {
-      centerX += 30; // half of typical gateway width
-      centerY += 30; // half of typical gateway height
-    } else {
-      // start/end events and others
-      centerX += 20; // half of typical event diameter
-      centerY += 20; // half of typical event diameter
+    if (selectedTool === "connector" && !connectingElement) {
+      onElementSelect(elementId);
+      return;
     }
     
-    return { x: centerX, y: centerY };
-  };
+    onElementSelect(elementId);
+  }, [selectedTool, connectingElement, onElementSelect, onConnectionCreate]);
 
-  // Helper functions to render elements based on their type
-  const renderElement = (element: BpmnElement) => {
-    if (!element || !element.position) {
-      console.error("Invalid element or missing position:", element);
-      return null; // Don't render if element or position is invalid
+  // Handle element double-click for text editing
+  const handleElementDoubleClick = useCallback((e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    const element = elements.find(el => el.id === elementId);
+    if (element) {
+      setEditingElement(elementId);
+      setEditingText(element.name || '');
     }
+  }, [elements]);
 
+  // Handle text edit completion
+  const handleTextEditComplete = useCallback(() => {
+    if (editingElement) {
+      onElementUpdate(editingElement, { name: editingText });
+      setEditingElement(null);
+      setEditingText("");
+    }
+  }, [editingElement, editingText, onElementUpdate]);
+
+  // Handle mouse down on element for dragging
+  const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string) => {
+    if (selectedTool !== "select") return;
+    
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const offsetX = e.clientX - rect.left - element.x * scale;
+    const offsetY = e.clientY - rect.top - element.y * scale;
+    
+    setDragOffset({ x: offsetX, y: offsetY });
+    setIsDragging(true);
+    onElementSelect(elementId);
+    onElementDragStart(e, elementId);
+  }, [selectedTool, elements, scale, onElementSelect, onElementDragStart]);
+
+  // Handle mouse move for dragging
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging || !selectedElement || selectedTool !== "select") return;
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const newX = Math.max(0, (e.clientX - rect.left - dragOffset.x) / scale);
+    const newY = Math.max(0, (e.clientY - rect.top - dragOffset.y) / scale);
+
+    onElementUpdate(selectedElement, { x: newX, y: newY });
+    onElementDragMove(e);
+  }, [isDragging, selectedElement, selectedTool, dragOffset, scale, onElementUpdate, onElementDragMove]);
+
+  // Handle mouse up to end dragging
+  const handleMouseUp = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false);
+      onElementDragEnd();
+    }
+  }, [isDragging, onElementDragEnd]);
+
+  // Add event listeners
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        handleMouseMove(e as any);
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      handleMouseUp();
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Render element based on type
+  const renderElement = (element: any) => {
     const isSelected = selectedElement === element.id;
-    const isCursorStyle = selectedTool === "connector" ? "crosshair" : 
-                          (selectedTool === "select" || selectedTool === "move" || selectedTool === "hand") ? "move" : "default";
+    const isConnecting = connectingElement === element.id;
+    const isEditing = editingElement === element.id;
     
-    const commonClasses = `absolute cursor-${isCursorStyle} ${isSelected ? "ring-2 ring-primary shadow-lg" : ""}`;
-    
-    switch(element.type) {
-      case "task":
+    const baseClasses = cn(
+      "absolute border-2 cursor-pointer transition-all duration-200 select-none",
+      isSelected && "border-blue-500 shadow-lg",
+      isConnecting && "border-green-500 bg-green-50",
+      !isSelected && !isConnecting && "border-gray-300 hover:border-gray-400"
+    );
+
+    const style = {
+      left: element.x * scale,
+      top: element.y * scale,
+      width: (element.width || 120) * scale,
+      height: (element.height || 80) * scale,
+      transform: `scale(1)`,
+    };
+
+    const renderContent = () => {
+      if (isEditing) {
         return (
-          <div 
-            key={element.id}
-            className={`${commonClasses} bg-white border rounded-md p-2 w-32 h-20 flex items-center justify-center text-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
+          <input
+            type="text"
+            value={editingText}
+            onChange={(e) => setEditingText(e.target.value)}
+            onBlur={handleTextEditComplete}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleTextEditComplete();
+              if (e.key === 'Escape') {
+                setEditingElement(null);
+                setEditingText("");
+              }
             }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
-          >
-            <span className="text-sm font-medium truncate max-w-[90%] break-words">{element.name}</span>
-          </div>
+            className="w-full h-full text-center text-xs bg-transparent border-none outline-none"
+            autoFocus
+          />
         );
-        
-      case "gateway":
+      }
+      
+      return (
+        <span className="text-xs font-medium text-center break-words px-1">
+          {element.name || `New ${element.type}`}
+        </span>
+      );
+    };
+
+    switch (element.type) {
+      case 'start-event':
         return (
-          <div 
+          <div
             key={element.id}
-            className={`${commonClasses}`}
-            style={{ 
-              left: element.position.x, 
-              top: element.position.y,
-              width: "60px",
-              height: "60px"
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
-            }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
+            className={cn(baseClasses, "rounded-full bg-green-100 flex items-center justify-center")}
+            style={style}
+            onClick={(e) => handleElementClick(e, element.id)}
+            onDoubleClick={(e) => handleElementDoubleClick(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
-            <div className="w-full h-full bg-white border transform rotate-45 flex items-center justify-center">
-              <span className="transform -rotate-45 text-center text-xs max-w-[70%] truncate">{element.name}</span>
-            </div>
-          </div>
-        );
-        
-      case "start-event":
-        return (
-          <div 
-            key={element.id}
-            className={`${commonClasses} bg-white border rounded-full w-12 h-12 flex items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
-            }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
-          >
-            <div className="text-xs truncate max-w-[80%] text-center">{element.name}</div>
-          </div>
-        );
-        
-      case "end-event":
-        return (
-          <div 
-            key={element.id}
-            className={`${commonClasses} bg-white border-2 border-black rounded-full w-12 h-12 flex items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
-            }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
-          >
-            <div className="text-xs truncate max-w-[80%] text-center">{element.name}</div>
-          </div>
-        );
-        
-      case "subprocess":
-        return (
-          <div 
-            key={element.id}
-            className={`${commonClasses} bg-white border-2 rounded-md p-2 w-40 h-32 flex items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
-            }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
-          >
-            <div className="text-sm font-medium truncate max-w-[90%] text-center">{element.name}</div>
+            {renderContent()}
           </div>
         );
       
-      case "dataobject":
+      case 'end-event':
         return (
-          <div 
+          <div
             key={element.id}
-            className={`${commonClasses} bg-white border rounded-md p-2 w-16 h-20 flex flex-col items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
-            }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
+            className={cn(baseClasses, "rounded-full bg-red-100 flex items-center justify-center border-4")}
+            style={style}
+            onClick={(e) => handleElementClick(e, element.id)}
+            onDoubleClick={(e) => handleElementDoubleClick(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
-            <div className="w-full h-full relative flex items-center justify-center">
-              <div className="absolute top-0 right-0 w-4 h-4 bg-white border-t border-r transform rotate-90"></div>
-              <span className="text-xs truncate max-w-[90%] text-center mt-2">{element.name}</span>
+            {renderContent()}
+          </div>
+        );
+      
+      case 'intermediate-event':
+        return (
+          <div
+            key={element.id}
+            className={cn(baseClasses, "rounded-full bg-yellow-100 flex items-center justify-center border-double border-4")}
+            style={style}
+            onClick={(e) => handleElementClick(e, element.id)}
+            onDoubleClick={(e) => handleElementDoubleClick(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
+          >
+            {renderContent()}
+          </div>
+        );
+      
+      case 'task':
+      case 'user-task':
+      case 'service-task':
+      case 'manual-task':
+        return (
+          <div
+            key={element.id}
+            className={cn(baseClasses, "rounded-md bg-blue-100 flex items-center justify-center p-2")}
+            style={style}
+            onClick={(e) => handleElementClick(e, element.id)}
+            onDoubleClick={(e) => handleElementDoubleClick(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
+          >
+            {renderContent()}
+            {element.type === 'user-task' && (
+              <div className="absolute top-1 left-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+            )}
+            {element.type === 'service-task' && (
+              <div className="absolute top-1 left-1 w-3 h-3 bg-purple-500 rounded-sm"></div>
+            )}
+          </div>
+        );
+      
+      case 'gateway':
+      case 'exclusive-gateway':
+      case 'parallel-gateway':
+      case 'inclusive-gateway':
+        return (
+          <div
+            key={element.id}
+            className={cn(baseClasses, "bg-yellow-100 flex items-center justify-center transform rotate-45")}
+            style={{
+              ...style,
+              width: (element.width || 50) * scale,
+              height: (element.height || 50) * scale,
+            }}
+            onClick={(e) => handleElementClick(e, element.id)}
+            onDoubleClick={(e) => handleElementDoubleClick(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
+          >
+            <div className="transform -rotate-45 text-xs font-bold">
+              {element.type === 'exclusive-gateway' ? 'X' : 
+               element.type === 'parallel-gateway' ? '+' : 
+               element.type === 'inclusive-gateway' ? 'O' : '?'}
             </div>
           </div>
         );
-        
-      case "pool":
+      
+      case 'subprocess':
         return (
-          <div 
+          <div
             key={element.id}
-            className={`${commonClasses} bg-white border rounded-sm p-2 w-64 h-24 flex items-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
-            }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
+            className={cn(baseClasses, "rounded-md bg-gray-100 flex items-center justify-center p-2 border-dashed")}
+            style={style}
+            onClick={(e) => handleElementClick(e, element.id)}
+            onDoubleClick={(e) => handleElementDoubleClick(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
-            <div className="w-8 h-full border-r flex items-center justify-center -ml-2 -mt-2 -mb-2">
-              <span className="transform -rotate-90 text-xs whitespace-nowrap">{element.name}</span>
+            {renderContent()}
+            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
+              <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+              <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+              <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
             </div>
           </div>
         );
-        
+      
       default:
         return (
-          <div 
+          <div
             key={element.id}
-            className={`${commonClasses} bg-white border rounded-md p-2 w-24 h-16 flex items-center justify-center`}
-            style={{ left: element.position.x, top: element.position.y }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onElementSelect(element.id);
-            }}
-            onMouseDown={(e) => onElementDragStart(e, element.id)}
-            onMouseMove={onElementDragMove}
-            onMouseUp={onElementDragEnd}
-            onMouseLeave={onElementDragEnd}
+            className={cn(baseClasses, "rounded-md bg-gray-100 flex items-center justify-center p-2")}
+            style={style}
+            onClick={(e) => handleElementClick(e, element.id)}
+            onDoubleClick={(e) => handleElementDoubleClick(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
-            <span className="text-xs truncate max-w-[90%] text-center">{element.name}</span>
+            {renderContent()}
           </div>
         );
     }
   };
 
-  // Render connections between elements
-  const renderConnections = () => {
-    return connections.map(conn => {
-      const source = elements.find(el => el.id === conn.sourceId);
-      const target = elements.find(el => el.id === conn.targetId);
-      
-      if (source && target) {
-        const sourceCenter = getElementCenter(source);
-        const targetCenter = getElementCenter(target);
-        
-        return (
-          <svg 
-            key={conn.id} 
-            className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          >
-            <line
-              x1={sourceCenter.x}
-              y1={sourceCenter.y}
-              x2={targetCenter.x}
-              y2={targetCenter.y}
-              stroke="black"
-              strokeWidth={conn.type === "message-flow" ? 1 : 2}
-              strokeDasharray={conn.type === "message-flow" ? "5,5" : ""}
-              markerEnd="url(#arrowhead)"
-            />
-            <defs>
-              <marker
-                id="arrowhead"
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-              >
-                <polygon points="0 0, 10 3.5, 0 7" />
-              </marker>
-            </defs>
-          </svg>
-        );
-      }
-      return null;
-    });
-  };
+  // Render connection line
+  const renderConnection = (connection: any) => {
+    const sourceElement = elements.find(el => el.id === connection.source);
+    const targetElement = elements.find(el => el.id === connection.target);
+    
+    if (!sourceElement || !targetElement) return null;
 
-  // Render temporary connection when creating a new connection
-  const renderTemporaryConnection = () => {
-    if (connectingElement) {
-      const source = elements.find(el => el.id === connectingElement);
-      
-      if (source) {
-        const sourceCenter = getElementCenter(source);
-        
-        return (
-          <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            <line
-              x1={sourceCenter.x}
-              y1={sourceCenter.y}
-              x2={mousePosition.x}
-              y2={mousePosition.y}
-              stroke="black"
-              strokeWidth={2}
-              strokeDasharray="5,5"
-              markerEnd="url(#temp-arrowhead)"
+    const sourceX = (sourceElement.x + (sourceElement.width || 120) / 2) * scale;
+    const sourceY = (sourceElement.y + (sourceElement.height || 80) / 2) * scale;
+    const targetX = (targetElement.x + (targetElement.width || 120) / 2) * scale;
+    const targetY = (targetElement.y + (targetElement.height || 80) / 2) * scale;
+
+    return (
+      <svg
+        key={connection.id}
+        className="absolute top-0 left-0 pointer-events-none"
+        style={{ width: '100%', height: '100%' }}
+      >
+        <defs>
+          <marker
+            id={`arrowhead-${connection.id}`}
+            markerWidth="10"
+            markerHeight="7"
+            refX="9"
+            refY="3.5"
+            orient="auto"
+          >
+            <polygon
+              points="0 0, 10 3.5, 0 7"
+              fill="#374151"
             />
-            <defs>
-              <marker
-                id="temp-arrowhead"
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-              >
-                <polygon points="0 0, 10 3.5, 0 7" fill="black" />
-              </marker>
-            </defs>
-          </svg>
-        );
-      }
-    }
-    return null;
+          </marker>
+        </defs>
+        <line
+          x1={sourceX}
+          y1={sourceY}
+          x2={targetX}
+          y2={targetY}
+          stroke="#374151"
+          strokeWidth="2"
+          markerEnd={`url(#arrowhead-${connection.id})`}
+        />
+      </svg>
+    );
   };
 
   return (
-    <div 
-      className={`flex-1 overflow-auto relative ${showGrid ? 'bg-grid' : 'bg-slate-50'}`}
-      style={{ height: 'calc(100% - 50px)' }}
+    <div
+      ref={canvasRef}
+      className={cn(
+        "relative w-full h-full overflow-hidden",
+        showGrid && "bg-grid-pattern"
+      )}
+      style={{
+        backgroundSize: `${20 * scale}px ${20 * scale}px`,
+        cursor: selectedTool === "hand" ? "grab" : selectedTool === "connector" ? "crosshair" : "default"
+      }}
+      onClick={() => onElementSelect(null)}
     >
-      <div
-        className="h-full w-full relative"
-        style={{ 
-          transform: `scale(${zoomLevel/100})`,
-          transformOrigin: 'top left',
-          transition: 'transform 0.2s ease-out',
-          minWidth: '2000px',
-          minHeight: '1000px'
-        }}
-      >
-        {/* Render connections */}
-        {renderConnections()}
-        
-        {/* Render temporary connection when creating a new one */}
-        {renderTemporaryConnection()}
-        
-        {/* Render elements */}
-        {elements.map(element => renderElement(element))}
-      </div>
+      {/* Render connections */}
+      {connections.map(renderConnection)}
+      
+      {/* Render elements */}
+      {elements.map(renderElement)}
+      
+      {/* Connection preview line */}
+      {connectingElement && (
+        <svg className="absolute top-0 left-0 pointer-events-none w-full h-full">
+          <line
+            x1={(elements.find(el => el.id === connectingElement)?.x || 0) * scale + 60}
+            y1={(elements.find(el => el.id === connectingElement)?.y || 0) * scale + 40}
+            x2={mousePosition.x}
+            y2={mousePosition.y}
+            stroke="#3b82f6"
+            strokeWidth="2"
+            strokeDasharray="5,5"
+          />
+        </svg>
+      )}
     </div>
   );
 };

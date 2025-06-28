@@ -83,7 +83,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         history={state.history}
         snapToGrid={state.snapToGrid}
         
-        // Handlers
+        // Enhanced handlers
         onZoomIn={actions.handleZoomIn}
         onZoomOut={actions.handleZoomOut}
         onToggleGrid={actions.handleToggleGrid}
@@ -108,6 +108,8 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onToggleSnapToGrid={actions.handleToggleSnapToGrid}
         onImportClick={actions.handleImportClick}
         onLoadTemplate={state.loadTemplate}
+        onElementUpdate={actions.handleElementUpdate}
+        onConnectionCreate={actions.handleConnectionCreate}
       />
       
       {/* Element Properties Dialog */}

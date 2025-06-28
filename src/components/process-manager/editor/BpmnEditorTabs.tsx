@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ interface BpmnEditorTabsProps {
   onExportJson: () => void;
   onXmlChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onCanvasClick: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onElementSelect: (elementId: string) => void;
+  onElementSelect: (elementId: string | null) => void;
   onElementDragStart: (e: React.MouseEvent, elementId: string) => void;
   onElementDragMove: (e: React.MouseEvent) => void;
   onElementDragEnd: () => void;
@@ -53,6 +54,8 @@ interface BpmnEditorTabsProps {
   onToggleSnapToGrid: () => void;
   onImportClick: () => void;
   onLoadTemplate: (templateId: string) => void;
+  onElementUpdate: (elementId: string, updates: any) => void;
+  onConnectionCreate: (sourceId: string, targetId: string) => void;
 }
 
 export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
@@ -96,7 +99,9 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
   onRedo,
   onToggleSnapToGrid,
   onImportClick,
-  onLoadTemplate
+  onLoadTemplate,
+  onElementUpdate,
+  onConnectionCreate
 }) => {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
 
@@ -183,6 +188,8 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                   onElementDragStart={onElementDragStart}
                   onElementDragMove={onElementDragMove}
                   onElementDragEnd={onElementDragEnd}
+                  onElementUpdate={onElementUpdate}
+                  onConnectionCreate={onConnectionCreate}
                 />
               </div>
               
@@ -225,7 +232,7 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                         Selected: {elements.find(el => el.id === selectedElement)?.name || selectedElement}
                       </span>
                     )}
-                    <span className="text-xs text-muted-foreground">Last saved: {new Date().toLocaleString()}</span>
+                    <span className="text-xs text-muted-foreground">Auto-saved</span>
                   </div>
                 </div>
               </div>
@@ -246,20 +253,23 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = ({
                         </p>
                       </div>
                       
-                      <div className="flex items-center justify-center gap-8 flex-wrap">
-                        {elements.slice(0, 5).map((element, index) => (
-                          <div key={element.id} className="flex flex-col items-center">
-                            <div className="w-16 h-12 rounded-md border-2 border-blue-500 flex items-center justify-center text-xs mb-2 bg-blue-50">
-                              {element.type.includes('start') ? 'START' : 
-                               element.type.includes('end') ? 'END' : 
-                               element.type.includes('gateway') ? 'GATE' : 'TASK'}
-                            </div>
-                            <span className="text-xs text-center max-w-20 truncate">{element.name}</span>
-                            {index < elements.length - 1 && index < 4 && (
-                              <div className="w-8 h-0.5 bg-blue-500 mt-2"></div>
-                            )}
-                          </div>
-                        ))}
+                      <div className="relative w-full h-64 border rounded bg-gray-50 overflow-hidden">
+                        <BpmnCanvas
+                          elements={elements.map(el => ({ ...el, x: el.x * 0.3, y: el.y * 0.3 }))}
+                          connections={connections}
+                          selectedElement={null}
+                          selectedTool="select"
+                          zoomLevel={30}
+                          showGrid={false}
+                          connectingElement={null}
+                          mousePosition={{ x: 0, y: 0 }}
+                          onElementSelect={() => {}}
+                          onElementDragStart={() => {}}
+                          onElementDragMove={() => {}}
+                          onElementDragEnd={() => {}}
+                          onElementUpdate={() => {}}
+                          onConnectionCreate={() => {}}
+                        />
                       </div>
                     </div>
                   ) : (

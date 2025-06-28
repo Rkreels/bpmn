@@ -84,42 +84,173 @@ export const useBpmnEditorActions = ({
   toast: (props: ToastProps) => void;
   speakText: (text: string) => void;
 }) => {
+  
+  // Get default dimensions for element type
+  const getElementDimensions = (type: string) => {
+    switch (type) {
+      case 'start-event':
+      case 'end-event':
+      case 'intermediate-event':
+      case 'message-start':
+      case 'timer-start':
+        return { width: 40, height: 40 };
+      case 'exclusive-gateway':
+      case 'parallel-gateway':
+      case 'inclusive-gateway':
+      case 'event-gateway':
+        return { width: 50, height: 50 };
+      case 'task':
+      case 'user-task':
+      case 'service-task':
+      case 'manual-task':
+      case 'script-task':
+      case 'send-task':
+      case 'receive-task':
+      case 'business-rule-task':
+        return { width: 120, height: 80 };
+      case 'subprocess':
+      case 'call-activity':
+      case 'event-subprocess':
+        return { width: 160, height: 100 };
+      case 'data-object':
+      case 'data-store':
+        return { width: 60, height: 80 };
+      case 'pool':
+        return { width: 600, height: 200 };
+      case 'lane':
+        return { width: 600, height: 100 };
+      default:
+        return { width: 120, height: 80 };
+    }
+  };
+
   // Add a new element to the diagram
   const handleAddElement = useCallback((type: string, x: number = 250, y: number = 250) => {
     const id = uuidv4();
+    const dimensions = getElementDimensions(type);
+    
     const newElement = {
       id,
       type,
       x: snapToGrid ? Math.round(x / 20) * 20 : x,
       y: snapToGrid ? Math.round(y / 20) * 20 : y,
-      width: type === 'task' ? 120 : type === 'gateway' ? 50 : 40,
-      height: type === 'task' ? 80 : type === 'gateway' ? 50 : 40,
-      name: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+      width: dimensions.width,
+      height: dimensions.height,
+      name: `New ${type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}`,
       position: {
         x: snapToGrid ? Math.round(x / 20) * 20 : x,
         y: snapToGrid ? Math.round(y / 20) * 20 : y
+      },
+      // Add default properties for different element types
+      properties: {
+        documentation: '',
+        assignee: type.includes('user') ? 'User' : '',
+        dueDate: '',
+        implementation: type.includes('service') ? 'Service' : '',
+        color: '#ffffff'
       }
     };
     
-    setElements(prev => [...prev, newElement]);
+    const newElements = [...elements, newElement];
+    setElements(newElements);
     setSelectedElement(id);
-    saveToHistory([...elements, newElement], connections);
+    saveToHistory(newElements, connections);
     
     if (isVoiceEnabled) {
-      speakText(`Added new ${type} element`);
+      speakText(`Added new ${type.replace('-', ' ')} element`);
     }
     
     toast({
       title: "Element Added",
-      description: `New ${type} has been added to the diagram.`,
+      description: `New ${type.replace('-', ' ')} has been added to the diagram.`,
     });
     
     return id;
   }, [elements, connections, snapToGrid, saveToHistory, setElements, setSelectedElement, toast, isVoiceEnabled, speakText]);
 
+  // Update element properties
+  const handleElementUpdate = useCallback((elementId: string, updates: any) => {
+    const newElements = elements.map(el => 
+      el.id === elementId 
+        ? { 
+            ...el, 
+            ...updates,
+            position: updates.x !== undefined || updates.y !== undefined 
+              ? { x: updates.x ?? el.x, y: updates.y ?? el.y }
+              : el.position
+          } 
+        : el
+    );
+    
+    setElements(newElements);
+    
+    // Don't save to history for position updates (too frequent)
+    if (!updates.x && !updates.y) {
+      saveToHistory(newElements, connections);
+    }
+  }, [elements, connections, setElements, saveToHistory]);
+
+  // Create connection between elements
+  const handleConnectionCreate = useCallback((sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    
+    // Check if connection already exists
+    const existingConnection = connections.find(
+      conn => (conn.source === sourceId && conn.target === targetId) ||
+              (conn.source === targetId && conn.target === sourceId)
+    );
+    
+    if (existingConnection) {
+      toast({
+        title: "Connection Exists",
+        description: "A connection between these elements already exists.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const id = uuidv4();
+    const newConnection = {
+      id,
+      source: sourceId,
+      target: targetId,
+      sourceId: sourceId,
+      targetId: targetId,
+      type: 'sequence-flow',
+    };
+    
+    const newConnections = [...connections, newConnection];
+    setConnections(newConnections);
+    setConnectingElement(null);
+    setSelectedTool('select');
+    saveToHistory(elements, newConnections);
+    
+    if (isVoiceEnabled) {
+      speakText('Connection created successfully');
+    }
+    
+    toast({
+      title: "Connection Created",
+      description: "A new connection has been added between elements.",
+    });
+  }, [connections, elements, saveToHistory, setConnections, setConnectingElement, setSelectedTool, toast, isVoiceEnabled, speakText]);
+
   // Select an element in the diagram
   const handleSelectElement = useCallback((id: string | null) => {
     setSelectedElement(id);
+    
+    if (selectedTool === "connector" && id) {
+      if (connectingElement && connectingElement !== id) {
+        handleConnectionCreate(connectingElement, id);
+        return;
+      } else if (!connectingElement) {
+        setConnectingElement(id);
+        if (isVoiceEnabled) {
+          speakText('Starting connection. Select target element to connect.');
+        }
+        return;
+      }
+    }
     
     if (id) {
       const element = elements.find(el => el.id === id);
@@ -128,16 +259,16 @@ export const useBpmnEditorActions = ({
           id: element.id,
           type: element.type,
           name: element.name || '',
-          documentation: element.documentation || '',
-          assignee: element.assignee || '',
-          dueDate: element.dueDate || '',
-          implementation: element.implementation || '',
-          description: element.description || '',
-          color: element.color || '#ffffff',
+          documentation: element.properties?.documentation || '',
+          assignee: element.properties?.assignee || '',
+          dueDate: element.properties?.dueDate || '',
+          implementation: element.properties?.implementation || '',
+          description: element.properties?.description || '',
+          color: element.properties?.color || '#ffffff',
         });
         
         if (isVoiceEnabled) {
-          speakText(`Selected ${element.type} element: ${element.name || 'unnamed'}`);
+          speakText(`Selected ${element.type.replace('-', ' ')} element: ${element.name || 'unnamed'}`);
         }
       }
     } else {
@@ -153,93 +284,33 @@ export const useBpmnEditorActions = ({
         color: '#ffffff',
       });
     }
-  }, [elements, setSelectedElement, setElementProperties, isVoiceEnabled, speakText]);
-
-  // Start connecting elements
-  const handleStartConnecting = useCallback((id: string) => {
-    setConnectingElement(id);
-    setSelectedTool('connector');
-    
-    if (isVoiceEnabled) {
-      speakText('Starting connection. Select target element to connect.');
-    }
-  }, [setConnectingElement, setSelectedTool, isVoiceEnabled, speakText]);
-
-  // Complete connection between elements
-  const handleCompleteConnection = useCallback((targetId: string) => {
-    if (connectingElement && connectingElement !== targetId) {
-      const id = uuidv4();
-      const newConnection = {
-        id,
-        source: connectingElement,
-        target: targetId,
-        sourceId: connectingElement,
-        targetId: targetId,
-        type: 'sequence',
-      };
-      
-      setConnections(prev => [...prev, newConnection]);
-      setConnectingElement(null);
-      setSelectedTool('select');
-      saveToHistory(elements, [...connections, newConnection]);
-      
-      if (isVoiceEnabled) {
-        speakText('Connection created');
-      }
-      
-      toast({
-        title: "Connection Created",
-        description: "A new connection has been added between elements.",
-      });
-    }
-  }, [connectingElement, elements, connections, saveToHistory, setConnections, setConnectingElement, setSelectedTool, toast, isVoiceEnabled, speakText]);
+  }, [elements, selectedTool, connectingElement, setSelectedElement, setElementProperties, setConnectingElement, handleConnectionCreate, isVoiceEnabled, speakText]);
 
   // Handle element dragging start
-  const handleStartDrag = useCallback((id: string, x: number, y: number) => {
-    setSelectedElement(id);
-    setIsDragging(true);
-    setDragStartPos({ x, y });
+  const handleElementDragStart = useCallback((e: React.MouseEvent, elementId: string) => {
+    if (selectedTool !== 'select') return;
     
-    const element = elements.find(el => el.id === id);
-    if (element) {
-      setCurrentElementPosition({ x: element.x, y: element.y });
-    }
-  }, [elements, setSelectedElement, setIsDragging, setDragStartPos, setCurrentElementPosition]);
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    setSelectedElement(elementId);
+    setIsDragging(true);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+    setCurrentElementPosition({ x: element.x, y: element.y });
+  }, [selectedTool, elements, setSelectedElement, setIsDragging, setDragStartPos, setCurrentElementPosition]);
 
   // Handle element dragging
-  const handleDrag = useCallback((x: number, y: number) => {
-    if (isDragging && dragStartPos && currentElementPosition && selectedElement) {
-      const deltaX = x - dragStartPos.x;
-      const deltaY = y - dragStartPos.y;
-      
-      const newX = currentElementPosition.x + deltaX;
-      const newY = currentElementPosition.y + deltaY;
-      
-      const snappedX = snapToGrid ? Math.round(newX / 20) * 20 : newX;
-      const snappedY = snapToGrid ? Math.round(newY / 20) * 20 : newY;
-      
-      setElements(prev => prev.map(el => 
-        el.id === selectedElement 
-          ? { 
-              ...el, 
-              x: snappedX, 
-              y: snappedY, 
-              position: { 
-                x: snappedX, 
-                y: snappedY 
-              } 
-            } 
-          : el
-      ));
-    }
-  }, [isDragging, dragStartPos, currentElementPosition, selectedElement, snapToGrid, setElements]);
+  const handleElementDragMove = useCallback((e: React.MouseEvent) => {
+    // This will be handled by the canvas component
+  }, []);
 
   // Handle element dragging end
-  const handleEndDrag = useCallback(() => {
+  const handleElementDragEnd = useCallback(() => {
     if (isDragging && selectedElement) {
       setIsDragging(false);
       setDragStartPos(null);
       setCurrentElementPosition(null);
+      // Save to history after drag is complete
       saveToHistory(elements, connections);
     }
   }, [isDragging, selectedElement, elements, connections, saveToHistory, setIsDragging, setDragStartPos, setCurrentElementPosition]);
@@ -274,39 +345,27 @@ export const useBpmnEditorActions = ({
   // Update element properties
   const handleUpdateElementProperties = useCallback((props: ElementProperties) => {
     if (props.id) {
-      setElements(prev => prev.map(el => 
+      const newElements = elements.map(el => 
         el.id === props.id 
           ? { 
               ...el, 
               name: props.name,
-              documentation: props.documentation,
-              assignee: props.assignee,
-              dueDate: props.dueDate,
-              implementation: props.implementation,
-              description: props.description,
-              color: props.color
-            } 
-          : el
-      ));
-      
-      setIsEditDialogOpen(false);
-      saveToHistory(
-        elements.map(el => 
-          el.id === props.id 
-            ? { 
-                ...el, 
-                name: props.name,
+              properties: {
+                ...el.properties,
                 documentation: props.documentation,
                 assignee: props.assignee,
                 dueDate: props.dueDate,
                 implementation: props.implementation,
                 description: props.description,
                 color: props.color
-              } 
-            : el
-        ),
-        connections
+              }
+            } 
+          : el
       );
+      
+      setElements(newElements);
+      setIsEditDialogOpen(false);
+      saveToHistory(newElements, connections);
       
       if (isVoiceEnabled) {
         speakText('Element properties updated');
@@ -328,17 +387,52 @@ export const useBpmnEditorActions = ({
           id: element.id,
           type: element.type,
           name: element.name || '',
-          documentation: element.documentation || '',
-          assignee: element.assignee || '',
-          dueDate: element.dueDate || '',
-          implementation: element.implementation || '',
-          description: element.description || '',
-          color: element.color || '#ffffff',
+          documentation: element.properties?.documentation || '',
+          assignee: element.properties?.assignee || '',
+          dueDate: element.properties?.dueDate || '',
+          implementation: element.properties?.implementation || '',
+          description: element.properties?.description || '',
+          color: element.properties?.color || '#ffffff',
         });
         setIsEditDialogOpen(true);
       }
     }
   }, [selectedElement, elements, setElementProperties, setIsEditDialogOpen]);
+
+  // Duplicate element
+  const handleDuplicateElement = useCallback(() => {
+    if (selectedElement) {
+      const elementToDuplicate = elements.find(el => el.id === selectedElement);
+      if (elementToDuplicate) {
+        const id = uuidv4();
+        const newElement = {
+          ...elementToDuplicate,
+          id,
+          x: elementToDuplicate.x + 50,
+          y: elementToDuplicate.y + 50,
+          name: `Copy of ${elementToDuplicate.name}`,
+          position: {
+            x: elementToDuplicate.x + 50,
+            y: elementToDuplicate.y + 50
+          }
+        };
+        
+        const newElements = [...elements, newElement];
+        setElements(newElements);
+        setSelectedElement(id);
+        saveToHistory(newElements, connections);
+        
+        if (isVoiceEnabled) {
+          speakText('Element duplicated');
+        }
+        
+        toast({
+          title: "Element Duplicated",
+          description: "A copy of the selected element has been created.",
+        });
+      }
+    }
+  }, [selectedElement, elements, connections, setElements, setSelectedElement, saveToHistory, toast, isVoiceEnabled, speakText]);
 
   // Zoom in
   const handleZoomIn = useCallback(() => {
@@ -403,31 +497,55 @@ export const useBpmnEditorActions = ({
 
   // Export XML
   const handleExportXml = useCallback(() => {
-    // This is a simplified example - in a real app, you'd generate actual BPMN XML
-    const xml = `
-      <?xml version="1.0" encoding="UTF-8"?>
-      <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL">
-        <bpmn:process id="Process_1">
-          ${elements.map(el => `<bpmn:${el.type} id="${el.id}" name="${el.name || ''}" />`).join('\n')}
-          ${connections.map(conn => 
-            `<bpmn:sequenceFlow id="${conn.id}" sourceRef="${conn.source}" targetRef="${conn.target}" />`
-          ).join('\n')}
-        </bpmn:process>
-      </bpmn:definitions>
-    `;
+    // Generate proper BPMN XML
+    const processElements = elements.map(el => {
+      switch (el.type) {
+        case 'start-event':
+          return `    <bpmn:startEvent id="${el.id}" name="${el.name || ''}">
+      <bpmn:outgoing>${connections.filter(c => c.source === el.id).map(c => c.id).join('</bpmn:outgoing>\n      <bpmn:outgoing>')}</bpmn:outgoing>
+    </bpmn:startEvent>`;
+        case 'end-event':
+          return `    <bpmn:endEvent id="${el.id}" name="${el.name || ''}">
+      <bpmn:incoming>${connections.filter(c => c.target === el.id).map(c => c.id).join('</bpmn:incoming>\n      <bpmn:incoming>')}</bpmn:incoming>
+    </bpmn:endEvent>`;
+        case 'task':
+        case 'user-task':
+        case 'service-task':
+          return `    <bpmn:${el.type.replace('-', '')} id="${el.id}" name="${el.name || ''}">
+      <bpmn:incoming>${connections.filter(c => c.target === el.id).map(c => c.id).join('</bpmn:incoming>\n      <bpmn:incoming>')}</bpmn:incoming>
+      <bpmn:outgoing>${connections.filter(c => c.source === el.id).map(c => c.id).join('</bpmn:outgoing>\n      <bpmn:outgoing>')}</bpmn:outgoing>
+    </bpmn:${el.type.replace('-', '')}>`;
+        default:
+          return `    <bpmn:task id="${el.id}" name="${el.name || ''}" />`;
+      }
+    }).join('\n');
+
+    const sequenceFlows = connections.map(conn => 
+      `    <bpmn:sequenceFlow id="${conn.id}" sourceRef="${conn.source}" targetRef="${conn.target}" />`
+    ).join('\n');
+    
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_1" isExecutable="false">
+${processElements}
+${sequenceFlows}
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+${elements.map(el => `      <bpmndi:BPMNShape id="${el.id}_di" bpmnElement="${el.id}">
+        <dc:Bounds x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" />
+      </bpmndi:BPMNShape>`).join('\n')}
+${connections.map(conn => `      <bpmndi:BPMNEdge id="${conn.id}_di" bpmnElement="${conn.id}">
+        <di:waypoint x="${elements.find(el => el.id === conn.source)?.x + 60}" y="${elements.find(el => el.id === conn.source)?.y + 40}" />
+        <di:waypoint x="${elements.find(el => el.id === conn.target)?.x + 60}" y="${elements.find(el => el.id === conn.target)?.y + 40}" />
+      </bpmndi:BPMNEdge>`).join('\n')}
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>`;
     
     setXmlSource(xml);
     
-    if (isVoiceEnabled) {
-      speakText('XML exported');
-    }
-    
-    toast({
-      title: "XML Exported",
-      description: "BPMN XML has been generated successfully.",
-    });
-    
-    // In a real app, you might trigger a download here
+    // Download the file
     const blob = new Blob([xml], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -437,6 +555,15 @@ export const useBpmnEditorActions = ({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    if (isVoiceEnabled) {
+      speakText('BPMN XML exported successfully');
+    }
+    
+    toast({
+      title: "XML Exported",
+      description: "BPMN XML has been generated and downloaded successfully.",
+    });
   }, [elements, connections, setXmlSource, toast, isVoiceEnabled, speakText]);
 
   // Export JSON
@@ -446,7 +573,9 @@ export const useBpmnEditorActions = ({
       connections,
       metadata: {
         exportedAt: new Date().toISOString(),
-        version: "1.0"
+        version: "2.0",
+        elementCount: elements.length,
+        connectionCount: connections.length
       }
     };
     
@@ -462,7 +591,7 @@ export const useBpmnEditorActions = ({
     URL.revokeObjectURL(url);
     
     if (isVoiceEnabled) {
-      speakText('JSON exported');
+      speakText('Process data exported as JSON');
     }
     
     toast({
@@ -476,7 +605,7 @@ export const useBpmnEditorActions = ({
     setXmlSource(e.target.value);
   }, [setXmlSource]);
 
-  // Open the import dialog
+  // Open import dialog
   const handleImportClick = useCallback(() => {
     setIsImportDialogOpen(true);
     setImportSource('');
@@ -486,110 +615,61 @@ export const useBpmnEditorActions = ({
     }
   }, [setIsImportDialogOpen, setImportSource, isVoiceEnabled, speakText]);
 
-  // Import XML
-  const handleImportConfirm = useCallback((xml: string) => {
+  // Import XML/JSON
+  const handleImportConfirm = useCallback((source: string) => {
     try {
-      // This is a simplified example - in a real app, you'd parse actual BPMN XML
-      // For now, we'll just set some dummy data
-      const newElements = [
-        { id: 'start1', type: 'start-event', x: 100, y: 150, width: 40, height: 40, name: 'Start Event', position: { x: 100, y: 150 } },
-        { id: 'task1', type: 'task', x: 200, y: 130, width: 120, height: 80, name: 'User Task', position: { x: 200, y: 130 } },
-        { id: 'gateway1', type: 'gateway', x: 380, y: 150, width: 50, height: 50, name: 'Gateway', position: { x: 380, y: 150 } },
-        { id: 'end1', type: 'end-event', x: 500, y: 150, width: 40, height: 40, name: 'End Event', position: { x: 500, y: 150 } },
-      ];
-      
-      const newConnections = [
-        { id: 'conn1', source: 'start1', target: 'task1', type: 'sequence', sourceId: 'start1', targetId: 'task1' },
-        { id: 'conn2', source: 'task1', target: 'gateway1', type: 'sequence', sourceId: 'task1', targetId: 'gateway1' },
-        { id: 'conn3', source: 'gateway1', target: 'end1', type: 'sequence', sourceId: 'gateway1', targetId: 'end1' },
-      ];
-      
-      setElements(newElements);
-      setConnections(newConnections);
-      setSelectedElement(null);
-      saveToHistory(newElements, newConnections);
-      setIsImportDialogOpen(false);
-      
-      if (isVoiceEnabled) {
-        speakText('Process imported successfully');
+      // Try to parse as JSON first
+      const data = JSON.parse(source);
+      if (data.elements && data.connections) {
+        setElements(data.elements);
+        setConnections(data.connections);
+        setSelectedElement(null);
+        saveToHistory(data.elements, data.connections);
+        setIsImportDialogOpen(false);
+        
+        toast({
+          title: "Import Successful",
+          description: `Imported ${data.elements.length} elements and ${data.connections.length} connections.`,
+        });
+        
+        if (isVoiceEnabled) {
+          speakText('Process imported successfully from JSON');
+        }
+        return;
       }
-      
-      toast({
-        title: "Import Successful",
-        description: "The BPMN process has been imported successfully.",
-      });
     } catch (error) {
-      console.error('Error importing BPMN XML:', error);
-      
-      toast({
-        title: "Import Failed",
-        description: "There was an error importing the BPMN XML.",
-        variant: "destructive",
-      });
-    }
-  }, [setElements, setConnections, setSelectedElement, saveToHistory, setIsImportDialogOpen, toast, isVoiceEnabled, speakText]);
-
-  // Clear the diagram
-  const handleClearDiagram = useCallback(() => {
-    setElements([]);
-    setConnections([]);
-    setSelectedElement(null);
-    saveToHistory([], []);
-    
-    if (isVoiceEnabled) {
-      speakText('Diagram cleared');
+      // If JSON parsing fails, try XML parsing (simplified)
+      console.log('Not JSON, attempting XML parsing...');
     }
     
+    // For now, just show an error for unsupported formats
     toast({
-      title: "Diagram Cleared",
-      description: "All elements have been removed from the diagram.",
+      title: "Import Failed",
+      description: "Please import a valid JSON file exported from this editor.",
+      variant: "destructive"
     });
-  }, [setElements, setConnections, setSelectedElement, saveToHistory, toast, isVoiceEnabled, speakText]);
+  }, [setElements, setConnections, setSelectedElement, saveToHistory, setIsImportDialogOpen, toast, isVoiceEnabled, speakText]);
 
   // Handle canvas click
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (selectedTool === 'select') {
-      // Deselect when clicking on empty canvas area
       setSelectedElement(null);
-    } else if (selectedTool !== 'connector') {
+      setConnectingElement(null);
+    } else if (selectedTool !== 'connector' && selectedTool !== 'select' && selectedTool !== 'hand') {
       // Add new element when using an element tool
       const rect = (e.target as HTMLDivElement).getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       
-      if (selectedTool === 'start-event' || selectedTool === 'end-event' || 
-          selectedTool === 'task' || selectedTool === 'gateway') {
-        handleAddElement(selectedTool, x, y);
-      }
+      handleAddElement(selectedTool, x, y);
+      setSelectedTool('select'); // Return to select tool after adding element
     }
-  }, [selectedTool, setSelectedElement, handleAddElement]);
+  }, [selectedTool, selectedElement, setSelectedElement, setConnectingElement, handleAddElement, setSelectedTool]);
 
   // Handle mouse move
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     setMousePosition({ x: e.clientX, y: e.clientY });
-    
-    if (isDragging && selectedElement) {
-      handleDrag(e.clientX, e.clientY);
-    }
-  }, [isDragging, selectedElement, setMousePosition, handleDrag]);
-
-  // Handle element drag start
-  const handleElementDragStart = useCallback((e: React.MouseEvent, elementId: string) => {
-    e.stopPropagation();
-    handleStartDrag(elementId, e.clientX, e.clientY);
-  }, [handleStartDrag]);
-
-  // Handle element drag move
-  const handleElementDragMove = useCallback((e: React.MouseEvent) => {
-    if (isDragging) {
-      handleDrag(e.clientX, e.clientY);
-    }
-  }, [isDragging, handleDrag]);
-
-  // Handle element drag end
-  const handleElementDragEnd = useCallback(() => {
-    handleEndDrag();
-  }, [handleEndDrag]);
+  }, [setMousePosition]);
 
   // Handle tool selection
   const handleSelectTool = useCallback((tool: string) => {
@@ -600,48 +680,11 @@ export const useBpmnEditorActions = ({
     }
     
     if (isVoiceEnabled) {
-      speakText(`Selected ${tool} tool`);
+      speakText(`Selected ${tool.replace('-', ' ')} tool`);
     }
   }, [setSelectedTool, setConnectingElement, isVoiceEnabled, speakText]);
 
-  // Handle duplicate element
-  const handleDuplicateElement = useCallback(() => {
-    if (selectedElement) {
-      const elementToDuplicate = elements.find(el => el.id === selectedElement);
-      if (elementToDuplicate) {
-        const id = uuidv4();
-        const newElement = {
-          ...elementToDuplicate,
-          id,
-          x: elementToDuplicate.x + 20,
-          y: elementToDuplicate.y + 20,
-          name: `Copy of ${elementToDuplicate.name}`,
-          position: {
-            x: elementToDuplicate.x + 20,
-            y: elementToDuplicate.y + 20
-          }
-        };
-        
-        setElements([...elements, newElement]);
-        setSelectedElement(id);
-        saveToHistory([...elements, newElement], connections);
-        
-        if (isVoiceEnabled) {
-          speakText('Element duplicated');
-        }
-        
-        toast({
-          title: "Element Duplicated",
-          description: "A copy of the selected element has been created.",
-        });
-      }
-    }
-  }, [selectedElement, elements, connections, setElements, setSelectedElement, saveToHistory, toast, isVoiceEnabled, speakText]);
-
-  // Element delete alias for consistency with BpmnEditorTabs component 
-  const handleElementDelete = handleDeleteElement;
-
-  // Handle save model
+  // Save model
   const handleSaveModel = useCallback(() => {
     saveToHistory(elements, connections);
     
@@ -655,43 +698,21 @@ export const useBpmnEditorActions = ({
     }
   }, [elements, connections, saveToHistory, toast, isVoiceEnabled, speakText]);
 
-  // Handle undo
-  const handleUndo = useCallback(() => {
-    // This would be implemented with the history functionality
-    toast({
-      title: "Undo",
-      description: "The last action has been undone.",
-    });
-    
-    if (isVoiceEnabled) {
-      speakText('Undo');
-    }
-  }, [toast, isVoiceEnabled, speakText]);
-
-  // Handle redo
-  const handleRedo = useCallback(() => {
-    // This would be implemented with the history functionality
-    toast({
-      title: "Redo",
-      description: "The previously undone action has been redone.",
-    });
-    
-    if (isVoiceEnabled) {
-      speakText('Redo');
-    }
-  }, [toast, isVoiceEnabled, speakText]);
+  // Element delete alias for consistency
+  const handleElementDelete = handleDeleteElement;
 
   return {
     handleAddElement,
+    handleElementUpdate,
+    handleConnectionCreate,
     handleSelectElement,
-    handleStartConnecting,
-    handleCompleteConnection,
-    handleStartDrag,
-    handleDrag,
-    handleEndDrag,
+    handleElementDragStart,
+    handleElementDragMove,
+    handleElementDragEnd,
     handleDeleteElement,
     handleUpdateElementProperties,
     handleEditElement,
+    handleDuplicateElement,
     handleZoomIn,
     handleZoomOut,
     handleResetZoom,
@@ -703,17 +724,10 @@ export const useBpmnEditorActions = ({
     handleXmlChange,
     handleImportClick,
     handleImportConfirm,
-    handleClearDiagram,
     handleCanvasClick,
     handleMouseMove,
-    handleElementDragStart,
-    handleElementDragMove,
-    handleElementDragEnd,
     handleSelectTool,
-    handleDuplicateElement,
     handleElementDelete,
-    handleSaveModel,
-    handleUndo,
-    handleRedo
+    handleSaveModel
   };
 };
