@@ -7,6 +7,8 @@ export interface ElementProperties {
   assignee: string;
   dueDate: string;
   implementation: string;
+  description?: string;
+  color?: string;
 }
 
 export interface BpmnElement {
