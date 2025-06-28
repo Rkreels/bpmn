@@ -8,6 +8,7 @@ import { ProcessHealthCharts } from "./ProcessHealthCharts";
 import { NotificationList, Notification } from "./NotificationList";
 import { useToast } from "@/hooks/use-toast";
 import { useVoice } from "@/contexts/VoiceContext";
+import { useNavigate } from "react-router-dom";
 import { 
   Workflow, 
   Route, 
@@ -50,6 +51,7 @@ export const DashboardContent: React.FC = () => {
   
   const { toast } = useToast();
   const { speakText, isVoiceEnabled } = useVoice();
+  const navigate = useNavigate();
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -67,6 +69,72 @@ export const DashboardContent: React.FC = () => {
       speakText("Dashboard refreshed successfully. All metrics and data are now up to date.");
     }
   };
+
+  const metrics = [
+    {
+      label: "Active Processes",
+      value: "24",
+      change: "+12%",
+      trend: "up",
+      icon: Workflow,
+      link: "/process-manager",
+      color: "text-blue-500"
+    },
+    {
+      label: "Team Members",
+      value: "18",
+      change: "+3",
+      trend: "up", 
+      icon: Users,
+      link: "/collaboration-hub",
+      color: "text-green-500"
+    },
+    {
+      label: "Repository Items",
+      value: "156",
+      change: "+8",
+      trend: "up",
+      icon: Database,
+      link: "/repository",
+      color: "text-purple-500"
+    },
+    {
+      label: "Avg Performance",
+      value: "87%",
+      change: "+5%",
+      trend: "up",
+      icon: BarChart3,
+      link: "/process-intelligence",
+      color: "text-orange-500"
+    }
+  ];
+
+  const projects = [
+    {
+      id: "1",
+      name: "Customer Onboarding Redesign",
+      status: "In Progress",
+      progress: 75,
+      team: ["Sarah", "Mike", "Lisa"],
+      lastUpdated: "2 hours ago"
+    },
+    {
+      id: "2", 
+      name: "Invoice Automation Process",
+      status: "Review",
+      progress: 90,
+      team: ["David", "Anna"],
+      lastUpdated: "5 hours ago"
+    },
+    {
+      id: "3",
+      name: "HR Workflow Optimization",
+      status: "Completed",
+      progress: 100,
+      team: ["John", "Emma", "Chris"],
+      lastUpdated: "1 day ago"
+    }
+  ];
 
   const quickActions = [
     {
@@ -127,7 +195,20 @@ export const DashboardContent: React.FC = () => {
     }
   ];
 
+  const handleMetricClick = (link: string, label: string) => {
+    navigate(link);
+    toast({
+      title: "Opening " + label,
+      description: `Navigating to ${label.toLowerCase()}`
+    });
+    
+    if (isVoiceEnabled) {
+      speakText(`Opening ${label}. Navigating to ${label.toLowerCase()}.`);
+    }
+  };
+
   const handleActionClick = (action: any) => {
+    navigate(action.link);
     toast({
       title: "Opening " + action.title,
       description: action.description
@@ -135,6 +216,18 @@ export const DashboardContent: React.FC = () => {
     
     if (isVoiceEnabled) {
       speakText(`Opening ${action.title}. ${action.description}`);
+    }
+  };
+
+  const handleProjectClick = (project: any) => {
+    navigate("/process-manager");
+    toast({
+      title: "Opening Project",
+      description: `Opening ${project.name}`
+    });
+    
+    if (isVoiceEnabled) {
+      speakText(`Opening project ${project.name}. Status: ${project.status}, Progress: ${project.progress}%`);
     }
   };
 
@@ -170,7 +263,7 @@ export const DashboardContent: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       <DashboardHeader onRefresh={handleRefresh} refreshing={refreshing} />
       
-      <MetricsCards />
+      <MetricsCards metrics={metrics} onMetricClick={handleMetricClick} />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -188,7 +281,7 @@ export const DashboardContent: React.FC = () => {
         </div>
       </div>
       
-      <RecentProjects />
+      <RecentProjects projects={projects} onProjectClick={handleProjectClick} />
       
       <ProcessHealthCharts />
     </div>

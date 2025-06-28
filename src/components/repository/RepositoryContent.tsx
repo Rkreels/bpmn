@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +36,7 @@ export const RepositoryContent: React.FC = () => {
     handleRenameItem,
     handleShareItem,
     handleDownloadItem,
-    handleDeleteItem
+    deleteItem
   } = useRepository();
   
   const { toast } = useToast();
@@ -93,7 +92,7 @@ export const RepositoryContent: React.FC = () => {
       <Button size="sm" variant="ghost" onClick={() => handleDownloadItem(item)}>
         <Download className="h-3 w-3" />
       </Button>
-      <Button size="sm" variant="ghost" onClick={() => handleDeleteItem(item)} className="text-red-500 hover:text-red-700">
+      <Button size="sm" variant="ghost" onClick={() => deleteItem(item.id)} className="text-red-500 hover:text-red-700">
         <Trash2 className="h-3 w-3" />
       </Button>
     </div>
