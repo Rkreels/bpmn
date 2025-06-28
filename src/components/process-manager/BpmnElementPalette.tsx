@@ -87,55 +87,45 @@ export const BpmnElementPalette: React.FC<BpmnElementPaletteProps> = ({ onAddEle
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-between h-8 px-2 text-sm font-medium"
+                size="sm"
+                className="w-full justify-between h-8 px-2 text-xs font-medium"
               >
-                <span>{category}</span>
-                {expandedCategories[category] ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
+                {category}
+                {expandedCategories[category] ? 
+                  <ChevronDown className="h-3 w-3" /> : 
                   <ChevronRight className="h-3 w-3" />
-                )}
+                }
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 mt-1">
-              <div className="grid grid-cols-2 gap-1">
-                {elements.map(element => (
-                  <ElementButton
-                    key={element.id}
-                    {...element}
-                    onClick={() => handleElementClick(element)}
-                    onHover={() => handleElementHover(element)}
-                    className="h-8 text-xs justify-start px-2"
-                  />
-                ))}
-              </div>
+            <CollapsibleContent className="space-y-1">
+              {elements.map((element) => (
+                <ElementButton
+                  key={element.id}
+                  element={element}
+                  onClick={() => handleElementClick(element)}
+                  onHover={() => handleElementHover(element)}
+                />
+              ))}
             </CollapsibleContent>
           </Collapsible>
         ))}
         
         {/* Connectors */}
-        <Collapsible defaultOpen>
-          <CollapsibleTrigger asChild>
+        <div className="border-t pt-2">
+          <div className="text-xs font-medium mb-2 px-2">Connectors</div>
+          {connectorTypes.map((connector) => (
             <Button
+              key={connector.id}
               variant="ghost"
-              className="w-full justify-between h-8 px-2 text-sm font-medium"
+              size="sm"
+              className="w-full justify-start h-8 px-2 text-xs hover:bg-muted"
+              onClick={() => onAddElement(connector.id)}
             >
-              <span>Connectors</span>
-              <ChevronDown className="h-3 w-3" />
+              <span className="mr-2">{connector.icon}</span>
+              {connector.name}
             </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-1 mt-1">
-            {connectorTypes.map(connector => (
-              <ElementButton
-                key={connector.id}
-                {...connector}
-                onClick={() => handleElementClick(connector)}
-                onHover={() => handleElementHover(connector)}
-                className="h-8 text-xs justify-start px-2 w-full"
-              />
-            ))}
-          </CollapsibleContent>
-        </Collapsible>
+          ))}
+        </div>
       </div>
     </div>
   );

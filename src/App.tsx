@@ -1,47 +1,31 @@
 
-import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { VoiceProvider } from "@/contexts/VoiceContext";
-import { VoiceTrainerProvider } from "@/contexts/VoiceTrainerContext";
+import ProcessManager from "./pages/ProcessManager";
+import Index from "./pages/Index";
 
-// Import pages
-import Dashboard from "@/pages/Dashboard";
-import ProcessManager from "@/pages/ProcessManager";
-import JourneyModeler from "@/pages/JourneyModeler";
-import CollaborationHub from "@/pages/CollaborationHub";
-import Repository from "@/pages/Repository";
-import ProcessIntelligence from "@/pages/ProcessIntelligence";
-import ProcessMining from "@/pages/ProcessMining";
-import TransformationCockpit from "@/pages/TransformationCockpit";
-import Reports from "@/pages/Reports";
-import Users from "@/pages/Users";
-import Settings from "@/pages/Settings";
-import NotFound from "@/pages/NotFound";
+const queryClient = new QueryClient();
 
-function App() {
-  return (
+const App = () => (
+  <QueryClientProvider client={queryClient}>
     <VoiceProvider>
-      <VoiceTrainerProvider>
-        <div className="min-h-screen bg-background">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/process-manager" replace />} />
             <Route path="/process-manager" element={<ProcessManager />} />
-            <Route path="/journey-modeler" element={<JourneyModeler />} />
-            <Route path="/collaboration-hub" element={<CollaborationHub />} />
-            <Route path="/repository" element={<Repository />} />
-            <Route path="/process-intelligence" element={<ProcessIntelligence />} />
-            <Route path="/process-mining" element={<ProcessMining />} />
-            <Route path="/transformation-cockpit" element={<TransformationCockpit />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/index" element={<Index />} />
           </Routes>
-          <Toaster />
-        </div>
-      </VoiceTrainerProvider>
+        </BrowserRouter>
+      </TooltipProvider>
     </VoiceProvider>
-  );
-}
+  </QueryClientProvider>
+);
 
 export default App;

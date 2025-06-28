@@ -1,51 +1,25 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { LucideIcon } from "lucide-react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { ElementType } from './ElementTypes';
 
 interface ElementButtonProps {
-  id: string;
-  name: string;
-  icon: LucideIcon;
-  description: string;
-  voiceGuidance: string;
+  element: ElementType;
   onClick: () => void;
-  onHover: () => void;
-  variant?: "outline" | "ghost";
-  size?: "sm" | "default";
-  className?: string;
+  onHover?: () => void;
 }
 
-export const ElementButton: React.FC<ElementButtonProps> = ({
-  id,
-  name,
-  icon: Icon,
-  description,
-  onClick,
-  onHover,
-  variant = "outline",
-  size = "sm",
-  className = "justify-start"
-}) => {
+export const ElementButton: React.FC<ElementButtonProps> = ({ element, onClick, onHover }) => {
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button 
-            variant={variant}
-            size={size}
-            className={className}
-            id={`element-${id}`}
-            onClick={onClick}
-            onMouseEnter={onHover}
-          >
-            <Icon className="h-4 w-4 mr-2" />
-            {name}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right">{description}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full justify-start h-8 px-2 text-xs hover:bg-muted"
+      onClick={onClick}
+      onMouseEnter={onHover}
+    >
+      <span className="mr-2">{element.icon}</span>
+      {element.name}
+    </Button>
   );
 };
