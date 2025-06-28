@@ -29,9 +29,9 @@ export function MainLayout({
         <Header pageTitle={pageTitle} />
         
         <main className={cn(
-          "flex-1 overflow-hidden", // Changed from overflow-auto to overflow-hidden for canvas
+          "flex-1 overflow-hidden",
           fullHeight ? "h-full" : "min-h-0",
-          isMobile ? "p-3" : fullHeight ? "p-0" : "p-6", // No padding for full height canvas
+          isMobile ? "p-3" : fullHeight ? "p-0" : "p-6",
           className
         )}>
           {children}

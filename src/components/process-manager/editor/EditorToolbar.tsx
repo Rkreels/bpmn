@@ -24,7 +24,6 @@ interface EditorToolbarProps {
   onDuplicateElement: () => void;
   onDeleteElement: () => void;
   hasSelectedElement: boolean;
-  canEdit: boolean;
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -37,8 +36,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onEditElement,
   onDuplicateElement,
   onDeleteElement,
-  hasSelectedElement,
-  canEdit
+  hasSelectedElement
 }) => {
   const tools = [
     { id: 'select', icon: MousePointer, label: 'Select', shortcut: 'V' },
@@ -56,8 +54,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             key={tool.id}
             variant={selectedTool === tool.id ? "default" : "ghost"}
             size="sm"
-            onClick={() => canEdit && onSelectTool(tool.id)}
-            disabled={!canEdit}
+            onClick={() => onSelectTool(tool.id)}
             className="h-8 w-8 p-0"
             title={`${tool.label} (${tool.shortcut})`}
           >
@@ -66,70 +63,66 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         );
       })}
       
-      {canEdit && (
-        <>
-          <Separator orientation="vertical" className="h-6" />
-          
-          {/* History Controls */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onUndo}
-            disabled={!canUndo}
-            className="h-8 w-8 p-0"
-            title="Undo (Ctrl+Z)"
-          >
-            <Undo className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRedo}
-            disabled={!canRedo}
-            className="h-8 w-8 p-0"
-            title="Redo (Ctrl+Y)"
-          >
-            <Redo className="h-4 w-4" />
-          </Button>
-          
-          <Separator orientation="vertical" className="h-6" />
-          
-          {/* Element Actions */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onEditElement}
-            disabled={!hasSelectedElement}
-            className="h-8 w-8 p-0"
-            title="Edit Properties"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDuplicateElement}
-            disabled={!hasSelectedElement}
-            className="h-8 w-8 p-0"
-            title="Duplicate (Ctrl+D)"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDeleteElement}
-            disabled={!hasSelectedElement}
-            className="h-8 w-8 p-0"
-            title="Delete (Delete)"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </>
-      )}
+      <Separator orientation="vertical" className="h-6" />
+      
+      {/* History Controls */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onUndo}
+        disabled={!canUndo}
+        className="h-8 w-8 p-0"
+        title="Undo (Ctrl+Z)"
+      >
+        <Undo className="h-4 w-4" />
+      </Button>
+      
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRedo}
+        disabled={!canRedo}
+        className="h-8 w-8 p-0"
+        title="Redo (Ctrl+Y)"
+      >
+        <Redo className="h-4 w-4" />
+      </Button>
+      
+      <Separator orientation="vertical" className="h-6" />
+      
+      {/* Element Actions */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onEditElement}
+        disabled={!hasSelectedElement}
+        className="h-8 w-8 p-0"
+        title="Edit Properties"
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onDuplicateElement}
+        disabled={!hasSelectedElement}
+        className="h-8 w-8 p-0"
+        title="Duplicate (Ctrl+D)"
+      >
+        <Copy className="h-4 w-4" />
+      </Button>
+      
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onDeleteElement}
+        disabled={!hasSelectedElement}
+        className="h-8 w-8 p-0"
+        title="Delete (Delete)"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 };

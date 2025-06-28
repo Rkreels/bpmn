@@ -2,19 +2,17 @@
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Copy, Download, Upload } from 'lucide-react';
+import { Copy, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface XmlSourceViewProps {
   xmlSource: string;
   onXmlChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  readOnly?: boolean;
 }
 
 export const XmlSourceView: React.FC<XmlSourceViewProps> = ({ 
   xmlSource, 
-  onXmlChange, 
-  readOnly = false 
+  onXmlChange
 }) => {
   const { toast } = useToast();
 
@@ -56,11 +54,6 @@ export const XmlSourceView: React.FC<XmlSourceViewProps> = ({
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold">XML Source</h3>
-          {readOnly && (
-            <span className="text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded">
-              Read Only
-            </span>
-          )}
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
@@ -78,7 +71,6 @@ export const XmlSourceView: React.FC<XmlSourceViewProps> = ({
         <Textarea
           value={xmlSource}
           onChange={onXmlChange}
-          readOnly={readOnly}
           placeholder="BPMN XML source will appear here..."
           className="w-full h-full font-mono text-sm resize-none"
           style={{ minHeight: '500px' }}

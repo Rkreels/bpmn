@@ -8,14 +8,12 @@ import { ImportDialog } from "./editor/dialogs/ImportDialog";
 import { TemplateSelector } from "./editor/dialogs/TemplateSelector";
 import { ProcessValidationPanel } from "./editor/panels/ProcessValidationPanel";
 import { ElementProperties } from "./editor/types";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface BpmnEditorProps {
   activeTool?: string;
 }
 
 export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" }) => {
-  const { hasPermission, hasRole } = useAuth();
   const state = useBpmnEditorState({ activeTool });
   const actions = useBpmnEditorActions({
     elements: state.elements,
@@ -56,15 +54,8 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
   });
 
   const handleAddElement = (elementType: string) => {
-    if (hasPermission('write') || hasPermission('model')) {
-      actions.handleAddElement(elementType, 300, 200);
-    }
+    actions.handleAddElement(elementType, 300, 200);
   };
-
-  // Role-based feature restrictions
-  const canEdit = hasPermission('write') || hasPermission('model');
-  const canExport = hasPermission('read') || hasRole('admin');
-  const canImport = hasPermission('write') || hasRole('admin');
 
   return (
     <div className="h-full w-full flex flex-col">
@@ -84,60 +75,56 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         historyIndex={state.historyIndex}
         history={state.history}
         snapToGrid={state.snapToGrid}
-        canEdit={canEdit}
-        canExport={canExport}
-        canImport={canImport}
+        canEdit={true}
+        canExport={true}
+        canImport={true}
         
         onZoomIn={actions.handleZoomIn}
         onZoomOut={actions.handleZoomOut}
         onToggleGrid={actions.handleToggleGrid}
         onToggleValidation={actions.handleToggleValidation}
-        onSaveModel={canEdit ? actions.handleSaveModel : () => {}}
-        onExportXml={canExport ? actions.handleExportXml : () => {}}
-        onExportJson={canExport ? actions.handleExportJson : () => {}}
-        onXmlChange={canEdit ? actions.handleXmlChange : () => {}}
+        onSaveModel={actions.handleSaveModel}
+        onExportXml={actions.handleExportXml}
+        onExportJson={actions.handleExportJson}
+        onXmlChange={actions.handleXmlChange}
         onCanvasClick={actions.handleCanvasClick}
         onElementSelect={actions.handleSelectElement}
-        onElementDragStart={canEdit ? actions.handleElementDragStart : () => {}}
-        onElementDragMove={canEdit ? actions.handleElementDragMove : () => {}}
-        onElementDragEnd={canEdit ? actions.handleElementDragEnd : () => {}}
+        onElementDragStart={actions.handleElementDragStart}
+        onElementDragMove={actions.handleElementDragMove}
+        onElementDragEnd={actions.handleElementDragEnd}
         onMouseMove={actions.handleMouseMove}
         onSelectTool={actions.handleSelectTool}
-        onEditElement={canEdit ? actions.handleEditElement : () => {}}
-        onDuplicateElement={canEdit ? actions.handleDuplicateElement : () => {}}
-        onDeleteElement={canEdit ? actions.handleElementDelete : () => {}}
+        onEditElement={actions.handleEditElement}
+        onDuplicateElement={actions.handleDuplicateElement}
+        onDeleteElement={actions.handleElementDelete}
         onAddElement={handleAddElement}
-        onUndo={canEdit ? state.undo : () => {}}
-        onRedo={canEdit ? state.redo : () => {}}
+        onUndo={state.undo}
+        onRedo={state.redo}
         onToggleSnapToGrid={actions.handleToggleSnapToGrid}
-        onImportClick={canImport ? actions.handleImportClick : () => {}}
-        onLoadTemplate={canEdit ? state.loadTemplate : () => {}}
-        onElementUpdate={canEdit ? actions.handleElementUpdate : () => {}}
-        onConnectionCreate={canEdit ? actions.handleConnectionCreate : () => {}}
+        onImportClick={actions.handleImportClick}
+        onLoadTemplate={state.loadTemplate}
+        onElementUpdate={actions.handleElementUpdate}
+        onConnectionCreate={actions.handleConnectionCreate}
       />
       
-      {canEdit && (
-        <ElementPropertiesDialog
-          open={state.isEditDialogOpen}
-          onOpenChange={state.setIsEditDialogOpen}
-          elementProperties={state.elementProperties}
-          setElementProperties={state.setElementProperties}
-          onUpdateProperties={(props: ElementProperties) => actions.handleUpdateElementProperties(props)}
-        />
-      )}
+      <ElementPropertiesDialog
+        open={state.isEditDialogOpen}
+        onOpenChange={state.setIsEditDialogOpen}
+        elementProperties={state.elementProperties}
+        setElementProperties={state.setElementProperties}
+        onUpdateProperties={(props: ElementProperties) => actions.handleUpdateElementProperties(props)}
+      />
       
-      {canImport && (
-        <ImportDialog
-          open={state.isImportDialogOpen}
-          onOpenChange={state.setIsImportDialogOpen}
-          importSource={state.importSource}
-          setImportSource={state.setImportSource}
-          onImportConfirm={actions.handleImportConfirm}
-        />
-      )}
+      <ImportDialog
+        open={state.isImportDialogOpen}
+        onOpenChange={state.setIsImportDialogOpen}
+        importSource={state.importSource}
+        setImportSource={state.setImportSource}
+        onImportConfirm={actions.handleImportConfirm}
+      />
 
       <TemplateSelector
-        onLoadTemplate={canEdit ? state.loadTemplate : () => {}}
+        onLoadTemplate={state.loadTemplate}
       />
 
       {state.showValidation && (
