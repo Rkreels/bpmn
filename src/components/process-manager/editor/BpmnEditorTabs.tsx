@@ -8,7 +8,6 @@ import { EditorToolbar } from './EditorToolbar';
 import { XmlSourceView } from './XmlSourceView';
 import { SimulationView } from './SimulationView';
 import { ZoomIn, ZoomOut, Grid, Play, Save, Download, Upload, Lock } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface BpmnEditorTabsProps {
   activeTab: string;
@@ -59,8 +58,6 @@ interface BpmnEditorTabsProps {
 }
 
 export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = (props) => {
-  const { user } = useAuth();
-
   return (
     <div className="w-full h-full flex flex-col">
       <Tabs value={props.activeTab} onValueChange={props.setActiveTab} className="w-full h-full flex flex-col">
@@ -125,7 +122,6 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = (props) => {
                 onDuplicateElement={props.onDuplicateElement}
                 onDeleteElement={props.onDeleteElement}
                 hasSelectedElement={!!props.selectedElement}
-                canEdit={props.canEdit}
               />
               <div className="w-full h-full">
                 <BpmnCanvas
@@ -155,7 +151,6 @@ export const BpmnEditorTabs: React.FC<BpmnEditorTabsProps> = (props) => {
           <XmlSourceView 
             xmlSource={props.xmlSource}
             onXmlChange={props.onXmlChange}
-            readOnly={!props.canEdit}
           />
         </TabsContent>
 

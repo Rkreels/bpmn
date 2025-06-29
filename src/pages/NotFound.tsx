@@ -8,7 +8,7 @@ import { Home, ArrowLeft, Search } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <MainLayout pageTitle="Page Not Found" showPageTitle={false}>
+    <MainLayout pageTitle="Page Not Found">
       <div className="flex items-center justify-center min-h-[60vh] p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">

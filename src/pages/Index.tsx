@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
   return (
-    <MainLayout pageTitle="Process Modeling Suite" showPageTitle={false} className="bg-muted/30">
+    <MainLayout pageTitle="Process Modeling Suite" className="bg-muted/30">
       <div className="flex flex-col gap-8 max-w-6xl mx-auto py-8">
         <section className="text-center">
           <h1 className="text-4xl font-bold tracking-tight mb-4">Welcome to the Process Modeling Suite</h1>
