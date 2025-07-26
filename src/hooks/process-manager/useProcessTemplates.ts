@@ -1,115 +1,165 @@
-
-import { useState, useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useCallback } from 'react';
 
 export interface ProcessTemplate {
   id: string;
   name: string;
   description: string;
   category: string;
-  status: "active" | "draft" | "archived";
-  createdDate: string;
-  lastModified: string;
-  author: string;
+  industry: string;
+  complexity: 'simple' | 'medium' | 'complex';
   version: string;
-  elements: number;
-  usage: number;
+  author: string;
+  createdAt: string;
+  updatedAt: string;
+  tags: string[];
+  isPublic: boolean;
+  downloadCount: number;
+  rating: number;
+  elements: any[];
+  connections: any[];
 }
 
 export const useProcessTemplates = () => {
-  const { toast } = useToast();
-  
   const [templates, setTemplates] = useState<ProcessTemplate[]>([
     {
-      id: "tmpl-001",
-      name: "Order Processing Template",
-      description: "Standard order processing flow with approvals",
-      category: "Sales",
-      status: "active",
-      createdDate: "2024-01-15",
-      lastModified: "2024-05-20",
-      author: "John Smith",
-      version: "2.1",
-      elements: 15,
-      usage: 45
+      id: '1',
+      name: 'Purchase Order Process',
+      description: 'Standard purchase order approval workflow with multi-level approvals',
+      category: 'Finance',
+      industry: 'General',
+      complexity: 'medium',
+      version: '1.2',
+      author: 'John Smith',
+      createdAt: '2024-01-15T10:00:00Z',
+      updatedAt: '2024-01-20T14:30:00Z',
+      tags: ['purchase', 'approval', 'finance'],
+      isPublic: true,
+      downloadCount: 245,
+      rating: 4.5,
+      elements: [],
+      connections: []
     },
     {
-      id: "tmpl-002",
-      name: "Invoice Approval Process",
-      description: "Multi-level invoice approval workflow",
-      category: "Finance",
-      status: "active",
-      createdDate: "2024-02-10",
-      lastModified: "2024-05-18",
-      author: "Sarah Johnson",
-      version: "1.8",
-      elements: 12,
-      usage: 32
-    },
-    {
-      id: "tmpl-003",
-      name: "Customer Onboarding",
-      description: "Complete customer registration and verification process",
-      category: "Customer Service",
-      status: "draft",
-      createdDate: "2024-05-01",
-      lastModified: "2024-05-30",
-      author: "Mike Davis",
-      version: "1.0",
-      elements: 18,
-      usage: 8
+      id: '2',
+      name: 'Customer Onboarding',
+      description: 'Digital customer onboarding process with KYC and account setup',
+      category: 'Customer Service',
+      industry: 'Banking',
+      complexity: 'complex',
+      version: '2.1',
+      author: 'Sarah Johnson',
+      createdAt: '2024-01-10T09:00:00Z',
+      updatedAt: '2024-01-18T16:45:00Z',
+      tags: ['customer', 'onboarding', 'kyc'],
+      isPublic: true,
+      downloadCount: 182,
+      rating: 4.8,
+      elements: [],
+      connections: []
     }
   ]);
+  
+  const [isLoading, setIsLoading] = useState(false);
 
-  const createTemplate = useCallback((templateData: Partial<ProcessTemplate>) => {
+  const createTemplate = useCallback(async (templateData: Partial<ProcessTemplate>) => {
+    setIsLoading(true);
+    
     const newTemplate: ProcessTemplate = {
-      id: `tmpl-${Date.now()}`,
-      name: templateData.name || "New Template",
-      description: templateData.description || "",
-      category: templateData.category || "General",
-      status: "draft",
-      createdDate: new Date().toISOString().split('T')[0],
-      lastModified: new Date().toISOString().split('T')[0],
-      author: "Current User",
-      version: "1.0",
-      elements: 0,
-      usage: 0
+      id: Date.now().toString(),
+      name: templateData.name || 'New Template',
+      description: templateData.description || '',
+      category: templateData.category || 'General',
+      industry: templateData.industry || 'General',
+      complexity: templateData.complexity || 'simple',
+      version: '1.0',
+      author: 'Current User',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      tags: templateData.tags || [],
+      isPublic: templateData.isPublic || false,
+      downloadCount: 0,
+      rating: 0,
+      elements: templateData.elements || [],
+      connections: templateData.connections || [],
+      ...templateData
     };
-    
-    setTemplates(prev => [...prev, newTemplate]);
-    toast({
-      title: "Template Created",
-      description: `${newTemplate.name} has been created successfully.`
-    });
-    
-    return newTemplate;
-  }, [toast]);
 
-  const updateTemplate = useCallback((id: string, updates: Partial<ProcessTemplate>) => {
-    setTemplates(prev => prev.map(template => 
-      template.id === id 
-        ? { ...template, ...updates, lastModified: new Date().toISOString().split('T')[0] }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setTemplates(prev => [newTemplate, ...prev]);
+    setIsLoading(false);
+    
+    return newTemplate.id;
+  }, []);
+
+  const updateTemplate = useCallback(async (id: string, updates: Partial<ProcessTemplate>) => {
+    setIsLoading(true);
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setTemplates(prev => prev.map(template =>
+      template.id === id
+        ? { ...template, ...updates, updatedAt: new Date().toISOString() }
         : template
     ));
     
-    toast({
-      title: "Template Updated",
-      description: "Template has been updated successfully."
-    });
-  }, [toast]);
+    setIsLoading(false);
+  }, []);
 
-  const deleteTemplate = useCallback((id: string) => {
+  const deleteTemplate = useCallback(async (id: string) => {
+    setIsLoading(true);
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
     setTemplates(prev => prev.filter(template => template.id !== id));
-    toast({
-      title: "Template Deleted",
-      description: "Template has been removed from the repository."
-    });
-  }, [toast]);
+    
+    setIsLoading(false);
+  }, []);
+
+  const duplicateTemplate = useCallback(async (id: string) => {
+    const template = templates.find(t => t.id === id);
+    if (!template) return;
+
+    const duplicated = {
+      ...template,
+      id: Date.now().toString(),
+      name: `${template.name} (Copy)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      downloadCount: 0,
+      isPublic: false
+    };
+
+    setTemplates(prev => [duplicated, ...prev]);
+    return duplicated.id;
+  }, [templates]);
+
+  const searchTemplates = useCallback((query: string, filters: any = {}) => {
+    let filtered = templates;
+
+    if (query) {
+      filtered = filtered.filter(template =>
+        template.name.toLowerCase().includes(query.toLowerCase()) ||
+        template.description.toLowerCase().includes(query.toLowerCase()) ||
+        template.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+      );
+    }
+
+    if (filters.category) {
+      filtered = filtered.filter(template => template.category === filters.category);
+    }
+
+    if (filters.complexity) {
+      filtered = filtered.filter(template => template.complexity === filters.complexity);
+    }
+
+    return filtered;
+  }, [templates]);
 
   return {
     templates,
+    isLoading,
     createTemplate,
     updateTemplate,
-    deleteTemplate
+    deleteTemplate,
+    duplicateTemplate,
+    searchTemplates
   };
 };

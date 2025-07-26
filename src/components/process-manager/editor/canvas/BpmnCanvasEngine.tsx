@@ -253,7 +253,7 @@ export const BpmnCanvasEngine: React.FC<BpmnCanvasEngineProps> = ({
   return (
     <div
       ref={canvasRef}
-      className="relative w-full h-full bg-white overflow-auto"
+      className="relative w-full h-full bg-white overflow-auto min-h-[600px]"
       style={{ 
         backgroundImage: showGrid ? 
           `radial-gradient(circle, #e5e7eb 1px, transparent 1px)` : 'none',
