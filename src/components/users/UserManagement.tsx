@@ -8,6 +8,8 @@ import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
 import { UserManagementActions } from "./UserManagementActions";
 import { UserDetailView } from "./UserDetailView";
+import { useUsersData } from "@/hooks/useUsersData";
+import { User as DataUser } from "@/types/modules";
 import { 
   Users, 
   Search,
@@ -19,103 +21,69 @@ import {
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  lastLogin: string;
-  department?: string;
-  phone?: string;
-  bio?: string;
-  processesOwned?: number;
-  collaborations?: number;
-}
-
 export const UserManagement: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<DataUser | null>(null);
   const [showDetailView, setShowDetailView] = useState(false);
   
-  const [users, setUsers] = useState<User[]>([
-    { 
-      id: "1", 
-      name: "John Doe", 
-      email: "john@company.com", 
-      role: "Admin", 
-      status: "Active", 
-      lastLogin: "2 hours ago",
-      department: "IT",
-      phone: "+1 (555) 123-4567",
-      bio: "Lead system administrator with 10+ years experience",
-      processesOwned: 12,
-      collaborations: 8
-    },
-    { 
-      id: "2", 
-      name: "Jane Smith", 
-      email: "jane@company.com", 
-      role: "Editor", 
-      status: "Active", 
-      lastLogin: "1 day ago",
-      department: "Operations",
-      phone: "+1 (555) 234-5678",
-      bio: "Business process analyst specializing in workflow optimization",
-      processesOwned: 8,
-      collaborations: 15
-    },
-    { 
-      id: "3", 
-      name: "Mike Johnson", 
-      email: "mike@company.com", 
-      role: "Viewer", 
-      status: "Inactive", 
-      lastLogin: "1 week ago",
-      department: "Finance",
-      phone: "+1 (555) 345-6789",
-      bio: "Financial controller with focus on process compliance",
-      processesOwned: 3,
-      collaborations: 5
-    }
-  ]);
+  // Use the data manager for users
+  const usersData = useUsersData();
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = usersData.filteredItems.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateUser = (userData: User) => {
-    setUsers(prev => [...prev, userData]);
+  const handleCreateUser = (userData: any) => {
+    const newUser = {
+      name: userData.name,
+      description: userData.bio || "",
+      email: userData.email,
+      firstName: userData.firstName || userData.name.split(' ')[0],
+      lastName: userData.lastName || userData.name.split(' ')[1] || "",
+      role: userData.role as "admin" | "analyst" | "viewer" | "editor",
+      department: userData.department || "",
+      permissions: userData.role === "admin" ? ["all"] : ["view_processes"],
+      lastLogin: new Date().toISOString(),
+      isActive: true,
+      createdBy: "System Admin",
+      status: "active" as const
+    };
+    usersData.create(newUser);
     speakText(`New user ${userData.name} has been added to the system`);
   };
 
-  const handleUpdateUser = (userData: User) => {
-    setUsers(prev => prev.map(user => user.id === userData.id ? userData : user));
+  const handleUpdateUser = (userData: any) => {
+    usersData.update(userData.id, {
+      name: userData.name,
+      email: userData.email,
+      role: userData.role as "admin" | "analyst" | "viewer" | "editor",
+      department: userData.department
+    });
     speakText(`User ${userData.name} has been updated`);
   };
 
   const handleDeleteUser = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    setUsers(prev => prev.filter(user => user.id !== userId));
+    const user = usersData.getById(userId);
+    usersData.remove(userId);
     if (user) {
       speakText(`User ${user.name} has been removed from the system`);
     }
   };
 
-  const handleViewUser = (user: User) => {
+  const handleViewUser = (user: DataUser) => {
     setSelectedUser(user);
     setShowDetailView(true);
     speakText(`Viewing profile for ${user.name}`);
   };
 
   const stats = [
-    { label: "Total Users", value: users.length, icon: <Users className="h-8 w-8 text-blue-500" /> },
-    { label: "Active Users", value: users.filter(u => u.status === "Active").length, icon: <Shield className="h-8 w-8 text-green-500" /> },
-    { label: "Pending Invites", value: users.filter(u => u.status === "Pending").length, icon: <Mail className="h-8 w-8 text-orange-500" /> }
+    { label: "Total Users", value: usersData.items.length, icon: <Users className="h-8 w-8 text-blue-500" /> },
+    { label: "Active Users", value: usersData.items.filter(u => u.status === "active").length, icon: <Shield className="h-8 w-8 text-green-500" /> },
+    { label: "Pending Invites", value: usersData.items.filter(u => u.status === "draft").length, icon: <Mail className="h-8 w-8 text-orange-500" /> }
   ];
 
   return (
@@ -186,19 +154,17 @@ export const UserManagement: React.FC = () => {
                   <div>
                     <p className="font-medium">{user.name}</p>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
-                    {user.department && (
-                      <p className="text-xs text-muted-foreground">{user.department}</p>
-                    )}
+                    <p className="text-xs text-muted-foreground">{user.department}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-4">
                   <Badge variant="outline">{user.role}</Badge>
-                  <Badge variant={user.status === "Active" ? "default" : "secondary"}>
+                  <Badge variant={user.status === "active" ? "default" : "secondary"}>
                     {user.status}
                   </Badge>
                   <p className="text-sm text-muted-foreground hidden sm:block">
-                    Last login: {user.lastLogin}
+                    Last login: {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
                   </p>
                   
                   <DropdownMenu>

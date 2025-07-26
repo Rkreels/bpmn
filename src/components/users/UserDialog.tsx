@@ -7,27 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  lastLogin: string;
-  department?: string;
-  phone?: string;
-  bio?: string;
-  processesOwned?: number;
-  collaborations?: number;
-}
+import { User } from "@/types/modules";
 
 interface UserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "create" | "edit";
   user?: User;
-  onSave: (user: User) => void;
+  onSave: (user: any) => void;
   onDelete?: () => void;
 }
 
@@ -42,10 +29,10 @@ export const UserDialog: React.FC<UserDialogProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "Viewer",
-    status: "Active",
+    firstName: "",
+    lastName: "",
+    role: "viewer" as "admin" | "analyst" | "viewer" | "editor",
     department: "",
-    phone: "",
     bio: ""
   });
 
@@ -54,20 +41,20 @@ export const UserDialog: React.FC<UserDialogProps> = ({
       setFormData({
         name: user.name,
         email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
-        status: user.status,
-        department: user.department || "",
-        phone: user.phone || "",
-        bio: user.bio || ""
+        department: user.department,
+        bio: user.description || ""
       });
     } else {
       setFormData({
         name: "",
         email: "",
-        role: "Viewer",
-        status: "Active",
+        firstName: "",
+        lastName: "",
+        role: "viewer" as "admin" | "analyst" | "viewer" | "editor",
         department: "",
-        phone: "",
         bio: ""
       });
     }
@@ -76,12 +63,15 @@ export const UserDialog: React.FC<UserDialogProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const userData: User = {
+    const userData = {
       id: mode === "edit" && user ? user.id : Date.now().toString(),
-      ...formData,
-      lastLogin: mode === "edit" && user ? user.lastLogin : "Never",
-      processesOwned: mode === "edit" && user ? user.processesOwned : 0,
-      collaborations: mode === "edit" && user ? user.collaborations : 0
+      name: formData.name,
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      role: formData.role,
+      department: formData.department,
+      bio: formData.bio
     };
 
     onSave(userData);
@@ -119,29 +109,36 @@ export const UserDialog: React.FC<UserDialogProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="role">Role</Label>
-            <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Admin">Admin</SelectItem>
-                <SelectItem value="Editor">Editor</SelectItem>
-                <SelectItem value="Viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="firstName">First Name</Label>
+            <Input
+              id="firstName"
+              value={formData.firstName}
+              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+              required
+            />
           </div>
 
           <div>
-            <Label htmlFor="status">Status</Label>
-            <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              value={formData.lastName}
+              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="role">Role</Label>
+            <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as any }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="editor">Editor</SelectItem>
+                <SelectItem value="analyst">Analyst</SelectItem>
+                <SelectItem value="viewer">Viewer</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -155,14 +152,6 @@ export const UserDialog: React.FC<UserDialogProps> = ({
             />
           </div>
 
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-            />
-          </div>
 
           <div>
             <Label htmlFor="bio">Bio</Label>

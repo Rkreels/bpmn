@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { useTransformationData } from "@/hooks/useTransformationData";
 import { TransformationActions } from "./TransformationActions";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { ValueRealization } from "./ValueRealization";
@@ -36,23 +37,18 @@ export const TransformationDashboard: React.FC = () => {
   const { speakText } = useVoice();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("portfolio");
-  const [initiatives, setInitiatives] = useState<Initiative[]>([
-    { id: "1", name: "Digital Customer Onboarding", status: "In Progress", progress: 75, budget: "$250K", timeline: "Q2 2024" },
-    { id: "2", name: "Process Automation Suite", status: "Planning", progress: 25, budget: "$180K", timeline: "Q3 2024" },
-    { id: "3", name: "Data Analytics Platform", status: "Completed", progress: 100, budget: "$320K", timeline: "Q1 2024" },
-    { id: "4", name: "Mobile Experience Upgrade", status: "At Risk", progress: 40, budget: "$150K", timeline: "Q2 2024" }
-  ]);
+  // Use the data manager for transformation initiatives
+  const transformationData = useTransformationData();
 
   const transformationMetrics = [
     { label: "Total Portfolio Value", value: "$2.4M", change: "+12%", trend: "up", icon: DollarSign },
-    { label: "Active Initiatives", value: initiatives.length.toString(), change: "+3", trend: "up", icon: Target },
+    { label: "Active Initiatives", value: transformationData.items.length.toString(), change: "+3", trend: "up", icon: Target },
     { label: "Value Delivered YTD", value: "$890K", change: "+23%", trend: "up", icon: TrendingUp },
     { label: "Transformation ROI", value: "340%", change: "+45%", trend: "up", icon: BarChart3 }
   ];
 
-  const handleCreateInitiative = (newInitiative: Initiative) => {
-    setInitiatives(prev => [...prev, newInitiative]);
-    console.log("New initiative created:", newInitiative);
+  const handleCreateInitiative = (newInitiative: any) => {
+    transformationData.create(newInitiative);
   };
 
   const handleGenerateReport = () => {
@@ -118,13 +114,12 @@ export const TransformationDashboard: React.FC = () => {
   };
 
   const handleInitiativeClick = (initiativeId: string) => {
-    const initiative = initiatives.find(i => i.id === initiativeId);
+    const initiative = transformationData.getById(initiativeId);
     if (initiative) {
       toast({
         title: "Initiative Details",
         description: `Opening details for ${initiative.name}`
       });
-      console.log("Initiative clicked:", initiative);
     }
   };
 
@@ -187,7 +182,7 @@ export const TransformationDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {initiatives.map((initiative) => (
+            {transformationData.items.map((initiative) => (
               <div 
                 key={initiative.id} 
                 className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
@@ -202,7 +197,7 @@ export const TransformationDashboard: React.FC = () => {
                     </Badge>
                   </div>
                   <div className="flex flex-wrap gap-4 text-xs md:text-sm text-muted-foreground">
-                    <span>Budget: {initiative.budget}</span>
+                    <span>Budget: ${initiative.budget?.toLocaleString() || "TBD"}</span>
                     <span>Timeline: {initiative.timeline}</span>
                     <span>Progress: {initiative.progress}%</span>
                   </div>

@@ -52,11 +52,29 @@ export const RepositoryContent: React.FC = () => {
   ];
 
   const handleNewItem = () => {
+    const newItem = {
+      name: `New Item ${Date.now()}`,
+      description: "New repository item",
+      type: "process" as const,
+      category: "operations",
+      version: "1.0.0",
+      owner: "Current User",
+      size: "0 KB",
+      tags: ["new"],
+      lastModified: new Date().toISOString(),
+      createdBy: "Current User",
+      status: "draft" as const
+    };
+    
+    // Use the data manager's create function
+    const repositoryData = useRepository();
+    repositoryData.create(newItem);
+    
     toast({
-      title: "Create New Item",
-      description: "Opening item creation dialog..."
+      title: "Item Created",
+      description: "New repository item has been created successfully."
     });
-    speakText("Opening dialog to create a new repository item. You can add processes, models, templates, or frameworks.");
+    speakText("New repository item created successfully. You can now edit it to add your content.");
   };
 
   const getTypeIcon = (type: string) => {

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
+import { useReportsData } from "@/hooks/useReportsData";
 import { ReportsActions } from "./ReportsActions";
 import { 
   BarChart3, 
@@ -36,104 +37,42 @@ export const ReportsDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   
-  const [reports, setReports] = useState<Report[]>([
-    {
-      id: "1",
-      name: "Weekly Performance Summary",
-      type: "Performance",
-      description: "Comprehensive performance analysis of all active processes",
-      schedule: "Weekly",
-      format: "PDF",
-      recipients: ["john@company.com", "jane@company.com"],
-      lastGenerated: "2 days ago",
-      status: "Active"
-    },
-    {
-      id: "2",
-      name: "Compliance Audit Report",
-      type: "Compliance",
-      description: "Monthly compliance check against regulatory requirements",
-      schedule: "Monthly",
-      format: "Excel",
-      recipients: ["compliance@company.com"],
-      lastGenerated: "1 week ago",
-      status: "Active"
-    },
-    {
-      id: "3",
-      name: "Process Bottleneck Analysis",
-      type: "Bottleneck",
-      description: "Identification and analysis of process bottlenecks",
-      schedule: "Bi-weekly",
-      format: "PowerPoint",
-      recipients: ["ops@company.com"],
-      lastGenerated: "3 days ago",
-      status: "Paused"
-    }
-  ]);
+  // Use the data manager for reports
+  const reportsData = useReportsData();
 
-  const filteredReports = reports.filter(report => {
+  const filteredReports = reportsData.filteredItems.filter(report => {
     const matchesSearch = report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          report.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === "all" || 
-                      (activeTab === "active" && report.status === "Active") ||
-                      (activeTab === "scheduled" && report.schedule !== "On-Demand") ||
-                      (activeTab === "recent" && ["1 day ago", "2 days ago", "3 days ago"].includes(report.lastGenerated));
+                      (activeTab === "active" && report.status === "active") ||
+                      (activeTab === "scheduled" && report.schedule?.frequency) ||
+                      (activeTab === "recent" && report.lastGenerated);
     return matchesSearch && matchesTab;
   });
 
-  const handleCreateReport = (reportData: Report) => {
-    setReports(prev => [...prev, reportData]);
+  const handleCreateReport = (reportData: any) => {
+    reportsData.create(reportData);
     speakText(`New report ${reportData.name} has been created`);
-    console.log("Report created:", reportData);
   };
 
   const handleGenerateReport = (reportId: string) => {
-    const report = reports.find(r => r.id === reportId);
+    const report = reportsData.getById(reportId);
     if (report) {
-      setReports(prev => prev.map(r => 
-        r.id === reportId ? { ...r, lastGenerated: "Just now" } : r
-      ));
+      reportsData.update(reportId, { lastGenerated: new Date().toISOString() });
       toast({
         title: "Report Generated",
         description: `${report.name} has been generated successfully.`
       });
       speakText(`Report ${report.name} has been generated and is ready for download`);
-      console.log("Report generated:", report);
     }
   };
 
   const handleDownloadReport = (reportId: string) => {
     if (reportId === "all") {
-      console.log("Downloading all reports");
-      const allReportsData = {
-        timestamp: new Date().toISOString(),
-        reports: reports.map(r => ({
-          name: r.name,
-          type: r.type,
-          lastGenerated: r.lastGenerated,
-          status: r.status
-        }))
-      };
-      
-      const blob = new Blob([JSON.stringify(allReportsData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `all-reports-${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Download Complete",
-        description: "All reports have been downloaded successfully."
-      });
+      reportsData.exportData();
     } else {
-      const report = reports.find(r => r.id === reportId);
+      const report = reportsData.getById(reportId);
       if (report) {
-        console.log("Downloading report:", report);
         toast({
           title: "Download Started",
           description: `Downloading ${report.name}...`
@@ -143,21 +82,20 @@ export const ReportsDashboard: React.FC = () => {
   };
 
   const handleReportClick = (reportId: string) => {
-    const report = reports.find(r => r.id === reportId);
+    const report = reportsData.getById(reportId);
     if (report) {
       toast({
         title: "Report Details",
         description: `Opening details for ${report.name}`
       });
-      console.log("Report clicked:", report);
     }
   };
 
   const stats = [
-    { label: "Total Reports", value: reports.length, icon: <FileText className="h-6 w-6 text-blue-500" /> },
-    { label: "Active Reports", value: reports.filter(r => r.status === "Active").length, icon: <TrendingUp className="h-6 w-6 text-green-500" /> },
-    { label: "Scheduled Reports", value: reports.filter(r => r.schedule !== "On-Demand").length, icon: <Clock className="h-6 w-6 text-orange-500" /> },
-    { label: "Recipients", value: new Set(reports.flatMap(r => r.recipients)).size, icon: <Users className="h-6 w-6 text-purple-500" /> }
+    { label: "Total Reports", value: reportsData.items.length, icon: <FileText className="h-6 w-6 text-blue-500" /> },
+    { label: "Active Reports", value: reportsData.items.filter(r => r.status === "active").length, icon: <TrendingUp className="h-6 w-6 text-green-500" /> },
+    { label: "Scheduled Reports", value: reportsData.items.filter(r => r.schedule?.frequency).length, icon: <Clock className="h-6 w-6 text-orange-500" /> },
+    { label: "Recipients", value: new Set(reportsData.items.flatMap(r => r.schedule?.recipients || [])).size, icon: <Users className="h-6 w-6 text-purple-500" /> }
   ];
 
   return (
@@ -239,21 +177,21 @@ export const ReportsDashboard: React.FC = () => {
                           <Badge variant="outline" className="text-xs">
                             {report.type}
                           </Badge>
-                          <Badge variant={report.status === "Active" ? "default" : "secondary"} className="text-xs">
+                          <Badge variant={report.status === "active" ? "default" : "secondary"} className="text-xs">
                             {report.status}
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">{report.description}</p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {report.schedule}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
-                            {report.format}
-                          </span>
-                          <span>Last generated: {report.lastGenerated}</span>
+                           <span className="flex items-center gap-1">
+                             <Calendar className="h-3 w-3" />
+                             {report.schedule?.frequency || "On-demand"}
+                           </span>
+                           <span className="flex items-center gap-1">
+                             <FileText className="h-3 w-3" />
+                             {report.format}
+                           </span>
+                           <span>Last generated: {report.lastGenerated ? new Date(report.lastGenerated).toLocaleDateString() : "Never"}</span>
                         </div>
                       </div>
                     </div>

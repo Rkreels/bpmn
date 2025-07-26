@@ -5,25 +5,12 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { UserDialog } from "./UserDialog";
 import { useVoice } from "@/contexts/VoiceContext";
 import { useToast } from "@/hooks/use-toast";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  lastLogin: string;
-  department?: string;
-  phone?: string;
-  bio?: string;
-  processesOwned?: number;
-  collaborations?: number;
-}
+import { User } from "@/types/modules";
 
 interface UserManagementActionsProps {
   mode: "create" | "edit";
   user?: User;
-  onSave: (user: User) => void;
+  onSave: (user: any) => void;
   onDelete?: (userId: string) => void;
 }
 
@@ -43,7 +30,7 @@ export const UserManagementActions: React.FC<UserManagementActionsProps> = ({
     speakText(`${action} dialog opened`);
   };
 
-  const handleSave = (userData: User) => {
+  const handleSave = (userData: any) => {
     onSave(userData);
     setIsDialogOpen(false);
     
