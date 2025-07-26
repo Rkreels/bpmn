@@ -1,97 +1,91 @@
-import { useState } from "react";
-import { useDiscussions } from "./collaboration/useDiscussions";
-import { useTeamData, TeamMember, Activity } from "./collaboration/useTeamData";
+import { useDataManager } from './useDataManager';
+import { CollaborationProject } from '@/types/modules';
 
-export interface ProcessReview {
-  id: string;
-  processName: string;
-  reviewType: string;
-  reviewer: string;
-  status: "completed" | "in-progress" | "overdue" | "scheduled";
-  priority: "high" | "medium" | "low";
-  dueDate: string;
-}
+const initialCollaborationData: CollaborationProject[] = [
+  {
+    id: 'collab_1',
+    name: 'Process Optimization Initiative',
+    description: 'Cross-functional team collaboration for process improvement',
+    type: 'process-review',
+    participants: ['Sarah Johnson', 'Mike Wilson', 'Anna Davis', 'John Smith'],
+    discussions: [
+      {
+        id: 'disc_1',
+        title: 'Bottleneck Analysis Discussion',
+        author: 'Sarah Johnson',
+        content: 'We need to analyze the current bottlenecks in our customer onboarding process.',
+        timestamp: '2024-01-15T09:00:00Z',
+        replies: [],
+        resolved: false
+      }
+    ],
+    approvals: [
+      {
+        id: 'app_1',
+        title: 'Process Model Review',
+        requestedBy: 'Sarah Johnson',
+        assignedTo: 'Mike Wilson',
+        status: 'pending',
+        deadline: '2024-01-20T17:00:00Z',
+        comments: 'Please review the updated process model for accuracy.'
+      }
+    ],
+    tasks: [
+      {
+        id: 'task_1',
+        title: 'Update process documentation',
+        assignedTo: 'Anna Davis',
+        status: 'in-progress',
+        priority: 'high',
+        dueDate: '2024-01-18T17:00:00Z'
+      }
+    ],
+    createdAt: '2024-01-10T09:00:00Z',
+    updatedAt: '2024-01-15T11:30:00Z',
+    createdBy: 'Sarah Johnson',
+    status: 'active'
+  }
+];
 
-export interface ScheduleEvent {
-  id: string;
-  title: string;
-  type: "meeting" | "review" | "training" | "workshop";
-  startTime: string;
-  endTime: string;
-  organizer: string;
-  attendees: string[];
-  isVirtual: boolean;
-  location?: string;
-}
+const validateCollaboration = (item: Partial<CollaborationProject>): string | null => {
+  if (!item.name?.trim()) return 'Project name is required';
+  if (!item.type) return 'Project type is required';
+  return null;
+};
 
 export const useCollaborationData = () => {
-  const discussionData = useDiscussions();
-  const teamData = useTeamData();
+  const baseHook = useDataManager<CollaborationProject>({
+    storageKey: 'collaboration_projects',
+    initialData: initialCollaborationData,
+    validator: validateCollaboration
+  });
 
-  const [processReviews] = useState<ProcessReview[]>([
-    {
-      id: "1",
-      processName: "Customer Onboarding",
-      reviewType: "Quality Assessment",
-      reviewer: "Jane Smith",
-      status: "completed",
-      priority: "high",
-      dueDate: "2024-01-20"
-    },
-    {
-      id: "2",
-      processName: "Invoice Processing",
-      reviewType: "Compliance Review",
-      reviewer: "John Doe",
-      status: "in-progress",
-      priority: "medium",
-      dueDate: "2024-01-25"
-    }
-  ]);
-
-  const [scheduleEvents] = useState<ScheduleEvent[]>([
-    {
-      id: "1",
-      title: "Process Optimization Workshop",
-      type: "workshop",
-      startTime: "2024-01-22T10:00:00Z",
-      endTime: "2024-01-22T12:00:00Z",
-      organizer: "Sarah Chen",
-      attendees: ["john.doe", "jane.smith", "mike.johnson"],
-      isVirtual: true
-    },
-    {
-      id: "2",
-      title: "Monthly Process Review",
-      type: "review",
-      startTime: "2024-01-25T14:00:00Z",
-      endTime: "2024-01-25T15:30:00Z",
-      organizer: "John Doe",
-      attendees: ["sarah.chen", "jane.smith"],
-      isVirtual: false,
-      location: "Conference Room A"
-    }
-  ]);
-
-  const createProcessReview = (reviewData: Partial<ProcessReview>) => {
-    console.log("Creating process review:", reviewData);
-  };
-
-  const createScheduleEvent = (eventData: Partial<ScheduleEvent>) => {
-    console.log("Creating schedule event:", eventData);
-  };
+  // Add collaboration-specific functionality
+  const discussions = baseHook.items.flatMap(project => project.discussions);
+  const teamMembers = ['Sarah Johnson', 'Mike Wilson', 'Anna Davis', 'John Smith'];
+  const activities = baseHook.items.map(project => ({ id: project.id, type: 'project', message: `${project.name} updated` }));
 
   return {
-    ...discussionData,
-    ...teamData,
-    processReviews,
-    scheduleEvents,
-    createProcessReview,
-    createScheduleEvent
+    ...baseHook,
+    discussions,
+    teamMembers,
+    activities,
+    processReviews: baseHook.items.filter(p => p.type === 'process-review'),
+    scheduleEvents: [],
+    createDiscussion: (title: string, content: string) => baseHook.create({ name: title, description: content, type: 'process-review', participants: [], discussions: [], approvals: [], tasks: [], createdBy: 'Current User', status: 'active' }),
+    createProcessReview: (name: string) => baseHook.create({ name, description: 'Process review', type: 'process-review', participants: [], discussions: [], approvals: [], tasks: [], createdBy: 'Current User', status: 'active' }),
+    createScheduleEvent: () => {},
+    inviteTeamMember: () => {},
+    currentUserId: 'current-user',
+    addReply: () => {},
+    toggleLike: () => {},
+    togglePin: () => {},
+    resolveDiscussion: () => {}
   };
 };
 
-// Re-export types for backward compatibility
-export type { Discussion, Reply } from "./collaboration/useDiscussions";
-export type { TeamMember, Activity } from "./collaboration/useTeamData";
-export type { Discussion as DiscussionType } from "./collaboration/useDiscussions";
+export interface Activity {
+  id: string;
+  type: string;
+  message: string;
+}

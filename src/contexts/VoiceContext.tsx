@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 interface VoiceContextType {
   isVoiceEnabled: boolean;
@@ -8,6 +8,9 @@ interface VoiceContextType {
   speakText: (text: string) => void;
   stopSpeaking: () => void;
   isSupported: boolean;
+  voices: SpeechSynthesisVoice[];
+  selectedVoice: SpeechSynthesisVoice | null;
+  setSelectedVoice: (voice: SpeechSynthesisVoice) => void;
 }
 
 const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
@@ -15,6 +18,32 @@ const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [isSupported] = useState(typeof window !== 'undefined' && 'speechSynthesis' in window);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+
+  useEffect(() => {
+    if (isSupported) {
+      const loadVoices = () => {
+        const availableVoices = window.speechSynthesis.getVoices();
+        setVoices(availableVoices);
+        
+        // Select a preferred voice (female, English)
+        const preferredVoice = availableVoices.find(voice => 
+          voice.lang.startsWith('en') && 
+          (voice.name.toLowerCase().includes('female') || 
+           voice.name.toLowerCase().includes('samantha') ||
+           voice.name.toLowerCase().includes('susan'))
+        ) || availableVoices.find(voice => voice.lang.startsWith('en')) || availableVoices[0];
+        
+        if (preferredVoice && !selectedVoice) {
+          setSelectedVoice(preferredVoice);
+        }
+      };
+
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, [isSupported, selectedVoice]);
 
   const toggleVoice = useCallback(() => {
     setIsVoiceEnabled(prev => !prev);
@@ -26,14 +55,19 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       window.speechSynthesis.cancel(); // Stop any ongoing speech
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 0.8;
+      utterance.rate = 0.95;
+      utterance.pitch = 1.1;
+      utterance.volume = 1.0;
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      
       window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.warn('Speech synthesis failed:', error);
     }
-  }, [isVoiceEnabled, isSupported]);
+  }, [isVoiceEnabled, isSupported, selectedVoice]);
 
   const stopSpeaking = useCallback(() => {
     if (isSupported) {
@@ -49,7 +83,10 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toggleVoice,
         speakText,
         stopSpeaking,
-        isSupported
+        isSupported,
+        voices,
+        selectedVoice,
+        setSelectedVoice
       }}
     >
       {children}
