@@ -81,14 +81,24 @@ export const PersonaManagement: React.FC = () => {
   const handleSave = () => {
     if (isCreating) {
       const newPersona = {
-        ...formData,
-        id: Date.now().toString()
+        id: Date.now().toString(),
+        name: formData.name || "",
+        role: formData.role || "",
+        department: formData.department || "",
+        age: formData.age || 25,
+        location: formData.location || "",
+        goals: formData.goals || [],
+        painPoints: formData.painPoints || [],
+        motivations: formData.motivations || [],
+        preferredChannels: formData.preferredChannels || [],
+        techSavviness: formData.techSavviness || "medium",
+        decisionInfluence: formData.decisionInfluence || "medium"
       } as Persona;
       setPersonas([...personas, newPersona]);
       setIsCreating(false);
     } else if (editingPersona) {
       setPersonas(personas.map(p => 
-        p.id === editingPersona ? { ...formData } as Persona : p
+        p.id === editingPersona ? { ...p, ...formData } as Persona : p
       ));
       setEditingPersona(null);
     }
@@ -215,7 +225,7 @@ export const PersonaManagement: React.FC = () => {
               />
             ) : (
               <div className="space-y-1">
-                {persona.goals.map((goal, index) => (
+                {(persona.goals || []).map((goal, index) => (
                   <Badge key={index} variant="outline" className="text-xs mr-1 mb-1">
                     {goal}
                   </Badge>
@@ -239,7 +249,7 @@ export const PersonaManagement: React.FC = () => {
               />
             ) : (
               <div className="space-y-1">
-                {persona.painPoints.map((pain, index) => (
+                {(persona.painPoints || []).map((pain, index) => (
                   <Badge key={index} variant="destructive" className="text-xs mr-1 mb-1">
                     {pain}
                   </Badge>
