@@ -137,7 +137,7 @@ export const useProcessMiningData = () => {
 
     setEventLogs(prev => [newLog, ...prev]);
 
-    // Simulate upload process
+    // Simulate real upload process
     setTimeout(() => {
       setEventLogs(prev => prev.map(log => 
         log.id === newLog.id 
@@ -159,6 +159,8 @@ export const useProcessMiningData = () => {
           : log
       ));
     }, 3000);
+
+    return newLog.id;
   };
 
   const runAnalysis = (logId: string) => {

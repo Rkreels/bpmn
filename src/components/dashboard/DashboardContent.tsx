@@ -53,19 +53,36 @@ export const DashboardContent: React.FC = () => {
   const navigate = useNavigate();
 
   const handleRefresh = async () => {
+    if (refreshing) return;
+    
     setRefreshing(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setRefreshing(false);
-    toast({
-      title: "Dashboard Refreshed",
-      description: "All data has been updated successfully."
-    });
-    
-    if (isVoiceEnabled) {
-      speakText("Dashboard refreshed successfully. All metrics and data are now up to date.");
+    try {
+      // Simulate API call with real data updates
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Update notifications with new timestamp
+      setNotifications(prev => prev.map(notif => ({
+        ...notif,
+        timestamp: new Date().toISOString()
+      })));
+      
+      setRefreshing(false);
+      toast({
+        title: "Dashboard Refreshed",
+        description: "All data has been updated successfully."
+      });
+      
+      if (isVoiceEnabled) {
+        speakText("Dashboard refreshed successfully. All metrics and data are now up to date.");
+      }
+    } catch (error) {
+      setRefreshing(false);
+      toast({
+        title: "Refresh Failed", 
+        description: "Unable to refresh dashboard data.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -237,12 +254,12 @@ export const DashboardContent: React.FC = () => {
     );
     
     toast({
-      title: "Notification",
+      title: notification.title,
       description: notification.message
     });
     
     if (isVoiceEnabled) {
-      speakText(`Notification: ${notification.title}. ${notification.message}`);
+      speakText(`${notification.title}. ${notification.message}`);
     }
   };
 

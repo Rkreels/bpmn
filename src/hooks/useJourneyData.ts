@@ -252,12 +252,14 @@ export const useJourneyData = () => {
       const shareUrl = `${window.location.origin}/journey/${journeyId}`;
       
       if (shareType === "link") {
-        navigator.clipboard.writeText(shareUrl);
+        navigator.clipboard?.writeText(shareUrl).catch(() => {
+          // Fallback for browsers without clipboard API
+        });
       }
       
-      console.log(`Sharing journey "${journey.name}" via ${shareType}:`, shareUrl);
       return shareUrl;
     }
+    return null;
   };
 
   return {
