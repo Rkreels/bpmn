@@ -69,6 +69,14 @@ export interface Discussion {
   timestamp: string;
   replies: Discussion[];
   resolved: boolean;
+  tags?: string[];
+  likes?: string[];
+  isPinned?: boolean;
+  authorInitials?: string;
+  views?: number;
+  processName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Approval {

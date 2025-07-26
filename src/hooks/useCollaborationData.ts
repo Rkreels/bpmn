@@ -62,8 +62,20 @@ export const useCollaborationData = () => {
 
   // Add collaboration-specific functionality
   const discussions = baseHook.items.flatMap(project => project.discussions);
-  const teamMembers = ['Sarah Johnson', 'Mike Wilson', 'Anna Davis', 'John Smith'];
-  const activities = baseHook.items.map(project => ({ id: project.id, type: 'project', message: `${project.name} updated` }));
+  const teamMembers = [
+    { id: '1', name: 'Sarah Johnson', role: 'Process Manager', status: 'online', lastActive: '2 min ago' },
+    { id: '2', name: 'Mike Wilson', role: 'Analyst', status: 'busy', lastActive: '10 min ago' },
+    { id: '3', name: 'Anna Davis', role: 'Designer', status: 'away', lastActive: '1 hour ago' },
+    { id: '4', name: 'John Smith', role: 'Developer', status: 'offline', lastActive: '2 hours ago' }
+  ];
+  const activities = baseHook.items.map(project => ({ 
+    id: project.id, 
+    type: 'project', 
+    message: `${project.name} updated`,
+    title: project.name,
+    user: project.createdBy,
+    time: project.updatedAt
+  }));
 
   return {
     ...baseHook,
@@ -72,15 +84,35 @@ export const useCollaborationData = () => {
     activities,
     processReviews: baseHook.items.filter(p => p.type === 'process-review'),
     scheduleEvents: [],
-    createDiscussion: (title: string, content: string) => baseHook.create({ name: title, description: content, type: 'process-review', participants: [], discussions: [], approvals: [], tasks: [], createdBy: 'Current User', status: 'active' }),
-    createProcessReview: (name: string) => baseHook.create({ name, description: 'Process review', type: 'process-review', participants: [], discussions: [], approvals: [], tasks: [], createdBy: 'Current User', status: 'active' }),
-    createScheduleEvent: () => {},
-    inviteTeamMember: () => {},
+    createDiscussion: (title: string, content: string) => baseHook.create({ 
+      name: title, 
+      description: content, 
+      type: 'process-review', 
+      participants: [], 
+      discussions: [], 
+      approvals: [], 
+      tasks: [], 
+      createdBy: 'Current User', 
+      status: 'active' 
+    }),
+    createProcessReview: (name: string) => baseHook.create({ 
+      name, 
+      description: 'Process review', 
+      type: 'process-review', 
+      participants: [], 
+      discussions: [], 
+      approvals: [], 
+      tasks: [], 
+      createdBy: 'Current User', 
+      status: 'active' 
+    }),
+    createScheduleEvent: (event: any) => Promise.resolve(),
+    inviteTeamMember: (email: string, role: string) => Promise.resolve(),
     currentUserId: 'current-user',
-    addReply: () => {},
-    toggleLike: () => {},
-    togglePin: () => {},
-    resolveDiscussion: () => {}
+    addReply: (discussionId: string, reply: string) => Promise.resolve(),
+    toggleLike: (discussionId: string) => Promise.resolve(),
+    togglePin: (discussionId: string) => Promise.resolve(),
+    resolveDiscussion: (discussionId: string) => Promise.resolve()
   };
 };
 
@@ -88,4 +120,7 @@ export interface Activity {
   id: string;
   type: string;
   message: string;
+  title: string;
+  user: string;
+  time: string;
 }

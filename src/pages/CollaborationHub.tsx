@@ -34,11 +34,7 @@ export default function CollaborationHub() {
   const { toast } = useToast();
 
   const handleCreateDiscussion = () => {
-    const newDiscussion = createDiscussion({
-      title: "New Process Discussion",
-      content: "Let's discuss this process improvement",
-      tags: ["process", "improvement"]
-    });
+    const newDiscussion = createDiscussion("New Process Discussion", "Let's discuss this process improvement");
     
     toast({
       title: "Discussion Created",
@@ -49,14 +45,7 @@ export default function CollaborationHub() {
   };
 
   const handleCreateReview = () => {
-    const review = createProcessReview({
-      processName: "Sample Process",
-      reviewType: "Quality Assessment",
-      reviewer: "Current User",
-      status: "in-progress",
-      priority: "high",
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toDateString()
-    });
+    const review = createProcessReview("Performance Review - Customer Onboarding");
     
     toast({
       title: "Review Created",
@@ -99,7 +88,7 @@ export default function CollaborationHub() {
         <CollaborationStats
           discussions={discussions.length}
           teamMembers={teamMembers.length}
-          pendingReviews={processReviews.filter(r => r.status === "in-progress").length}
+          pendingReviews={processReviews.filter(r => r.status === "active").length}
           scheduledEvents={scheduleEvents.length}
         />
 
