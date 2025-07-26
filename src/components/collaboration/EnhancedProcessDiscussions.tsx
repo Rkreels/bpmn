@@ -69,7 +69,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
       const matchesSearch = discussion.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            discussion.content.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesTag = selectedTag === "all" || discussion.tags.includes(selectedTag);
-      const matchesResolved = showResolved || !discussion.isResolved;
+      const matchesResolved = showResolved || !discussion.resolved;
       return matchesSearch && matchesTag && matchesResolved;
     })
     .sort((a, b) => {
@@ -92,13 +92,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
 
     const tags = newDiscussion.tags.split(',').map(tag => tag.trim()).filter(Boolean);
     
-    createDiscussion({
-      title: newDiscussion.title,
-      content: newDiscussion.content,
-      tags,
-      processId: newDiscussion.processId || undefined,
-      processName: newDiscussion.processName || undefined
-    });
+    createDiscussion(newDiscussion.title, newDiscussion.content);
 
     setNewDiscussion({
       title: "",
@@ -125,7 +119,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
   };
 
   const handleLike = (discussionId: string, replyId?: string) => {
-    toggleLike(discussionId, replyId);
+    toggleLike(discussionId);
     speakText(replyId ? "Reply liked" : "Discussion liked");
   };
 
@@ -138,7 +132,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
   const handleResolve = (discussionId: string) => {
     resolveDiscussion(discussionId);
     const discussion = discussions.find(d => d.id === discussionId);
-    speakText(discussion?.isResolved ? "Discussion reopened" : "Discussion marked as resolved");
+    speakText(discussion?.resolved ? "Discussion reopened" : "Discussion marked as resolved");
   };
 
   const toggleReplies = (discussionId: string) => {
@@ -289,7 +283,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
         {filteredDiscussions
           .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0))
           .map((discussion) => (
-          <Card key={discussion.id} className={`${discussion.isPinned ? "border-primary" : ""} ${discussion.isResolved ? "opacity-75" : ""}`}>
+          <Card key={discussion.id} className={`${discussion.isPinned ? "border-primary" : ""} ${discussion.resolved ? "opacity-75" : ""}`}>
             <CardContent className="p-6">
               <div className="space-y-4">
                 {/* Discussion Header */}
@@ -302,7 +296,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{discussion.title}</h3>
                         {discussion.isPinned && <Pin className="h-4 w-4 text-primary" />}
-                        {discussion.isResolved && (
+                        {discussion.resolved && (
                           <Badge variant="default" className="bg-green-100 text-green-800">
                             Resolved
                           </Badge>
@@ -323,7 +317,7 @@ export const EnhancedProcessDiscussions: React.FC = () => {
                       <Pin className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleResolve(discussion.id)}>
-                      {discussion.isResolved ? <MessageSquare className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
+                      {discussion.resolved ? <MessageSquare className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
                     </Button>
                     <Button variant="ghost" size="icon">
                       <Share2 className="h-4 w-4" />
