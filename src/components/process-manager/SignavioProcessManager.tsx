@@ -663,8 +663,8 @@ export const SignavioProcessManager = () => {
       <MainToolbar 
         onSave={handleSave}
         onLoad={handleLoad}
-        onExport={handleExport}
         onValidate={handleValidate}
+        onExport={handleExport}
         onSimulate={handleSimulate}
         validationResults={validationResults}
       />
