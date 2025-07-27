@@ -81,13 +81,13 @@ export const JourneyModelerDashboard: React.FC = () => {
     });
     speakText("Exporting journey maps. This includes all touchpoints, personas, and analytics data for stakeholder sharing and backup purposes.");
     
-    setTimeout(() => {
-      exportJourneyData('json');
+    setTimeout(async () => {
+      await exportJourneyData();
       setIsLoading(false);
     }, 1000);
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (journeys.length === 0) {
       toast({
         title: "No Journeys to Share",
@@ -99,7 +99,7 @@ export const JourneyModelerDashboard: React.FC = () => {
     }
 
     const mainJourney = journeys[0];
-    shareJourney(mainJourney.id, 'link');
+    await shareJourney(mainJourney.id, ['stakeholder@company.com']);
     speakText(`Sharing journey ${mainJourney.name}. Stakeholders will be able to view the complete customer journey map with all touchpoints and insights.`);
   };
 
@@ -166,8 +166,7 @@ export const JourneyModelerDashboard: React.FC = () => {
                 {isLoading ? "Creating..." : "New Journey"}
               </Button>
             }
-            onJourneyCreated={(journeyId) => {
-              console.log('New journey created:', journeyId);
+            onJourneyCreated={() => {
               speakText("Journey created successfully. You can now start adding stages and touchpoints to map the complete customer experience.");
             }}
           />

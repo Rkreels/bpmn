@@ -10,7 +10,7 @@ interface ImportDialogProps {
   onOpenChange: (open: boolean) => void;
   importSource: string;
   setImportSource: (source: string) => void;
-  onImportConfirm: () => void;
+  onImportConfirm: (data: string) => void;
 }
 
 export const ImportDialog: React.FC<ImportDialogProps> = ({
@@ -21,8 +21,20 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
   onImportConfirm
 }) => {
   const handleImport = () => {
-    onImportConfirm();
+    onImportConfirm(importSource);
     onOpenChange(false);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setImportSource(content);
+      };
+      reader.readAsText(file);
+    }
   };
 
   return (
@@ -34,13 +46,22 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="import-source">BPMN XML Content</Label>
+            <label className="text-sm font-medium">Upload File</label>
+            <input
+              type="file"
+              accept=".bpmn,.xml,.json"
+              onChange={handleFileUpload}
+              className="w-full mt-1 p-2 border rounded-md"
+            />
+          </div>
+          <div>
+            <Label htmlFor="import-source">Or Paste Content</Label>
             <Textarea
               id="import-source"
               value={importSource}
               onChange={(e) => setImportSource(e.target.value)}
-              placeholder="Paste your BPMN XML content here..."
-              rows={12}
+              placeholder="Paste your BPMN XML or JSON content here..."
+              rows={8}
               className="font-mono text-sm"
             />
           </div>

@@ -45,7 +45,7 @@ export const ReportsDashboard: React.FC = () => {
                          report.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === "all" || 
                       (activeTab === "active" && report.status === "active") ||
-                      (activeTab === "scheduled" && report.schedule?.frequency) ||
+                      (activeTab === "scheduled" && report.scheduleEnabled) ||
                       (activeTab === "recent" && report.lastGenerated);
     return matchesSearch && matchesTab;
   });
@@ -94,8 +94,8 @@ export const ReportsDashboard: React.FC = () => {
   const stats = [
     { label: "Total Reports", value: reportsData.items.length, icon: <FileText className="h-6 w-6 text-blue-500" /> },
     { label: "Active Reports", value: reportsData.items.filter(r => r.status === "active").length, icon: <TrendingUp className="h-6 w-6 text-green-500" /> },
-    { label: "Scheduled Reports", value: reportsData.items.filter(r => r.schedule?.frequency).length, icon: <Clock className="h-6 w-6 text-orange-500" /> },
-    { label: "Recipients", value: new Set(reportsData.items.flatMap(r => r.schedule?.recipients || [])).size, icon: <Users className="h-6 w-6 text-purple-500" /> }
+    { label: "Scheduled Reports", value: reportsData.items.filter(r => r.scheduleEnabled).length, icon: <Clock className="h-6 w-6 text-orange-500" /> },
+    { label: "Recipients", value: new Set(reportsData.items.flatMap(r => r.recipients || [])).size, icon: <Users className="h-6 w-6 text-purple-500" /> }
   ];
 
   return (
@@ -185,12 +185,12 @@ export const ReportsDashboard: React.FC = () => {
                         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
                            <span className="flex items-center gap-1">
                              <Calendar className="h-3 w-3" />
-                             {report.schedule?.frequency || "On-demand"}
-                           </span>
-                           <span className="flex items-center gap-1">
-                             <FileText className="h-3 w-3" />
-                             {report.format}
-                           </span>
+                              {report.scheduleEnabled ? report.scheduleFrequency : "On-demand"}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <FileText className="h-3 w-3" />
+                              PDF
+                            </span>
                            <span>Last generated: {report.lastGenerated ? new Date(report.lastGenerated).toLocaleDateString() : "Never"}</span>
                         </div>
                       </div>

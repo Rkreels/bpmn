@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,13 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useJourneyData, Persona } from "@/hooks/useJourneyData";
+import { useJourneyData } from "@/hooks/useJourneyData";
 import { useVoice } from "@/contexts/VoiceContext";
 import { Plus } from "lucide-react";
 
 interface CreateJourneyDialogProps {
   trigger?: React.ReactNode;
-  onJourneyCreated?: (journeyId: string) => void;
+  onJourneyCreated?: () => void;
 }
 
 export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({ 
@@ -26,10 +25,10 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
     name: "",
     description: "",
     personaId: "",
-    status: "draft" as "draft" | "active" | "completed"
+    status: "draft" as "draft" | "active" | "archived"
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.personaId) {
@@ -37,26 +36,29 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
       return;
     }
 
-    const newJourneyId = createJourney({
-      ...formData,
-      stages: []
-    });
+    const journeyData = {
+      name: formData.name,
+      description: formData.description,
+      persona: formData.personaId,
+      stages: [],
+      status: formData.status,
+      createdBy: 'Current User'
+    };
 
-    setFormData({
-      name: "",
-      description: "",
-      personaId: "",
-      status: "draft"
-    });
-    
-    setOpen(false);
-    onJourneyCreated?.(newJourneyId);
-    
-    speakText(`New customer journey ${formData.name} has been created successfully. You can now start adding stages and touchpoints to map the complete customer experience.`);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setFormData({ ...formData, status: value as "draft" | "active" | "completed" });
+    const newJourney = await createJourney(journeyData);
+    if (newJourney) {
+      setFormData({
+        name: "",
+        description: "",
+        personaId: "",
+        status: "draft"
+      });
+      
+      setOpen(false);
+      onJourneyCreated?.();
+      
+      speakText(`New customer journey ${formData.name} has been created successfully. You can now start adding stages to map out the customer experience.`);
+    }
   };
 
   return (
@@ -109,7 +111,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
               <SelectContent>
                 {personas.map((persona) => (
                   <SelectItem key={persona.id} value={persona.id}>
-                    {persona.name} - {persona.role}
+                    {persona.name} - {persona.demographics.role}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -120,7 +122,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
             <Label htmlFor="status">Status</Label>
             <Select 
               value={formData.status} 
-              onValueChange={handleStatusChange}
+              onValueChange={(value) => setFormData({ ...formData, status: value as "draft" | "active" | "archived" })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -128,7 +130,7 @@ export const CreateJourneyDialog: React.FC<CreateJourneyDialogProps> = ({
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
           </div>
