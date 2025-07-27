@@ -15,6 +15,19 @@ export const ProcessTemplateSelector: React.FC<ProcessTemplateSelectorProps> = (
   onLoadTemplate,
   onPreviewTemplate
 }) => {
+  const handleLoadTemplate = (templateId: string) => {
+    // Load template data and pass to editor
+    const template = complexProcessTemplates.find(t => t.id === templateId);
+    if (template) {
+      // Convert template to elements and connections
+      onLoadTemplate(templateId);
+    }
+  };
+
+  const handlePreviewTemplate = (templateId: string) => {
+    // Show template preview
+    onPreviewTemplate(templateId);
+  };
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Select a Process Template</h3>
@@ -39,7 +52,7 @@ export const ProcessTemplateSelector: React.FC<ProcessTemplateSelectorProps> = (
               <div className="flex gap-2">
                 <Button 
                   size="sm" 
-                  onClick={() => onLoadTemplate(template.id)}
+                  onClick={() => handleLoadTemplate(template.id)}
                   className="flex-1"
                 >
                   <FileText className="h-4 w-4 mr-2" />
@@ -48,7 +61,7 @@ export const ProcessTemplateSelector: React.FC<ProcessTemplateSelectorProps> = (
                 <Button 
                   size="sm" 
                   variant="outline"
-                  onClick={() => onPreviewTemplate(template.id)}
+                  onClick={() => handlePreviewTemplate(template.id)}
                 >
                   <Play className="h-4 w-4" />
                 </Button>

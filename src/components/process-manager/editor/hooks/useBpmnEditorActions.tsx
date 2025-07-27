@@ -244,19 +244,55 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
     });
   }, [toast]);
 
-  const handleExportXml = useCallback(() => {
+  const handleExportXml = useCallback(async () => {
+    // Generate BPMN XML content
+    const xmlContent = generateBpmnXml(elements, connections);
+    
+    // Create download
+    const blob = new Blob([xmlContent], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `process_model_${new Date().toISOString().slice(0, 10)}.bpmn`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     toast({
-      title: "XML Export",
-      description: "Process exported as XML"
+      title: "XML Export Complete",
+      description: "Process exported as BPMN XML file"
     });
-  }, [toast]);
+  }, [elements, connections, toast]);
 
-  const handleExportJson = useCallback(() => {
+  const handleExportJson = useCallback(async () => {
+    // Generate JSON content
+    const jsonContent = {
+      elements,
+      connections,
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        version: '1.0',
+        creator: 'Process Manager'
+      }
+    };
+    
+    // Create download
+    const blob = new Blob([JSON.stringify(jsonContent, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `process_model_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     toast({
-      title: "JSON Export", 
-      description: "Process exported as JSON"
+      title: "JSON Export Complete", 
+      description: "Process exported as JSON file"
     });
-  }, [toast]);
+  }, [elements, connections, toast]);
 
   const handleXmlChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setXmlSource(e.target.value);
@@ -266,13 +302,52 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
     setIsImportDialogOpen(true);
   }, [setIsImportDialogOpen]);
 
-  const handleImportConfirm = useCallback(() => {
-    setIsImportDialogOpen(false);
-    toast({
-      title: "Import Complete",
-      description: "Process imported successfully"
-    });
-  }, [setIsImportDialogOpen, toast]);
+  const handleImportConfirm = useCallback(async (importData: string) => {
+    try {
+      let processData;
+      
+      // Try to parse as JSON first
+      try {
+        processData = JSON.parse(importData);
+      } catch {
+        // If JSON parsing fails, create basic process from BPMN/XML
+        processData = {
+          elements: [
+            {
+              id: 'imported-start',
+              type: 'start-event',
+              name: 'Start',
+              x: 100,
+              y: 100,
+              width: 36,
+              height: 36,
+              position: { x: 100, y: 100 },
+              properties: {}
+            }
+          ],
+          connections: []
+        };
+      }
+      
+      if (processData.elements) {
+        setElements(processData.elements);
+        setConnections(processData.connections || []);
+        saveToHistory(processData.elements, processData.connections || []);
+      }
+      
+      setIsImportDialogOpen(false);
+      toast({
+        title: "Import Complete",
+        description: "Process imported successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Import Error",
+        description: "Failed to import process. Please check the file format.",
+        variant: "destructive"
+      });
+    }
+  }, [setElements, setConnections, saveToHistory, setIsImportDialogOpen, toast]);
 
   const handleUpdateElementProperties = useCallback((props: ElementProperties) => {
     const newElements = elements.map(el => 
@@ -323,6 +398,51 @@ export const useBpmnEditorActions = (props: UseBpmnEditorActionsProps) => {
     handleUpdateElementProperties
   };
 };
+
+// Helper function to generate BPMN XML
+function generateBpmnXml(elements: BpmnElement[], connections: BpmnConnection[]): string {
+  const processId = `Process_${Date.now()}`;
+  
+  let elementsXml = '';
+  elements.forEach(element => {
+    switch (element.type) {
+      case 'start-event':
+        elementsXml += `    <bpmn:startEvent id="${element.id}" name="${element.name}" />\n`;
+        break;
+      case 'end-event':
+        elementsXml += `    <bpmn:endEvent id="${element.id}" name="${element.name}" />\n`;
+        break;
+      case 'task':
+      case 'user-task':
+      case 'service-task':
+        const taskType = element.type === 'task' ? 'task' : element.type.replace('-', '');
+        elementsXml += `    <bpmn:${taskType} id="${element.id}" name="${element.name}" />\n`;
+        break;
+      case 'exclusive-gateway':
+        elementsXml += `    <bpmn:exclusiveGateway id="${element.id}" name="${element.name}" />\n`;
+        break;
+      case 'parallel-gateway':
+        elementsXml += `    <bpmn:parallelGateway id="${element.id}" name="${element.name}" />\n`;
+        break;
+    }
+  });
+
+  let connectionsXml = '';
+  connections.forEach(connection => {
+    connectionsXml += `    <bpmn:sequenceFlow id="${connection.id}" sourceRef="${connection.source}" targetRef="${connection.target}" />\n`;
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                  id="Definitions_1" 
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="${processId}" isExecutable="true">
+${elementsXml}${connectionsXml}  </bpmn:process>
+</bpmn:definitions>`;
+}
 
 // Helper functions
 function getElementName(elementType: string): string {

@@ -120,7 +120,7 @@ export const BpmnEditor: React.FC<BpmnEditorProps> = ({ activeTool = "select" })
         onOpenChange={state.setIsImportDialogOpen}
         importSource={state.importSource}
         setImportSource={state.setImportSource}
-        onImportConfirm={actions.handleImportConfirm}
+        onImportConfirm={(data: string) => actions.handleImportConfirm(data)}
       />
 
       <TemplateSelector
