@@ -522,6 +522,118 @@ const PropertiesPanel = ({
   );
 };
 
+// Demo Loader Component
+const DemoProcessLoader = ({ 
+  onLoadDemo 
+}: { 
+  onLoadDemo: (nodes: Node[], edges: Edge[], processName: string) => void 
+}) => {
+  const [selectedDemo, setSelectedDemo] = useState<string>('');
+  const { toast } = useToast();
+
+  const handleLoadDemo = () => {
+    const demo = demoProcesses.find(p => p.id === selectedDemo);
+    if (!demo) {
+      toast({
+        title: "Error",
+        description: "Please select a demo process",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Convert demo elements to ReactFlow nodes
+    const demoNodes: Node[] = demo.elements.map(element => ({
+      id: element.id,
+      type: element.type === 'start-event' ? 'startEvent' : 
+            element.type === 'end-event' ? 'endEvent' :
+            element.type === 'user-task' || element.type === 'service-task' ? 'task' :
+            element.type === 'exclusive-gateway' ? 'gateway' :
+            element.type === 'subprocess' ? 'subprocess' : element.type,
+      position: element.position,
+      data: element.data || { label: element.name }
+    }));
+
+    // Convert demo connections to ReactFlow edges
+    const demoEdges: Edge[] = demo.connections.map(connection => ({
+      id: connection.id,
+      source: connection.source,
+      target: connection.target,
+      type: connection.type || 'smoothstep',
+      label: (connection as any).label || (connection as any).name || ''
+    }));
+
+    onLoadDemo(demoNodes, demoEdges, demo.name);
+    
+    toast({
+      title: "Demo Loaded",
+      description: `${demo.name} has been loaded successfully`
+    });
+  };
+
+  const categorizedDemos = demoProcesses.reduce((acc, demo) => {
+    if (!acc[demo.category]) acc[demo.category] = [];
+    acc[demo.category].push(demo);
+    return acc;
+  }, {} as Record<string, typeof demoProcesses>);
+
+  return (
+    <Card className="w-80">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm">Load Demo Process</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label className="text-xs font-medium mb-2 block">Select Demo Process</Label>
+          <Select value={selectedDemo} onValueChange={setSelectedDemo}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Choose a demo process" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(categorizedDemos).map(([category, demos]) => (
+                <div key={category}>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
+                    {category} Processes
+                  </div>
+                  {demos.map((demo) => (
+                    <SelectItem key={demo.id} value={demo.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{demo.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {demo.complexity} • {demo.elements.length} elements
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </div>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {selectedDemo && (
+          <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+            {demoProcesses.find(p => p.id === selectedDemo)?.description}
+          </div>
+        )}
+        
+        <Button 
+          onClick={handleLoadDemo} 
+          disabled={!selectedDemo}
+          className="w-full h-9"
+          size="sm"
+        >
+          <Play className="h-4 w-4 mr-2" />
+          Load Demo Process
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Import demo processes
+import { demoProcesses } from '@/data/processManagerDemoData';
+
 // Main Process Manager Component
 export const SignavioProcessManager = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -529,13 +641,28 @@ export const SignavioProcessManager = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [paletteCollapsed, setPaletteCollapsed] = useState(false);
   const [propertiesVisible, setPropertiesVisible] = useState(true);
+  const [showDemoLoader, setShowDemoLoader] = useState(false);
+  const [processName, setProcessName] = useState("Order Processing Workflow");
   const { toast } = useToast();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, type: 'smoothstep' }, eds)),
+    (params: Connection) => setEdges((eds) => addEdge({ 
+      ...params, 
+      type: 'smoothstep',
+      animated: false,
+      style: { stroke: '#6b7280', strokeWidth: 2 }
+    }, eds)),
     [setEdges]
   );
+
+  const onLoadDemo = useCallback((demoNodes: Node[], demoEdges: Edge[], name: string) => {
+    setNodes(demoNodes);
+    setEdges(demoEdges);
+    setProcessName(name);
+    setShowDemoLoader(false);
+    setSelectedNode(null);
+  }, [setNodes, setEdges]);
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
@@ -613,7 +740,7 @@ export const SignavioProcessManager = () => {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <SignavioHeader
-        processName="Order Processing Workflow"
+        processName={processName}
         onSave={handleSave}
         onExport={handleExport}
         onShare={handleShare}
@@ -657,29 +784,47 @@ export const SignavioProcessManager = () => {
             <Controls className="!bg-white !border-border !shadow-lg" />
             
             <Panel position="bottom-left" className="m-4">
-              <Card className="bg-white/95 backdrop-blur-sm">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span>Start Events: {nodes.filter(n => n.type === 'startEvent').length}</span>
+              <div className="flex gap-2">
+                <Card className="bg-white/95 backdrop-blur-sm">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        <span>Start Events: {nodes.filter(n => n.type === 'startEvent').length}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                        <span>Tasks: {nodes.filter(n => n.type === 'task').length}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                        <span>Gateways: {nodes.filter(n => n.type === 'gateway').length}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        <span>End Events: {nodes.filter(n => n.type === 'endEvent').length}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-blue-500" />
-                      <span>Tasks: {nodes.filter(n => n.type === 'task').length}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                      <span>Gateways: {nodes.filter(n => n.type === 'gateway').length}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <span>End Events: {nodes.filter(n => n.type === 'endEvent').length}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowDemoLoader(!showDemoLoader)}
+                  className="bg-white/95 backdrop-blur-sm"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Load Demo
+                </Button>
+              </div>
             </Panel>
+
+            {showDemoLoader && (
+              <Panel position="bottom-center" className="m-4">
+                <DemoProcessLoader onLoadDemo={onLoadDemo} />
+              </Panel>
+            )}
           </ReactFlow>
         </div>
 
