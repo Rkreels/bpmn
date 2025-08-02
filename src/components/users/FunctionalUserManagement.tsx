@@ -77,14 +77,18 @@ export function FunctionalUserManagement() {
 
   const handleCreateUser = () => {
     const newUser = {
+      name: `New User ${usersData.items.length + 1}`,
+      description: 'New user description',
       email: `user${usersData.items.length + 1}@company.com`,
       firstName: 'New',
       lastName: `User ${usersData.items.length + 1}`,
-      role: 'viewer',
+      role: 'viewer' as const,
       department: 'General',
       permissions: ['view_process'],
       lastLogin: new Date().toISOString(),
-      isActive: true
+      isActive: true,
+      status: 'active' as const,
+      createdBy: 'System Admin'
     };
     
     usersData.create(newUser);
