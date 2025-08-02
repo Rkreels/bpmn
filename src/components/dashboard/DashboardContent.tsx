@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DashboardHeader } from "./DashboardHeader";
 import { MetricsCards } from "./MetricsCards";
-import { QuickActions } from "./QuickActions";
+import { FunctionalQuickActions } from "./FunctionalQuickActions";
 import { RecentProjects } from "./RecentProjects";
 import { ProcessHealthCharts } from "./ProcessHealthCharts";
 import { NotificationList, Notification } from "./NotificationList";
