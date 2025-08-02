@@ -557,10 +557,13 @@ const DemoProcessLoader = ({
     // Convert demo connections to ReactFlow edges
     const demoEdges: Edge[] = demo.connections.map(connection => ({
       id: connection.id,
-      source: connection.source,
-      target: connection.target,
+      source: connection.sourceId || connection.source,
+      target: connection.targetId || connection.target,
+      sourceHandle: connection.sourceHandle,
+      targetHandle: connection.targetHandle,
       type: connection.type || 'smoothstep',
-      label: (connection as any).label || (connection as any).name || ''
+      label: (connection as any).label || (connection as any).name || '',
+      style: { stroke: '#6b7280', strokeWidth: 2 }
     }));
 
     onLoadDemo(demoNodes, demoEdges, demo.name);
@@ -595,7 +598,7 @@ const DemoProcessLoader = ({
                   <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
                     {category} Processes
                   </div>
-                  {demos.map((demo) => (
+                  {(demos as any[]).map((demo: any) => (
                     <SelectItem key={demo.id} value={demo.id}>
                       <div className="flex flex-col">
                         <span className="font-medium">{demo.name}</span>

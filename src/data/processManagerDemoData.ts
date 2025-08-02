@@ -1,4 +1,6 @@
-export const demoProcesses = [
+import { fixDemoConnections } from '../utils/demoDataFixer';
+
+const rawDemoProcesses = [
   {
     id: "demo-simple-1",
     name: "Simple Purchase Request",
@@ -61,6 +63,8 @@ export const demoProcesses = [
         target: "task-simple-1",
         sourceId: "start-simple-1",
         targetId: "task-simple-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -69,6 +73,8 @@ export const demoProcesses = [
         target: "task-simple-2",
         sourceId: "task-simple-1",
         targetId: "task-simple-2",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -77,6 +83,8 @@ export const demoProcesses = [
         target: "end-simple-1",
         sourceId: "task-simple-2",
         targetId: "end-simple-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       }
     ]
@@ -165,6 +173,8 @@ export const demoProcesses = [
         target: "task-easy-1",
         sourceId: "start-easy-1",
         targetId: "task-easy-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -173,6 +183,8 @@ export const demoProcesses = [
         target: "gateway-easy-1",
         sourceId: "task-easy-1",
         targetId: "gateway-easy-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -181,6 +193,8 @@ export const demoProcesses = [
         target: "task-easy-2",
         sourceId: "gateway-easy-1",
         targetId: "task-easy-2",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep",
         label: "Yes"
       },
@@ -190,6 +204,8 @@ export const demoProcesses = [
         target: "task-easy-3",
         sourceId: "gateway-easy-1",
         targetId: "task-easy-3",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep",
         label: "No"
       },
@@ -199,6 +215,8 @@ export const demoProcesses = [
         target: "end-easy-1",
         sourceId: "task-easy-2",
         targetId: "end-easy-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -207,6 +225,8 @@ export const demoProcesses = [
         target: "end-easy-1",
         sourceId: "task-easy-3",
         targetId: "end-easy-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       }
     ]
@@ -361,6 +381,8 @@ export const demoProcesses = [
         target: "task-complex-1",
         sourceId: "start-complex-1",
         targetId: "task-complex-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -369,6 +391,8 @@ export const demoProcesses = [
         target: "gateway-complex-1",
         sourceId: "task-complex-1",
         targetId: "gateway-complex-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -605,6 +629,8 @@ export const demoProcesses = [
         target: "task-order-1",
         sourceId: "start-order-1",
         targetId: "task-order-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -613,6 +639,8 @@ export const demoProcesses = [
         target: "gateway-order-1",
         sourceId: "task-order-1",
         targetId: "gateway-order-1",
+        sourceHandle: null,
+        targetHandle: null,
         type: "smoothstep"
       },
       {
@@ -700,3 +728,5 @@ export const demoProcesses = [
     ]
   }
 ];
+
+export const demoProcesses = fixDemoConnections(rawDemoProcesses);
