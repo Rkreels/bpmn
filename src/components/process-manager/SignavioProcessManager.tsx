@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { demoProcesses } from '@/data/processManagerDemoData';
 import { createBpmnExporter } from './BpmnExporter';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { demoProcesses } from '@/data/processManagerDemoData';
 import {
   ReactFlow,
   MiniMap,
