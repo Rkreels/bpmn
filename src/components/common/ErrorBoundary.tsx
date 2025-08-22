@@ -1,8 +1,7 @@
-
-import React, { Component, ErrorInfo, ReactNode } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Props {
   children: ReactNode;
@@ -24,10 +23,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error('Error caught by ErrorBoundary:', error, errorInfo);
   }
 
-  private handleRetry = () => {
+  private handleReset = () => {
     this.setState({ hasError: false, error: undefined });
   };
 
@@ -38,29 +37,31 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <Card className="m-4">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-              Something went wrong
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              An error occurred while rendering this component. Please try refreshing or contact support if the problem persists.
-            </p>
-            {this.state.error && (
-              <details className="bg-muted p-3 rounded text-sm">
-                <summary className="cursor-pointer font-medium">Error Details</summary>
-                <pre className="mt-2 whitespace-pre-wrap">{this.state.error.message}</pre>
-              </details>
-            )}
-            <Button onClick={this.handleRetry} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="min-h-[200px] flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
+              </div>
+              <CardTitle className="text-lg">Something went wrong</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <p className="text-sm text-muted-foreground">
+                An unexpected error occurred. Please try refreshing the page or contact support if the problem persists.
+              </p>
+              {this.state.error && (
+                <details className="text-xs text-left bg-muted p-3 rounded">
+                  <summary className="cursor-pointer font-medium">Error Details</summary>
+                  <pre className="mt-2 whitespace-pre-wrap">{this.state.error.message}</pre>
+                </details>
+              )}
+              <Button onClick={this.handleReset} className="w-full">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       );
     }
 

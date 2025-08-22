@@ -9,6 +9,7 @@ import { VoiceTrainerProvider } from "@/contexts/VoiceTrainerContext";
 import { VoiceTrainerToggle } from "@/components/voice/VoiceTrainerToggle";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import Index from "./pages/Index";
 import ProcessManager from "./pages/ProcessManager";
 import Users from "./pages/Users";
@@ -28,15 +29,16 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <VoiceProvider>
-        <VoiceTrainerProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <VoiceTrainerToggle />
-            <BrowserRouter>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <VoiceProvider>
+          <VoiceTrainerProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <VoiceTrainerToggle />
+              <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -54,12 +56,13 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-        </VoiceTrainerProvider>
-      </VoiceProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+          </VoiceTrainerProvider>
+        </VoiceProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -1,4 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { demoProcesses } from '@/data/processManagerDemoData';
+import { createBpmnExporter } from './BpmnExporter';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   ReactFlow,
   MiniMap,
@@ -634,8 +638,6 @@ const DemoProcessLoader = ({
   );
 };
 
-// Import demo processes
-import { demoProcesses } from '@/data/processManagerDemoData';
 
 // Main Process Manager Component
 export const SignavioProcessManager = () => {
@@ -727,6 +729,18 @@ export const SignavioProcessManager = () => {
   };
 
   const handleExport = () => {
+    const exporter = createBpmnExporter();
+    const bpmnXml = exporter.exportToBpmn(nodes, edges, processName);
+    
+    // Create and download file
+    const blob = new Blob([bpmnXml], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${processName.replace(/\s+/g, '_').toLowerCase()}.bpmn`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
     toast({
       title: "Process Exported",
       description: "Your process has been exported as BPMN XML.",
@@ -741,7 +755,8 @@ export const SignavioProcessManager = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <ErrorBoundary>
+      <div className="h-screen flex flex-col bg-gray-50">
       <SignavioHeader
         processName={processName}
         onSave={handleSave}
@@ -845,5 +860,6 @@ export const SignavioProcessManager = () => {
         />
       </div>
     </div>
+    </ErrorBoundary>
   );
 };
