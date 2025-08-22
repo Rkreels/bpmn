@@ -17,6 +17,8 @@ import {
   Panel,
   NodeTypes,
   BackgroundVariant,
+  Handle,
+  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,70 +62,103 @@ import {
 
 // Enhanced BPMN Node Components matching SAP Signavio style
 const StartEventNode = ({ data, selected }: { data: any; selected?: boolean }) => (
-  <div className={cn(
-    "w-10 h-10 rounded-full border-2 bg-green-50 flex items-center justify-center shadow-sm transition-all",
-    selected ? "border-green-600 ring-2 ring-green-200" : "border-green-500",
-    "hover:shadow-md cursor-pointer"
-  )}>
-    <Play className="w-4 h-4 text-green-700 fill-green-700" />
-  </div>
+  <>
+    <div className={cn(
+      "w-10 h-10 rounded-full border-2 bg-green-50 flex items-center justify-center shadow-sm transition-all",
+      selected ? "border-green-600 ring-2 ring-green-200" : "border-green-500",
+      "hover:shadow-md cursor-pointer"
+    )}>
+      <Play className="w-4 h-4 text-green-700 fill-green-700" />
+    </div>
+    <Handle type="source" position={Position.Right} />
+  </>
 );
 
 const EndEventNode = ({ data, selected }: { data: any; selected?: boolean }) => (
-  <div className={cn(
-    "w-10 h-10 rounded-full border-4 bg-red-50 flex items-center justify-center shadow-sm transition-all",
-    selected ? "border-red-600 ring-2 ring-red-200" : "border-red-500",
-    "hover:shadow-md cursor-pointer"
-  )}>
-    <Square className="w-3 h-3 text-red-700 fill-red-700" />
-  </div>
+  <>
+    <div className={cn(
+      "w-10 h-10 rounded-full border-4 bg-red-50 flex items-center justify-center shadow-sm transition-all",
+      selected ? "border-red-600 ring-2 ring-red-200" : "border-red-500",
+      "hover:shadow-md cursor-pointer"
+    )}>
+      <Square className="w-3 h-3 text-red-700 fill-red-700" />
+    </div>
+    <Handle type="target" position={Position.Left} />
+  </>
 );
 
 const TaskNode = ({ data, selected }: { data: any; selected?: boolean }) => (
-  <div className={cn(
-    "min-w-28 h-16 bg-blue-50 border-2 rounded-lg flex flex-col items-center justify-center p-2 shadow-sm transition-all",
-    selected ? "border-blue-600 ring-2 ring-blue-200" : "border-blue-400",
-    "hover:shadow-md cursor-pointer"
-  )}>
-    <div className="text-xs font-semibold text-blue-900 text-center truncate w-full">
-      {data.label || 'Task'}
+  <>
+    <div className={cn(
+      "min-w-28 h-16 bg-blue-50 border-2 rounded-lg flex flex-col items-center justify-center p-2 shadow-sm transition-all",
+      selected ? "border-blue-600 ring-2 ring-blue-200" : "border-blue-400",
+      "hover:shadow-md cursor-pointer"
+    )}>
+      <div className="text-xs font-semibold text-blue-900 text-center truncate w-full">
+        {data.label || 'Task'}
+      </div>
+      {data.type === 'user' && (
+        <User className="w-3 h-3 text-blue-600 mt-1" />
+      )}
+      {data.type === 'service' && (
+        <Zap className="w-3 h-3 text-blue-600 mt-1" />
+      )}
     </div>
-    {data.type === 'user' && (
-      <User className="w-3 h-3 text-blue-600 mt-1" />
-    )}
-    {data.type === 'service' && (
-      <Zap className="w-3 h-3 text-blue-600 mt-1" />
-    )}
-  </div>
+    <Handle type="target" position={Position.Left} />
+    <Handle type="source" position={Position.Right} />
+  </>
 );
 
 const GatewayNode = ({ data, selected }: { data: any; selected?: boolean }) => (
-  <div className={cn(
-    "w-12 h-12 bg-yellow-50 border-2 transform rotate-45 flex items-center justify-center shadow-sm transition-all",
-    selected ? "border-yellow-600 ring-2 ring-yellow-200" : "border-yellow-500",
-    "hover:shadow-md cursor-pointer"
-  )}>
-    <div className="transform -rotate-45">
-      {data.gatewayType === 'exclusive' && <X className="w-4 h-4 text-yellow-700" />}
-      {data.gatewayType === 'parallel' && <Plus className="w-4 h-4 text-yellow-700" />}
-      {data.gatewayType === 'inclusive' && <Circle className="w-4 h-4 text-yellow-700" />}
+  <>
+    <div className={cn(
+      "w-12 h-12 bg-yellow-50 border-2 transform rotate-45 flex items-center justify-center shadow-sm transition-all",
+      selected ? "border-yellow-600 ring-2 ring-yellow-200" : "border-yellow-500",
+      "hover:shadow-md cursor-pointer"
+    )}>
+      <div className="transform -rotate-45">
+        {data.gatewayType === 'exclusive' && <X className="w-4 h-4 text-yellow-700" />}
+        {data.gatewayType === 'parallel' && <Plus className="w-4 h-4 text-yellow-700" />}
+        {data.gatewayType === 'inclusive' && <Circle className="w-4 h-4 text-yellow-700" />}
+      </div>
     </div>
-  </div>
+    <Handle type="target" position={Position.Left} />
+    <Handle type="source" position={Position.Right} />
+    <Handle type="source" position={Position.Bottom} />
+  </>
 );
 
 const SubProcessNode = ({ data, selected }: { data: any; selected?: boolean }) => (
-  <div className={cn(
-    "min-w-36 h-20 bg-purple-50 border-2 rounded-lg flex flex-col items-center justify-center p-2 shadow-sm transition-all relative",
-    selected ? "border-purple-600 ring-2 ring-purple-200" : "border-purple-400",
-    "hover:shadow-md cursor-pointer"
-  )}>
-    <div className="text-xs font-semibold text-purple-900 text-center truncate w-full">
-      {data.label || 'Sub Process'}
+  <>
+    <div className={cn(
+      "min-w-36 h-20 bg-purple-50 border-2 rounded-lg flex flex-col items-center justify-center p-2 shadow-sm transition-all relative",
+      selected ? "border-purple-600 ring-2 ring-purple-200" : "border-purple-400",
+      "hover:shadow-md cursor-pointer"
+    )}>
+      <div className="text-xs font-semibold text-purple-900 text-center truncate w-full">
+        {data.label || 'Sub Process'}
+      </div>
+      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+        <Square className="w-3 h-3 text-purple-600 border border-purple-600" />
+      </div>
     </div>
-    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-      <Square className="w-3 h-3 text-purple-600 border border-purple-600" />
+    <Handle type="target" position={Position.Left} />
+    <Handle type="source" position={Position.Right} />
+  </>
+);
+
+const IntermediateEventNode = ({ data, selected }: { data: any; selected?: boolean }) => (
+  <>
+    <div className={cn(
+      "w-10 h-10 rounded-full border-2 bg-blue-50 flex items-center justify-center shadow-sm transition-all",
+      selected ? "border-blue-600 ring-2 ring-blue-200" : "border-blue-500",
+      "hover:shadow-md cursor-pointer"
+    )}>
+      <Circle className="w-4 h-4 text-blue-700" />
     </div>
-  </div>
+    <Handle type="target" position={Position.Left} />
+    <Handle type="source" position={Position.Right} />
+  </>
 );
 
 const nodeTypes: NodeTypes = {
@@ -132,6 +167,13 @@ const nodeTypes: NodeTypes = {
   task: TaskNode,
   gateway: GatewayNode,
   subprocess: SubProcessNode,
+  intermediateEvent: IntermediateEventNode,
+  userTask: TaskNode,
+  serviceTask: TaskNode,
+  scriptTask: TaskNode,
+  exclusiveGateway: GatewayNode,
+  parallelGateway: GatewayNode,
+  inclusiveGateway: GatewayNode,
 };
 
 const initialNodes: Node[] = [
