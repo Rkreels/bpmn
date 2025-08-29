@@ -25,17 +25,17 @@ export const Header: React.FC<HeaderProps> = ({ pageTitle }) => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800';
-      case 'process-owner': return 'bg-purple-100 text-purple-800';
-      case 'modeler': return 'bg-blue-100 text-blue-800';
-      case 'analyst': return 'bg-green-100 text-green-800';
-      case 'viewer': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'admin': return 'bg-status-danger/10 text-status-danger border-status-danger/20';
+      case 'process-owner': return 'bg-primary/10 text-primary border-primary/20';
+      case 'modeler': return 'bg-enterprise-blue-500/10 text-enterprise-blue-700 border-enterprise-blue-500/20';
+      case 'analyst': return 'bg-status-success/10 text-status-success border-status-success/20';
+      case 'viewer': return 'bg-muted text-muted-foreground border-border';
+      default: return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   return (
-    <header className="border-b bg-white px-6 py-4">
+    <header className="border-b bg-background px-6 py-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button
@@ -50,19 +50,19 @@ export const Header: React.FC<HeaderProps> = ({ pageTitle }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/')}
+            onClick={() => window.location.href = 'https://skillsim.vercel.app/dashboard'}
             className="flex items-center space-x-2"
           >
             <Home className="h-4 w-4" />
-            <span>Home</span>
+            <span>Master Dashboard</span>
           </Button>
-          <h1 className="text-xl font-semibold text-gray-900">{pageTitle}</h1>
+          <h1 className="text-xl font-semibold text-foreground">{pageTitle}</h1>
         </div>
         
         <div className="flex items-center space-x-4">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search..."
               className="w-64 pl-10"
@@ -72,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ pageTitle }) => {
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 h-3 w-3 bg-status-danger rounded-full text-xs text-white flex items-center justify-center">
               3
             </span>
           </Button>
@@ -98,8 +98,8 @@ export const Header: React.FC<HeaderProps> = ({ pageTitle }) => {
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
                 <p className="text-sm font-medium">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
-                <p className="text-xs text-gray-500">{user?.department}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-xs text-muted-foreground">{user?.department}</p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -126,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({ pageTitle }) => {
                 </>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-red-600">
+              <DropdownMenuItem onClick={logout} className="text-status-danger focus:text-status-danger">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>
