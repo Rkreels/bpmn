@@ -103,6 +103,9 @@ const TaskNode = ({ data, selected }: { data: any; selected?: boolean }) => (
       {data.type === 'service' && (
         <Zap className="w-3 h-3 text-blue-600 mt-1" />
       )}
+      {data.type === 'send' && (
+        <Mail className="w-3 h-3 text-blue-600 mt-1" />
+      )}
     </div>
     <Handle type="target" position={Position.Left} />
     <Handle type="source" position={Position.Right} />
@@ -128,447 +131,226 @@ const GatewayNode = ({ data, selected }: { data: any; selected?: boolean }) => (
   </>
 );
 
-const SubProcessNode = ({ data, selected }: { data: any; selected?: boolean }) => (
-  <>
-    <div className={cn(
-      "min-w-36 h-20 bg-purple-50 border-2 rounded-lg flex flex-col items-center justify-center p-2 shadow-sm transition-all relative",
-      selected ? "border-purple-600 ring-2 ring-purple-200" : "border-purple-400",
-      "hover:shadow-md cursor-pointer"
-    )}>
-      <div className="text-xs font-semibold text-purple-900 text-center truncate w-full">
-        {data.label || 'Sub Process'}
-      </div>
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-        <Square className="w-3 h-3 text-purple-600 border border-purple-600" />
-      </div>
-    </div>
-    <Handle type="target" position={Position.Left} />
-    <Handle type="source" position={Position.Right} />
-  </>
-);
-
-const IntermediateEventNode = ({ data, selected }: { data: any; selected?: boolean }) => (
-  <>
-    <div className={cn(
-      "w-10 h-10 rounded-full border-2 bg-blue-50 flex items-center justify-center shadow-sm transition-all",
-      selected ? "border-blue-600 ring-2 ring-blue-200" : "border-blue-500",
-      "hover:shadow-md cursor-pointer"
-    )}>
-      <Circle className="w-4 h-4 text-blue-700" />
-    </div>
-    <Handle type="target" position={Position.Left} />
-    <Handle type="source" position={Position.Right} />
-  </>
-);
-
+// Node types registry
 const nodeTypes: NodeTypes = {
   startEvent: StartEventNode,
   endEvent: EndEventNode,
   task: TaskNode,
-  gateway: GatewayNode,
-  subprocess: SubProcessNode,
-  intermediateEvent: IntermediateEventNode,
   userTask: TaskNode,
   serviceTask: TaskNode,
-  scriptTask: TaskNode,
+  sendTask: TaskNode,
   exclusiveGateway: GatewayNode,
   parallelGateway: GatewayNode,
   inclusiveGateway: GatewayNode,
 };
 
-const initialNodes: Node[] = [
-  {
-    id: 'start-1',
-    type: 'startEvent',
-    position: { x: 150, y: 200 },
-    data: { label: 'Start Process' },
-  },
-  {
-    id: 'task-1',
-    type: 'task',
-    position: { x: 300, y: 180 },
-    data: { label: 'Review Request', type: 'user' },
-  },
-  {
-    id: 'gateway-1',
-    type: 'gateway',
-    position: { x: 480, y: 185 },
-    data: { label: 'Approved?', gatewayType: 'exclusive' },
-  },
-  {
-    id: 'task-2',
-    type: 'task',
-    position: { x: 600, y: 120 },
-    data: { label: 'Process Request', type: 'service' },
-  },
-  {
-    id: 'task-3',
-    type: 'task',
-    position: { x: 600, y: 250 },
-    data: { label: 'Send Rejection', type: 'user' },
-  },
-  {
-    id: 'end-1',
-    type: 'endEvent',
-    position: { x: 780, y: 200 },
-    data: { label: 'End Process' },
-  },
-];
-
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: 'start-1', target: 'task-1', type: 'smoothstep' },
-  { id: 'e2-3', source: 'task-1', target: 'gateway-1', type: 'smoothstep' },
-  { id: 'e3-4', source: 'gateway-1', target: 'task-2', type: 'smoothstep', label: 'Yes' },
-  { id: 'e3-5', source: 'gateway-1', target: 'task-3', type: 'smoothstep', label: 'No' },
-  { id: 'e4-6', source: 'task-2', target: 'end-1', type: 'smoothstep' },
-  { id: 'e5-6', source: 'task-3', target: 'end-1', type: 'smoothstep' },
-];
-
-// SAP Signavio Style Header
-const SignavioHeader = ({ 
-  processName, 
-  onSave, 
-  onExport, 
-  onShare,
-  isCollaborating = false 
-}: {
-  processName: string;
-  onSave: () => void;
-  onExport: () => void;
-  onShare: () => void;
-  isCollaborating?: boolean;
-}) => {
-  return (
-    <div className="h-14 bg-white border-b border-border px-4 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Home className="w-4 h-4 text-muted-foreground" />
-          <ChevronRight className="w-3 h-3 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Processes</span>
-          <ChevronRight className="w-3 h-3 text-muted-foreground" />
-          <span className="text-sm font-medium">{processName}</span>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        {isCollaborating && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-green-50 rounded-full">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs text-green-700">3 collaborators</span>
-          </div>
-        )}
-        
-        <Button variant="ghost" size="sm" onClick={onSave}>
-          <Save className="w-4 h-4 mr-1" />
-          Save
-        </Button>
-        
-        <Button variant="ghost" size="sm" onClick={onShare}>
-          <Share2 className="w-4 h-4 mr-1" />
-          Share
-        </Button>
-        
-        <Button variant="ghost" size="sm" onClick={onExport}>
-          <Download className="w-4 h-4 mr-1" />
-          Export
-        </Button>
-        
-        <Separator orientation="vertical" className="h-6" />
-        
-        <Button variant="ghost" size="sm">
-          <MoreHorizontal className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-// Enhanced Element Palette
+// Element Palette Component
 const ElementPalette = ({ 
-  isCollapsed, 
+  isVisible, 
   onToggle, 
-  onDragStart 
+  onAddElement 
 }: { 
-  isCollapsed: boolean; 
+  isVisible: boolean; 
   onToggle: () => void; 
-  onDragStart: (event: React.DragEvent, nodeType: string) => void; 
+  onAddElement: (type: string, elementData: any) => void;
 }) => {
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
-    events: true,
-    tasks: true,
-    gateways: false,
-    containers: false,
-    data: false,
-  });
+  const elementTypes = [
+    { type: 'startEvent', label: 'Start Event', icon: Play, color: 'green' },
+    { type: 'endEvent', label: 'End Event', icon: Square, color: 'red' },
+    { type: 'task', label: 'Task', icon: FileText, color: 'blue' },
+    { type: 'userTask', label: 'User Task', icon: User, color: 'blue' },
+    { type: 'serviceTask', label: 'Service Task', icon: Zap, color: 'blue' },
+    { type: 'sendTask', label: 'Send Task', icon: Mail, color: 'blue' },
+    { type: 'exclusiveGateway', label: 'Exclusive Gateway', icon: Diamond, color: 'yellow' },
+    { type: 'parallelGateway', label: 'Parallel Gateway', icon: Diamond, color: 'yellow' },
+  ];
 
-  const elementCategories = {
-    events: [
-      { type: 'startEvent', icon: Play, label: 'Start Event', color: 'text-green-600' },
-      { type: 'endEvent', icon: Square, label: 'End Event', color: 'text-red-600' },
-      { type: 'intermediateEvent', icon: Circle, label: 'Intermediate Event', color: 'text-blue-600' },
-    ],
-    tasks: [
-      { type: 'task', icon: FileText, label: 'Task', color: 'text-blue-600' },
-      { type: 'userTask', icon: User, label: 'User Task', color: 'text-blue-600' },
-      { type: 'serviceTask', icon: Zap, label: 'Service Task', color: 'text-blue-600' },
-      { type: 'scriptTask', icon: Code, label: 'Script Task', color: 'text-blue-600' },
-    ],
-    gateways: [
-      { type: 'exclusiveGateway', icon: Diamond, label: 'Exclusive Gateway', color: 'text-yellow-600' },
-      { type: 'parallelGateway', icon: Diamond, label: 'Parallel Gateway', color: 'text-yellow-600' },
-      { type: 'inclusiveGateway', icon: Diamond, label: 'Inclusive Gateway', color: 'text-yellow-600' },
-    ],
-    containers: [
-      { type: 'subprocess', icon: Layers, label: 'Sub Process', color: 'text-purple-600' },
-      { type: 'pool', icon: Square, label: 'Pool', color: 'text-purple-600' },
-      { type: 'lane', icon: Square, label: 'Lane', color: 'text-purple-600' },
-    ],
-    data: [
-      { type: 'dataObject', icon: Database, label: 'Data Object', color: 'text-gray-600' },
-      { type: 'dataStore', icon: HardDrive, label: 'Data Store', color: 'text-gray-600' },
-      { type: 'message', icon: Mail, label: 'Message', color: 'text-gray-600' },
-    ],
+  const handleDragStart = (event: React.DragEvent, elementType: string) => {
+    event.dataTransfer.setData('application/reactflow', elementType);
+    event.dataTransfer.effectAllowed = 'move';
   };
 
-  if (isCollapsed) {
-    return (
-      <div className="absolute left-4 top-20 bg-white border border-border rounded-lg shadow-lg p-2 z-20">
-        <Button variant="ghost" size="sm" onClick={onToggle}>
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="absolute left-4 top-20 bg-white border border-border rounded-lg shadow-lg z-20 w-64 max-h-[calc(100vh-120px)]">
-      <div className="flex items-center justify-between p-3 border-b border-border">
-        <h3 className="text-sm font-semibold">BPMN Elements</h3>
-        <Button variant="ghost" size="sm" onClick={onToggle}>
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-      </div>
-      
-      <ScrollArea className="h-[calc(100vh-200px)]">
-        <div className="p-2 space-y-2">
-          {Object.entries(elementCategories).map(([category, elements]) => (
-            <Collapsible
-              key={category}
-              open={expandedCategories[category]}
-              onOpenChange={(open) => setExpandedCategories(prev => ({ ...prev, [category]: open }))}
-            >
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between h-8 px-2 text-xs font-medium">
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                  {expandedCategories[category] ? 
-                    <ChevronDown className="h-3 w-3" /> : 
-                    <ChevronRight className="h-3 w-3" />
-                  }
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-1">
-                {elements.map((element) => {
-                  const IconComponent = element.icon;
-                  return (
-                    <div
-                      key={element.type}
-                      className="flex items-center gap-2 p-2 border border-border rounded cursor-grab hover:bg-accent transition-colors text-xs"
-                      draggable
-                      onDragStart={(event) => onDragStart(event, element.type)}
-                    >
-                      <IconComponent className={`w-4 h-4 ${element.color}`} />
-                      <span>{element.label}</span>
-                    </div>
-                  );
-                })}
-              </CollapsibleContent>
-            </Collapsible>
-          ))}
+    <Card className={cn(
+      "absolute left-4 top-4 z-10 transition-all duration-300",
+      isVisible ? "w-64" : "w-12"
+    )}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4" />
+            {isVisible && <CardTitle className="text-sm">Elements</CardTitle>}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="h-6 w-6 p-0"
+          >
+            {isVisible ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          </Button>
         </div>
-      </ScrollArea>
-    </div>
+      </CardHeader>
+      
+      {isVisible && (
+        <CardContent className="pt-0">
+          <ScrollArea className="h-96">
+            <div className="grid gap-2">
+              {elementTypes.map((element) => {
+                const IconComponent = element.icon;
+                return (
+                  <div
+                    key={element.type}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, element.type)}
+                    className="flex items-center gap-2 p-2 border rounded-lg cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <IconComponent className={cn("w-4 h-4", `text-${element.color}-600`)} />
+                    <span className="text-xs font-medium">{element.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      )}
+    </Card>
   );
 };
 
-// Properties Panel
-const PropertiesPanel = ({ 
-  selectedNode, 
-  onNodeUpdate,
-  isVisible,
+// Process Properties Panel
+const ProcessPropertiesPanel = ({ 
+  selectedNode,
+  onUpdateNode,
+  isVisible, 
   onToggle 
 }: { 
-  selectedNode: Node | null; 
-  onNodeUpdate: (nodeId: string, data: any) => void;
-  isVisible: boolean;
+  selectedNode: Node | null;
+  onUpdateNode: (id: string, updates: any) => void;
+  isVisible: boolean; 
   onToggle: () => void;
 }) => {
-  const [nodeData, setNodeData] = useState({
-    label: '',
-    description: '',
-    assignee: '',
-    priority: 'medium',
-    documentation: '',
-    type: 'user',
-    gatewayType: 'exclusive'
-  });
+  const [nodeLabel, setNodeLabel] = useState<string>(selectedNode?.data?.label as string || '');
+  const [nodeType, setNodeType] = useState<string>(selectedNode?.data?.type as string || '');
+  const [assignee, setAssignee] = useState<string>(selectedNode?.data?.assignee as string || '');
 
   useEffect(() => {
     if (selectedNode) {
-      setNodeData({
-        label: (selectedNode.data?.label as string) || '',
-        description: (selectedNode.data?.description as string) || '',
-        assignee: (selectedNode.data?.assignee as string) || '',
-        priority: (selectedNode.data?.priority as string) || 'medium',
-        documentation: (selectedNode.data?.documentation as string) || '',
-        type: (selectedNode.data?.type as string) || 'user',
-        gatewayType: (selectedNode.data?.gatewayType as string) || 'exclusive'
-      });
+      setNodeLabel(selectedNode.data?.label as string || '');
+      setNodeType(selectedNode.data?.type as string || '');
+      setAssignee(selectedNode.data?.assignee as string || '');
     }
   }, [selectedNode]);
 
-  const handleUpdate = (field: string, value: string) => {
-    setNodeData(prev => ({ ...prev, [field]: value }));
+  const handleUpdateNode = () => {
     if (selectedNode) {
-      onNodeUpdate(selectedNode.id, { ...nodeData, [field]: value });
+      onUpdateNode(selectedNode.id, {
+        ...selectedNode.data,
+        label: nodeLabel,
+        type: nodeType,
+        assignee: assignee
+      });
     }
   };
 
-  if (!isVisible) {
-    return (
-      <div className="absolute right-4 top-20 bg-white border border-border rounded-lg shadow-lg p-2 z-20">
-        <Button variant="ghost" size="sm" onClick={onToggle}>
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="absolute right-4 top-20 bg-white border border-border rounded-lg shadow-lg z-20 w-80 max-h-[calc(100vh-120px)]">
-      <div className="flex items-center justify-between p-3 border-b border-border">
-        <h3 className="text-sm font-semibold">Properties</h3>
-        <Button variant="ghost" size="sm" onClick={onToggle}>
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
+    <Card className={cn(
+      "absolute right-4 top-4 z-10 transition-all duration-300",
+      isVisible ? "w-80" : "w-12"
+    )}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            {isVisible && <CardTitle className="text-sm">Properties</CardTitle>}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="h-6 w-6 p-0"
+          >
+            {isVisible ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+          </Button>
+        </div>
+      </CardHeader>
       
-      <ScrollArea className="h-[calc(100vh-200px)]">
-        <div className="p-4 space-y-4">
+      {isVisible && (
+        <CardContent className="space-y-4">
           {selectedNode ? (
             <>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">{selectedNode.type}</Badge>
-                <span className="text-xs text-muted-foreground">ID: {selectedNode.id}</span>
+              <div>
+                <Label className="text-xs font-medium">Element ID</Label>
+                <div className="text-xs text-muted-foreground mt-1 p-2 bg-muted rounded">
+                  {selectedNode.id}
+                </div>
               </div>
               
               <div>
-                <Label htmlFor="label" className="text-xs font-medium">Name</Label>
+                <Label className="text-xs font-medium">Label</Label>
                 <Input
-                  id="label"
-                  value={nodeData.label}
-                  onChange={(e) => handleUpdate('label', e.target.value)}
-                  className="mt-1 h-8"
-                  placeholder="Enter element name"
+                  value={nodeLabel}
+                  onChange={(e) => setNodeLabel(e.target.value)}
+                  onBlur={handleUpdateNode}
+                  className="mt-1 h-8 text-xs"
                 />
               </div>
-
+              
               <div>
-                <Label htmlFor="description" className="text-xs font-medium">Description</Label>
-                <Textarea
-                  id="description"
-                  value={nodeData.description}
-                  onChange={(e) => handleUpdate('description', e.target.value)}
-                  className="mt-1"
-                  placeholder="Enter description"
-                  rows={2}
-                />
+                <Label className="text-xs font-medium">Type</Label>
+                <Select value={nodeType} onValueChange={(value: string) => {
+                  setNodeType(value);
+                  if (selectedNode) {
+                    onUpdateNode(selectedNode.id, {
+                      ...selectedNode.data,
+                      type: value
+                    });
+                  }
+                }}>
+                  <SelectTrigger className="mt-1 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User Task</SelectItem>
+                    <SelectItem value="service">Service Task</SelectItem>
+                    <SelectItem value="send">Send Task</SelectItem>
+                    <SelectItem value="manual">Manual Task</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              {selectedNode.type === 'task' && (
-                <>
-                  <div>
-                    <Label htmlFor="type" className="text-xs font-medium">Task Type</Label>
-                    <Select value={nodeData.type} onValueChange={(value) => handleUpdate('type', value)}>
-                      <SelectTrigger className="mt-1 h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User Task</SelectItem>
-                        <SelectItem value="service">Service Task</SelectItem>
-                        <SelectItem value="script">Script Task</SelectItem>
-                        <SelectItem value="manual">Manual Task</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="assignee" className="text-xs font-medium">Assignee</Label>
-                    <Input
-                      id="assignee"
-                      value={nodeData.assignee}
-                      onChange={(e) => handleUpdate('assignee', e.target.value)}
-                      className="mt-1 h-8"
-                      placeholder="Assign to user"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="priority" className="text-xs font-medium">Priority</Label>
-                    <Select value={nodeData.priority} onValueChange={(value) => handleUpdate('priority', value)}>
-                      <SelectTrigger className="mt-1 h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-
-              {selectedNode.type === 'gateway' && (
+              
+              {(nodeType === 'user' || nodeType === 'manual') && (
                 <div>
-                  <Label htmlFor="gatewayType" className="text-xs font-medium">Gateway Type</Label>
-                  <Select value={nodeData.gatewayType} onValueChange={(value) => handleUpdate('gatewayType', value)}>
-                    <SelectTrigger className="mt-1 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="exclusive">Exclusive (XOR)</SelectItem>
-                      <SelectItem value="parallel">Parallel (AND)</SelectItem>
-                      <SelectItem value="inclusive">Inclusive (OR)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-xs font-medium">Assignee</Label>
+                  <Input
+                    value={assignee}
+                    onChange={(e) => setAssignee(e.target.value)}
+                    onBlur={handleUpdateNode}
+                    placeholder="Enter assignee"
+                    className="mt-1 h-8 text-xs"
+                  />
                 </div>
               )}
-
+              
               <div>
-                <Label htmlFor="documentation" className="text-xs font-medium">Documentation</Label>
-                <Textarea
-                  id="documentation"
-                  value={nodeData.documentation}
-                  onChange={(e) => handleUpdate('documentation', e.target.value)}
-                  className="mt-1"
-                  placeholder="Add documentation"
-                  rows={3}
-                />
+                <Label className="text-xs font-medium">Position</Label>
+                <div className="text-xs text-muted-foreground mt-1 p-2 bg-muted rounded">
+                  X: {Math.round(selectedNode.position.x)}, Y: {Math.round(selectedNode.position.y)}
+                </div>
               </div>
             </>
           ) : (
-            <div className="text-sm text-muted-foreground text-center py-8">
-              Select an element to view its properties
+            <div className="text-center text-muted-foreground text-xs py-8">
+              Select an element to view properties
             </div>
           )}
-        </div>
-      </ScrollArea>
-    </div>
+        </CardContent>
+      )}
+    </Card>
   );
 };
 
-// Demo Loader Component
+// Demo Process Loader Component
 const DemoProcessLoader = ({ 
   onLoadDemo 
 }: { 
@@ -588,28 +370,20 @@ const DemoProcessLoader = ({
       return;
     }
 
-    // Convert demo elements to ReactFlow nodes
+    // Convert demo elements to ReactFlow format
     const demoNodes: Node[] = demo.elements.map(element => ({
       id: element.id,
-      type: element.type === 'start-event' ? 'startEvent' : 
-            element.type === 'end-event' ? 'endEvent' :
-            element.type === 'user-task' || element.type === 'service-task' ? 'task' :
-            element.type === 'exclusive-gateway' ? 'gateway' :
-            element.type === 'subprocess' ? 'subprocess' : element.type,
-      position: element.position,
-      data: element.data || { label: element.name }
+      type: element.type,
+      position: element.position || { x: element.x || 0, y: element.y || 0 },
+      data: element.data || { label: element.name || 'Element' }
     }));
 
-    // Convert demo connections to ReactFlow edges
     const demoEdges: Edge[] = demo.connections.map(connection => ({
       id: connection.id,
-      source: connection.sourceId || connection.source,
-      target: connection.targetId || connection.target,
-      sourceHandle: connection.sourceHandle,
-      targetHandle: connection.targetHandle,
+      source: connection.source,
+      target: connection.target,
       type: connection.type || 'smoothstep',
-      label: (connection as any).label || (connection as any).name || '',
-      style: { stroke: '#6b7280', strokeWidth: 2 }
+      animated: connection.animated || false
     }));
 
     onLoadDemo(demoNodes, demoEdges, demo.name);
@@ -635,23 +409,18 @@ const DemoProcessLoader = ({
         <div>
           <Label className="text-xs font-medium mb-2 block">Select Demo Process</Label>
           <Select value={selectedDemo} onValueChange={setSelectedDemo}>
-            <SelectTrigger className="h-9">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Choose a demo process" />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(categorizedDemos).map(([category, demos]) => (
                 <div key={category}>
-                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
-                    {category} Processes
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {category}
                   </div>
-                  {(demos as any[]).map((demo: any) => (
-                    <SelectItem key={demo.id} value={demo.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{demo.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {demo.complexity} • {demo.elements.length} elements
-                        </span>
-                      </div>
+                  {(demos as any[]).map((demo) => (
+                    <SelectItem key={demo.id} value={demo.id} className="text-xs">
+                      {demo.name}
                     </SelectItem>
                   ))}
                 </div>
@@ -672,7 +441,6 @@ const DemoProcessLoader = ({
           className="w-full h-9"
           size="sm"
         >
-          <Play className="h-4 w-4 mr-2" />
           Load Demo Process
         </Button>
       </CardContent>
@@ -680,41 +448,37 @@ const DemoProcessLoader = ({
   );
 };
 
-
-// Main Process Manager Component
+// Main Component
 export const SignavioProcessManager = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [paletteCollapsed, setPaletteCollapsed] = useState(false);
+  const [paletteVisible, setPaletteVisible] = useState(true);
   const [propertiesVisible, setPropertiesVisible] = useState(true);
-  const [showDemoLoader, setShowDemoLoader] = useState(false);
-  const [processName, setProcessName] = useState("Order Processing Workflow");
-  const { toast } = useToast();
+  const [processName, setProcessName] = useState('Untitled Process');
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ 
-      ...params, 
-      type: 'smoothstep',
-      animated: false,
-      style: { stroke: '#6b7280', strokeWidth: 2 }
-    }, eds)),
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
-  const onLoadDemo = useCallback((demoNodes: Node[], demoEdges: Edge[], name: string) => {
-    setNodes(demoNodes);
-    setEdges(demoEdges);
-    setProcessName(name);
-    setShowDemoLoader(false);
-    setSelectedNode(null);
-  }, [setNodes, setEdges]);
+  const onSelectionChange = useCallback((params: any) => {
+    if (params.nodes && params.nodes.length > 0) {
+      setSelectedNode(params.nodes[0]);
+    } else {
+      setSelectedNode(null);
+    }
+  }, []);
 
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
+  const onUpdateNode = useCallback((id: string, updates: any) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === id ? { ...node, data: updates } : node
+      )
+    );
+  }, [setNodes]);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
@@ -728,18 +492,17 @@ export const SignavioProcessManager = () => {
       }
 
       const position = {
-        x: event.clientX - reactFlowBounds.left - 50,
-        y: event.clientY - reactFlowBounds.top - 50,
+        x: event.clientX - reactFlowBounds.left,
+        y: event.clientY - reactFlowBounds.top,
       };
 
       const newNode: Node = {
-        id: `${type}-${Date.now()}`,
-        type: type === 'exclusiveGateway' || type === 'parallelGateway' || type === 'inclusiveGateway' ? 'gateway' : type,
+        id: `${type}_${Date.now()}`,
+        type,
         position,
         data: { 
-          label: `New ${type}`,
-          ...(type.includes('Gateway') && { gatewayType: type.replace('Gateway', '') }),
-          ...(type.includes('Task') && { type: type.replace('Task', '') })
+          label: type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1'),
+          type: type.includes('Task') ? 'user' : undefined
         },
       };
 
@@ -753,150 +516,139 @@ export const SignavioProcessManager = () => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
-
-  const onNodeUpdate = useCallback((nodeId: string, data: any) => {
-    setNodes((nds) =>
-      nds.map((node) => (node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node))
-    );
-  }, [setNodes]);
-
   const handleSave = () => {
+    const processData = {
+      name: processName,
+      nodes,
+      edges,
+      savedAt: new Date().toISOString()
+    };
+    
+    // In a real app, save to backend
+    localStorage.setItem('bpmn_process', JSON.stringify(processData));
+    
     toast({
       title: "Process Saved",
-      description: "Your process has been saved successfully.",
+      description: `${processName} has been saved successfully`
     });
   };
 
-  const handleExport = () => {
-    const exporter = createBpmnExporter();
-    const bpmnXml = exporter.exportToBpmn(nodes, edges, processName);
-    
-    // Create and download file
-    const blob = new Blob([bpmnXml], { type: 'application/xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${processName.replace(/\s+/g, '_').toLowerCase()}.bpmn`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Process Exported",
-      description: "Your process has been exported as BPMN XML.",
-    });
+  const handleExport = async () => {
+    try {
+      const exporter = createBpmnExporter();
+      const bpmnXml = exporter.exportToBpmn(nodes, edges, processName);
+      
+      const blob = new Blob([bpmnXml], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${processName.replace(/\s+/g, '_')}.bpmn`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export Successful",
+        description: "BPMN file has been downloaded"
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not export BPMN file",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleShare = () => {
-    toast({
-      title: "Process Shared",
-      description: "Sharing link has been copied to clipboard.",
-    });
+  const handleLoadDemo = (demoNodes: Node[], demoEdges: Edge[], demoName: string) => {
+    setNodes(demoNodes);
+    setEdges(demoEdges);
+    setProcessName(demoName);
   };
 
   return (
     <ErrorBoundary>
-      <div className="h-screen flex flex-col bg-gray-50">
-      <SignavioHeader
-        processName={processName}
-        onSave={handleSave}
-        onExport={handleExport}
-        onShare={handleShare}
-        isCollaborating={true}
-      />
-      
-      <div className="flex-1 relative">
-        <div ref={reactFlowWrapper} className="w-full h-full">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onNodeClick={onNodeClick}
-            nodeTypes={nodeTypes}
-            fitView
-            className="bg-white"
-          >
-            <Background 
-              variant={BackgroundVariant.Dots} 
-              gap={20} 
-              size={1} 
-              color="#e2e8f0"
-            />
-            <MiniMap 
-              className="!bg-white !border-border"
-              nodeColor={(node) => {
-                switch (node.type) {
-                  case 'startEvent': return '#22c55e';
-                  case 'endEvent': return '#ef4444';
-                  case 'task': return '#3b82f6';
-                  case 'gateway': return '#eab308';
-                  case 'subprocess': return '#8b5cf6';
-                  default: return '#64748b';
-                }
-              }}
-            />
-            <Controls className="!bg-white !border-border !shadow-lg" />
-            
-            <Panel position="bottom-left" className="m-4">
-              <div className="flex gap-2">
-                <Card className="bg-white/95 backdrop-blur-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                        <span>Start Events: {nodes.filter(n => n.type === 'startEvent').length}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-blue-500" />
-                        <span>Tasks: {nodes.filter(n => n.type === 'task').length}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                        <span>Gateways: {nodes.filter(n => n.type === 'gateway').length}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-red-500" />
-                        <span>End Events: {nodes.filter(n => n.type === 'endEvent').length}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowDemoLoader(!showDemoLoader)}
-                  className="bg-white/95 backdrop-blur-sm"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Load Demo
-                </Button>
-              </div>
-            </Panel>
-
-            {showDemoLoader && (
-              <Panel position="bottom-center" className="m-4">
-                <DemoProcessLoader onLoadDemo={onLoadDemo} />
-              </Panel>
-            )}
-          </ReactFlow>
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header */}
+      <div className="bg-card border-b px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
+              <Layers className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <div>
+              <Input
+                value={processName}
+                onChange={(e) => setProcessName(e.target.value)}
+                className="font-semibold text-sm border-none bg-transparent p-0 h-auto focus-visible:ring-0"
+              />
+              <div className="text-xs text-muted-foreground">Process Manager</div>
+            </div>
+          </div>
         </div>
+        
+        <div className="flex items-center gap-2">
+          <DemoProcessLoader onLoadDemo={handleLoadDemo} />
+          <Separator orientation="vertical" className="h-6" />
+          <Button variant="outline" size="sm" onClick={handleSave}>
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="w-4 h-4 mr-2" />
+            Export BPMN
+          </Button>
+        </div>
+      </div>
 
+      {/* Canvas Area */}
+      <div className="flex-1 relative" ref={reactFlowWrapper}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onSelectionChange={onSelectionChange}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          nodeTypes={nodeTypes}
+          fitView
+          className="bg-background"
+          defaultEdgeOptions={{
+            type: 'smoothstep',
+            animated: false,
+            style: { strokeWidth: 2, stroke: '#64748b' }
+          }}
+        >
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={16} 
+            size={1}
+            color="#e2e8f0"
+          />
+          <Controls 
+            position="bottom-left"
+            className="bg-background border rounded-lg shadow-lg"
+          />
+          <MiniMap 
+            position="bottom-right"
+            className="bg-background border rounded-lg shadow-lg"
+            pannable
+            zoomable
+          />
+        </ReactFlow>
+
+        {/* Element Palette */}
         <ElementPalette
-          isCollapsed={paletteCollapsed}
-          onToggle={() => setPaletteCollapsed(!paletteCollapsed)}
-          onDragStart={onDragStart}
+          isVisible={paletteVisible}
+          onToggle={() => setPaletteVisible(!paletteVisible)}
+          onAddElement={() => {}}
         />
 
-        <PropertiesPanel
+        {/* Properties Panel */}
+        <ProcessPropertiesPanel
           selectedNode={selectedNode}
-          onNodeUpdate={onNodeUpdate}
+          onUpdateNode={onUpdateNode}
           isVisible={propertiesVisible}
           onToggle={() => setPropertiesVisible(!propertiesVisible)}
         />
