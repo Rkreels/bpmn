@@ -1,12 +1,12 @@
 
 import React from "react";
-import { SignavioProcessManager } from "@/components/process-manager/SignavioProcessManager";
+import { FunctionalProcessManager } from "@/components/process-manager/FunctionalProcessManager";
 import { ReactFlowProvider } from '@xyflow/react';
 
 export default function ProcessManager() {
   return (
     <ReactFlowProvider>
-      <SignavioProcessManager />
+      <FunctionalProcessManager />
     </ReactFlowProvider>
   );
 }
