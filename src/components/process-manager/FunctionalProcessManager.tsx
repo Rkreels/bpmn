@@ -44,20 +44,34 @@ export const FunctionalProcessManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    category: string;
+    status: ProcessModel['status'];
+    version: string;
+    owner: string;
+    collaborators: string[];
+    properties: {
+      estimatedDuration: string;
+      complexity: string;
+      automation: string;
+    };
+    tags: string[];
+  }>({
     name: '',
     description: '',
     category: '',
-    status: 'draft' as ProcessModel['status'],
+    status: 'draft',
     version: '1.0',
     owner: '',
-    collaborators: [] as string[],
+    collaborators: [],
     properties: {
       estimatedDuration: '',
       complexity: 'low',
       automation: 'none'
     },
-    tags: [] as string[]
+    tags: []
   });
 
   const [newTag, setNewTag] = useState('');
@@ -125,9 +139,9 @@ export const FunctionalProcessManager: React.FC = () => {
       const updatedProcess = LocalStorageService.update<ProcessModel>('processes', selectedProcess.id, {
         ...formData,
         properties: {
-          estimatedDuration: formData.properties.estimatedDuration || '',
-          complexity: formData.properties.complexity || 'low',
-          automation: formData.properties.automation || 'none'
+          estimatedDuration: formData.properties.estimatedDuration,
+          complexity: formData.properties.complexity,
+          automation: formData.properties.automation
         }
       });
       if (updatedProcess) {
@@ -269,7 +283,11 @@ export const FunctionalProcessManager: React.FC = () => {
       version: process.version,
       owner: process.owner,
       collaborators: [...process.collaborators],
-      properties: { ...process.properties },
+      properties: {
+        estimatedDuration: process.properties.estimatedDuration || '',
+        complexity: process.properties.complexity || 'low',
+        automation: process.properties.automation || 'none'
+      },
       tags: [...process.tags]
     });
     setIsEditDialogOpen(true);

@@ -111,7 +111,12 @@ export interface ProcessModel extends StorageEntity {
   collaborators: string[];
   elements: any[];
   connections: any[];
-  properties: Record<string, any>;
+  properties: {
+    estimatedDuration: string;
+    complexity: string;
+    automation: string;
+    [key: string]: any; // Allow additional properties
+  };
   tags: string[];
 }
 
