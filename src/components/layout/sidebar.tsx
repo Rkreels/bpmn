@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Home,
   Workflow,
@@ -16,7 +18,9 @@ import {
   Zap,
   Target,
   Shield,
-  Building
+  Building,
+  Menu,
+  X
 } from 'lucide-react';
 
 const navigation = [
@@ -39,6 +43,8 @@ const adminNavigation = [
 export const Sidebar = () => {
   const location = useLocation();
   const { user, hasRole } = useAuth();
+  const isMobile = useIsMobile();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const canAccess = (roles: string[]) => {
     if (roles.includes('all')) return true;
@@ -51,22 +57,33 @@ export const Sidebar = () => {
     return location.pathname === href;
   };
 
-  return (
-    <div className="flex h-screen w-64 flex-col bg-white border-r border-border text-foreground shadow-lg">
+  const handleNavClick = () => {
+    if (isMobile) setMobileOpen(false);
+  };
+
+  const sidebarContent = (
+    <div className="flex h-full flex-col bg-background border-r border-border text-foreground shadow-lg">
       {/* Logo */}
-      <div className="flex items-center px-6 py-4 border-b border-border">
-        <Building className="h-8 w-8 text-primary mr-3" />
-        <div>
-          <h1 className="text-lg font-bold text-foreground">ProcessSuite</h1>
-          <p className="text-xs text-muted-foreground">Enterprise Edition</p>
+      <div className="flex items-center justify-between px-4 lg:px-6 py-4 border-b border-border">
+        <div className="flex items-center">
+          <Building className="h-7 w-7 lg:h-8 lg:w-8 text-primary mr-2 lg:mr-3 flex-shrink-0" />
+          <div>
+            <h1 className="text-base lg:text-lg font-bold text-foreground">ProcessSuite</h1>
+            <p className="text-xs text-muted-foreground">Enterprise Edition</p>
+          </div>
         </div>
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)}>
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* User Info */}
-      <div className="px-6 py-4 border-b border-border">
+      <div className="px-4 lg:px-6 py-3 lg:py-4 border-b border-border">
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0">
-            <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-sm font-medium text-primary-foreground">
+            <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-full bg-primary flex items-center justify-center text-sm font-medium text-primary-foreground">
               {user?.name.split(' ').map(n => n[0]).join('')}
             </div>
           </div>
@@ -76,14 +93,14 @@ export const Sidebar = () => {
               <Badge variant="outline" className="text-xs">
                 {user?.role}
               </Badge>
-              <span className="text-xs text-muted-foreground">{user?.department}</span>
+              <span className="text-xs text-muted-foreground truncate">{user?.department}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 px-3 py-3 lg:py-4 overflow-y-auto">
         {navigation.map((item) => {
           if (!canAccess(item.roles)) return null;
           
@@ -91,8 +108,9 @@ export const Sidebar = () => {
             <Link
               key={item.name}
               to={item.href}
+              onClick={handleNavClick}
               className={cn(
-                'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                'group flex items-center px-3 py-2.5 lg:py-2 text-sm font-medium rounded-md transition-colors',
                 isActive(item.href)
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -123,8 +141,9 @@ export const Sidebar = () => {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={handleNavClick}
                 className={cn(
-                  'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                  'group flex items-center px-3 py-2.5 lg:py-2 text-sm font-medium rounded-md transition-colors',
                   isActive(item.href)
                     ? 'bg-destructive text-destructive-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -146,12 +165,44 @@ export const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-border">
+      <div className="px-4 lg:px-6 py-3 lg:py-4 border-t border-border">
         <div className="text-xs text-muted-foreground">
           <p>Version 2.1.0</p>
-          <p>© 2024 ProcessSuite</p>
+          <p>© 2026 ProcessSuite</p>
         </div>
       </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile hamburger button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-3 left-3 z-50 lg:hidden bg-background shadow-md border"
+          onClick={() => setMobileOpen(true)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        {/* Mobile overlay */}
+        {mobileOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+            <div className="fixed inset-y-0 left-0 w-72 z-50">
+              {sidebarContent}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <div className="hidden lg:flex h-screen w-64 flex-shrink-0">
+      {sidebarContent}
     </div>
   );
 };

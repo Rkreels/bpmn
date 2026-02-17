@@ -29,7 +29,7 @@ export function MainLayout({
         <Header pageTitle={pageTitle} />
         
         <main className={cn(
-          "flex-1 overflow-hidden",
+          "flex-1 overflow-auto",
           fullHeight ? "h-full" : "min-h-0",
           isMobile ? "p-3" : fullHeight ? "p-0" : "p-6",
           className
