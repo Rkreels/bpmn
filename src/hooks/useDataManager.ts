@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from './use-toast';
 
 export interface BaseEntity {
@@ -18,37 +18,13 @@ export interface UseDataManagerOptions<T> {
 }
 
 export function useDataManager<T extends BaseEntity>(options: UseDataManagerOptions<T>) {
-  const { storageKey, initialData = [], validator } = options;
-  const [items, setItems] = useState<T[]>([]);
+  const { initialData = [], validator } = options;
+  const [items, setItems] = useState<T[]>(initialData);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        setItems(JSON.parse(stored));
-      } else {
-        setItems(initialData);
-        localStorage.setItem(storageKey, JSON.stringify(initialData));
-      }
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      setItems(initialData);
-    }
-  }, [storageKey, initialData]);
-
-  // Save to localStorage whenever items change
-  useEffect(() => {
-    if (items.length > 0 || localStorage.getItem(storageKey)) {
-      localStorage.setItem(storageKey, JSON.stringify(items));
-    }
-  }, [items, storageKey]);
-
-  // Filtered items based on search and status
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
@@ -69,7 +45,7 @@ export function useDataManager<T extends BaseEntity>(options: UseDataManagerOpti
     try {
       const newItem: T = {
         ...data,
-        id: `${storageKey}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } as T;
@@ -83,7 +59,7 @@ export function useDataManager<T extends BaseEntity>(options: UseDataManagerOpti
     } finally {
       setLoading(false);
     }
-  }, [validator, toast, storageKey]);
+  }, [validator, toast]);
 
   const update = useCallback(async (id: string, updates: Partial<Omit<T, 'id' | 'createdAt'>>) => {
     if (validator) {
@@ -137,10 +113,9 @@ export function useDataManager<T extends BaseEntity>(options: UseDataManagerOpti
     const duplicateData = {
       ...item,
       name: `${item.name} (Copy)`,
-      createdBy: 'Current User', // This should come from auth context
+      createdBy: 'Current User',
     };
 
-    // Remove fields that shouldn't be duplicated
     const { id: _, createdAt, updatedAt, ...dataToCreate } = duplicateData;
     return create(dataToCreate as Omit<T, 'id' | 'createdAt' | 'updatedAt'>);
   }, [getById, create]);
@@ -151,11 +126,11 @@ export function useDataManager<T extends BaseEntity>(options: UseDataManagerOpti
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${storageKey}_export_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `export_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
     toast({ title: 'Success', description: 'Data exported successfully' });
-  }, [items, storageKey, toast]);
+  }, [items, toast]);
 
   const importData = useCallback((file: File) => {
     const reader = new FileReader();

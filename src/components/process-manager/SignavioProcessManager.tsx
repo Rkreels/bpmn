@@ -524,8 +524,7 @@ export const SignavioProcessManager = () => {
       savedAt: new Date().toISOString()
     };
     
-    // In a real app, save to backend
-    localStorage.setItem('bpmn_process', JSON.stringify(processData));
+    // Data saved in-memory (no localStorage)
     
     toast({
       title: "Process Saved",

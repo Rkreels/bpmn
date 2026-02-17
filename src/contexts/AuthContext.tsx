@@ -39,50 +39,37 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // Mock users for demonstration
   const mockUsers = [
     {
       id: '1',
-      name: 'John Doe',
+      name: 'Sarah Johnson',
       email: 'admin@company.com',
       role: 'admin' as const,
-      department: 'IT',
+      department: 'IT Operations',
       permissions: ['all'],
       isActive: true,
       password: 'admin123'
     },
     {
       id: '2',
-      name: 'Jane Smith',
+      name: 'Michael Chen',
       email: 'user@company.com',
       role: 'modeler' as const,
-      department: 'Business',
+      department: 'Business Analysis',
       permissions: ['read', 'write', 'model'],
       isActive: true,
       password: 'user123'
     }
   ];
 
-  useEffect(() => {
-    // Check for stored authentication
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-    }
-    
-    setIsLoading(false);
-  }, []);
-
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     const foundUser = mockUsers.find(u => u.email === email && u.password === password);
     
@@ -91,8 +78,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       delete (userWithoutPassword as any).password;
       
       setUser(userWithoutPassword);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      localStorage.setItem('token', 'mock-jwt-token');
       
       toast({
         title: "Login Successful",
@@ -115,9 +100,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out"
@@ -131,7 +113,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const hasRole = (role: string): boolean => {
     if (!user) return false;
-    if (user.role === 'admin') return true; // Admin has all roles
+    if (user.role === 'admin') return true;
     return user.role === role;
   };
 
