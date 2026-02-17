@@ -1,491 +1,137 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useVoice } from "@/contexts/VoiceContext";
-import { 
-  Plus, 
-  Search,
-  Filter,
-  Download,
-  Calendar,
-  BarChart3,
-  PieChart,
-  TrendingUp,
-  FileText,
-  Eye,
-  Edit,
-  Share,
-  Trash2,
-  Clock,
-  Users,
-  Target
-} from "lucide-react";
-
-interface Report {
-  id: string;
-  name: string;
-  type: 'dashboard' | 'export' | 'scheduled';
-  category: string;
-  description: string;
-  lastRun: string;
-  frequency: string;
-  status: 'active' | 'draft' | 'archived';
-  views: number;
-  creator: string;
-}
-
-interface Dashboard {
-  id: string;
-  name: string;
-  description: string;
-  widgets: number;
-  lastUpdated: string;
-  views: number;
-  isPublic: boolean;
-}
-
-const demoReports: Report[] = [
-  {
-    id: 'r1',
-    name: 'Process Performance Summary',
-    type: 'dashboard',
-    category: 'Performance',
-    description: 'Weekly summary of all process performance metrics',
-    lastRun: '2024-01-15T09:00:00Z',
-    frequency: 'Weekly',
-    status: 'active',
-    views: 342,
-    creator: 'Sarah Johnson'
-  },
-  {
-    id: 'r2', 
-    name: 'Compliance Audit Report',
-    type: 'export',
-    category: 'Compliance',
-    description: 'Detailed compliance audit for regulatory requirements',
-    lastRun: '2024-01-14T14:30:00Z',
-    frequency: 'Monthly',
-    status: 'active',
-    views: 156,
-    creator: 'Mike Wilson'
-  },
-  {
-    id: 'r3',
-    name: 'Customer Journey Analytics',
-    type: 'scheduled',
-    category: 'Analytics',
-    description: 'Daily analytics on customer journey performance',
-    lastRun: '2024-01-15T08:00:00Z',
-    frequency: 'Daily',
-    status: 'active',
-    views: 89,
-    creator: 'Emma Davis'
-  }
-];
-
-const demoDashboards: Dashboard[] = [
-  {
-    id: 'd1',
-    name: 'Executive Overview',
-    description: 'High-level KPIs and business metrics',
-    widgets: 8,
-    lastUpdated: '2024-01-15T10:30:00Z',
-    views: 1247,
-    isPublic: true
-  },
-  {
-    id: 'd2',
-    name: 'Operations Dashboard',
-    description: 'Real-time operational metrics and alerts',
-    widgets: 12,
-    lastUpdated: '2024-01-15T09:45:00Z',
-    views: 856,
-    isPublic: false
-  },
-  {
-    id: 'd3',
-    name: 'Process Mining Insights',
-    description: 'Process discovery and optimization insights',
-    widgets: 6,
-    lastUpdated: '2024-01-14T16:20:00Z',
-    views: 423,
-    isPublic: false
-  }
-];
+import { useIndustry } from "@/contexts/IndustryContext";
+import { getIndustryData, DemoReport, DemoDashboard } from "@/data/industryDemoData";
+import { Plus, Search, Filter, Download, Eye, Edit, Trash2 } from "lucide-react";
 
 export function FunctionalReports() {
-  const [reports, setReports] = useState<Report[]>(demoReports);
-  const [dashboards, setDashboards] = useState<Dashboard[]>(demoDashboards);
+  const { currentIndustry } = useIndustry();
+  const industryData = getIndustryData(currentIndustry);
+  const [reports, setReports] = useState<DemoReport[]>(industryData.reports);
+  const [dashboards, setDashboards] = useState<DemoDashboard[]>(industryData.dashboards);
   const [activeTab, setActiveTab] = useState("reports");
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [isCreateReportOpen, setIsCreateReportOpen] = useState(false);
+  const [isCreateDashOpen, setIsCreateDashOpen] = useState(false);
+  const [reportForm, setReportForm] = useState({ name: '', type: 'dashboard' as DemoReport['type'], category: '', description: '', frequency: 'Weekly' });
+  const [dashForm, setDashForm] = useState({ name: '', description: '', widgets: 6, isPublic: false });
   const { toast } = useToast();
-  const { speakText } = useVoice();
+
+  useEffect(() => { const d = getIndustryData(currentIndustry); setReports(d.reports); setDashboards(d.dashboards); }, [currentIndustry]);
 
   const handleCreateReport = () => {
-    const newReport: Report = {
-      id: `r${Date.now()}`,
-      name: `New Report ${reports.length + 1}`,
-      type: 'dashboard',
-      category: 'Performance',
-      description: 'New report description',
-      lastRun: new Date().toISOString(),
-      frequency: 'Weekly',
-      status: 'draft',
-      views: 0,
-      creator: 'Current User'
-    };
-    
-    setReports([...reports, newReport]);
-    toast({
-      title: "Report Created",
-      description: `Created new report: ${newReport.name}`
-    });
-    speakText(`Created new report: ${newReport.name}`);
+    const r: DemoReport = { id: `r${Date.now()}`, ...reportForm, lastRun: new Date().toISOString(), status: 'draft', views: 0, creator: 'Current User' };
+    setReports(prev => [...prev, r]);
+    setIsCreateReportOpen(false);
+    setReportForm({ name: '', type: 'dashboard', category: '', description: '', frequency: 'Weekly' });
+    toast({ title: "Report Created", description: `Created: ${r.name}` });
   };
 
   const handleCreateDashboard = () => {
-    const newDashboard: Dashboard = {
-      id: `d${Date.now()}`,
-      name: `New Dashboard ${dashboards.length + 1}`,
-      description: 'New dashboard description',
-      widgets: 0,
-      lastUpdated: new Date().toISOString(),
-      views: 0,
-      isPublic: false
-    };
-    
-    setDashboards([...dashboards, newDashboard]);
-    toast({
-      title: "Dashboard Created",
-      description: `Created new dashboard: ${newDashboard.name}`
-    });
-    speakText(`Created new dashboard: ${newDashboard.name}`);
+    const d: DemoDashboard = { id: `d${Date.now()}`, ...dashForm, lastUpdated: new Date().toISOString(), views: 0 };
+    setDashboards(prev => [...prev, d]);
+    setIsCreateDashOpen(false);
+    setDashForm({ name: '', description: '', widgets: 6, isPublic: false });
+    toast({ title: "Dashboard Created", description: `Created: ${d.name}` });
   };
 
-  const handleRunReport = (report: Report) => {
-    const updatedReports = reports.map(r => 
-      r.id === report.id 
-        ? { ...r, lastRun: new Date().toISOString(), views: r.views + 1 }
-        : r
-    );
-    setReports(updatedReports);
-    
-    toast({
-      title: "Report Generated",
-      description: `Generated report: ${report.name}`
-    });
-    speakText(`Generated ${report.name} report successfully`);
+  const handleRunReport = (r: DemoReport) => {
+    setReports(prev => prev.map(rep => rep.id === r.id ? { ...rep, lastRun: new Date().toISOString(), views: rep.views + 1 } : rep));
+    toast({ title: "Report Generated", description: `Generated: ${r.name}` });
   };
 
-  const handleExportReport = (report: Report) => {
-    toast({
-      title: "Export Started",
-      description: `Exporting ${report.name} to PDF`
-    });
-    speakText(`Starting export of ${report.name} to PDF`);
+  const handleExportReport = (r: DemoReport) => {
+    const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${r.name.replace(/\s+/g, '_')}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Export Complete", description: `${r.name} exported` });
   };
 
-  const handleViewDashboard = (dashboard: Dashboard) => {
-    const updatedDashboards = dashboards.map(d => 
-      d.id === dashboard.id 
-        ? { ...d, views: d.views + 1 }
-        : d
-    );
-    setDashboards(updatedDashboards);
-    
-    toast({
-      title: "Dashboard Opened",
-      description: `Opening ${dashboard.name} dashboard`
-    });
-    speakText(`Opening ${dashboard.name} dashboard`);
-  };
+  const handleDeleteReport = (id: string) => { setReports(prev => prev.filter(r => r.id !== id)); toast({ title: "Deleted", description: "Report deleted" }); };
+  const handleDeleteDashboard = (id: string) => { setDashboards(prev => prev.filter(d => d.id !== id)); toast({ title: "Deleted", description: "Dashboard deleted" }); };
+  const handleViewDashboard = (d: DemoDashboard) => { setDashboards(prev => prev.map(db => db.id === d.id ? { ...db, views: db.views + 1 } : db)); toast({ title: "Dashboard Opened", description: `Opening ${d.name}` }); };
 
-  const handleDeleteReport = (reportId: string) => {
-    const report = reports.find(r => r.id === reportId);
-    setReports(reports.filter(r => r.id !== reportId));
-    toast({
-      title: "Report Deleted",
-      description: `Deleted report: ${report?.name}`
-    });
-    speakText(`Deleted report: ${report?.name}`);
-  };
-
-  const handleDeleteDashboard = (dashboardId: string) => {
-    const dashboard = dashboards.find(d => d.id === dashboardId);
-    setDashboards(dashboards.filter(d => d.id !== dashboardId));
-    toast({
-      title: "Dashboard Deleted",
-      description: `Deleted dashboard: ${dashboard?.name}`
-    });
-    speakText(`Deleted dashboard: ${dashboard?.name}`);
-  };
-
-  const filteredReports = reports.filter(report =>
-    report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredDashboards = dashboards.filter(dashboard =>
-    dashboard.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dashboard.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredReports = reports.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.category.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredDashboards = dashboards.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Generate insights and track performance metrics</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => speakText("Reports and Analytics dashboard loaded with reporting tools")}>
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </Button>
-          <Button onClick={handleCreateReport}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Report
-          </Button>
-        </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div><h1 className="text-2xl sm:text-3xl font-bold">Reports & Analytics</h1><p className="text-muted-foreground">Generate insights and track performance</p></div>
+        <Button onClick={() => setIsCreateReportOpen(true)}><Plus className="h-4 w-4 mr-2" />New Report</Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">Total Reports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{reports.length}</div>
-            <div className="text-xs text-blue-600">+3 this month</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">Dashboards</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-900">{dashboards.length}</div>
-            <div className="text-xs text-green-600">All active</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">Total Views</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-900">
-              {reports.reduce((sum, r) => sum + r.views, 0) + dashboards.reduce((sum, d) => sum + d.views, 0)}
-            </div>
-            <div className="text-xs text-purple-600">This month</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">Scheduled</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-900">
-              {reports.filter(r => r.type === 'scheduled').length}
-            </div>
-            <div className="text-xs text-orange-600">Auto-generated</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Reports</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{reports.length}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Dashboards</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{dashboards.length}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total Views</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{reports.reduce((s, r) => s + r.views, 0) + dashboards.reduce((s, d) => s + d.views, 0)}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Scheduled</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{reports.filter(r => r.type === 'scheduled').length}</div></CardContent></Card>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search reports and dashboards..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <Button variant="outline">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
-      </div>
+      <div className="relative max-w-sm"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" /></div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="dashboards">Dashboards</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2"><TabsTrigger value="reports">Reports</TabsTrigger><TabsTrigger value="dashboards">Dashboards</TabsTrigger></TabsList>
         <TabsContent value="reports" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Reports</h2>
-            <Button onClick={handleCreateReport}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Report
-            </Button>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredReports.map((report) => (
-              <Card key={report.id} className="hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{report.name}</CardTitle>
-                    <Badge 
-                      variant={report.status === 'active' ? 'default' : report.status === 'draft' ? 'secondary' : 'destructive'}
-                    >
-                      {report.status}
-                    </Badge>
-                  </div>
-                  <CardDescription>{report.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium text-muted-foreground">Category</div>
-                      <div className="font-semibold">{report.category}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-muted-foreground">Type</div>
-                      <div className="font-semibold capitalize">{report.type}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium text-muted-foreground">Frequency</div>
-                      <div className="font-semibold">{report.frequency}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-muted-foreground">Views</div>
-                      <div className="font-semibold">{report.views}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleRunReport(report)}>
-                      <Eye className="h-3 w-3 mr-1" />
-                      Run
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleExportReport(report)}>
-                      <Download className="h-3 w-3 mr-1" />
-                      Export
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDeleteReport(report.id)}>
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
+            {filteredReports.map(report => (
+              <Card key={report.id} className="hover:shadow-md transition-shadow">
+                <CardHeader><div className="flex items-center justify-between"><CardTitle className="text-lg">{report.name}</CardTitle><Badge variant={report.status === 'active' ? 'default' : 'secondary'}>{report.status}</Badge></div><CardDescription>{report.description}</CardDescription></CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm"><div><span className="text-muted-foreground">Category:</span> {report.category}</div><div><span className="text-muted-foreground">Freq:</span> {report.frequency}</div></div>
+                  <div className="text-sm"><span className="text-muted-foreground">Views:</span> {report.views} • <span className="text-muted-foreground">By:</span> {report.creator}</div>
+                  <div className="flex gap-2"><Button size="sm" onClick={() => handleRunReport(report)}><Eye className="h-3 w-3 mr-1" />Run</Button><Button size="sm" variant="outline" onClick={() => handleExportReport(report)}><Download className="h-3 w-3 mr-1" />Export</Button><Button size="sm" variant="outline" onClick={() => handleDeleteReport(report.id)}><Trash2 className="h-3 w-3 mr-1" /></Button></div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </TabsContent>
-
         <TabsContent value="dashboards" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Dashboards</h2>
-            <Button onClick={handleCreateDashboard}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Dashboard
-            </Button>
-          </div>
-
+          <div className="flex justify-end"><Button onClick={() => setIsCreateDashOpen(true)}><Plus className="h-4 w-4 mr-2" />Create Dashboard</Button></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredDashboards.map((dashboard) => (
-              <Card key={dashboard.id} className="hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{dashboard.name}</CardTitle>
-                    <Badge variant={dashboard.isPublic ? 'default' : 'secondary'}>
-                      {dashboard.isPublic ? 'Public' : 'Private'}
-                    </Badge>
-                  </div>
-                  <CardDescription>{dashboard.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium text-muted-foreground">Widgets</div>
-                      <div className="font-semibold">{dashboard.widgets}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-muted-foreground">Views</div>
-                      <div className="font-semibold">{dashboard.views}</div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="font-medium text-muted-foreground text-sm">Last Updated</div>
-                    <div className="font-semibold">
-                      {new Date(dashboard.lastUpdated).toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleViewDashboard(dashboard)}>
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDeleteDashboard(dashboard.id)}>
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
+            {filteredDashboards.map(dash => (
+              <Card key={dash.id} className="hover:shadow-md transition-shadow">
+                <CardHeader><div className="flex items-center justify-between"><CardTitle className="text-lg">{dash.name}</CardTitle><Badge variant={dash.isPublic ? 'default' : 'secondary'}>{dash.isPublic ? 'Public' : 'Private'}</Badge></div><CardDescription>{dash.description}</CardDescription></CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm"><div><span className="text-muted-foreground">Widgets:</span> {dash.widgets}</div><div><span className="text-muted-foreground">Views:</span> {dash.views}</div></div>
+                  <div className="flex gap-2"><Button size="sm" onClick={() => handleViewDashboard(dash)}><Eye className="h-3 w-3 mr-1" />View</Button><Button size="sm" variant="outline" onClick={() => handleDeleteDashboard(dash.id)}><Trash2 className="h-3 w-3 mr-1" /></Button></div>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Report Analytics</CardTitle>
-              <CardDescription>Usage and performance insights</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {reports.reduce((sum, r) => sum + r.views, 0)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total Report Views</div>
-                </div>
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {dashboards.reduce((sum, d) => sum + d.views, 0)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Dashboard Views</div>
-                </div>
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {reports.filter(r => r.status === 'active').length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Active Reports</div>
-                </div>
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {reports.filter(r => r.type === 'scheduled').length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Scheduled Reports</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isCreateReportOpen} onOpenChange={setIsCreateReportOpen}><DialogContent><DialogHeader><DialogTitle>Create Report</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div><Label>Name *</Label><Input value={reportForm.name} onChange={e => setReportForm(p => ({...p, name: e.target.value}))} /></div>
+          <div><Label>Description</Label><Textarea value={reportForm.description} onChange={e => setReportForm(p => ({...p, description: e.target.value}))} /></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><Label>Category</Label><Input value={reportForm.category} onChange={e => setReportForm(p => ({...p, category: e.target.value}))} /></div>
+            <div><Label>Frequency</Label><Select value={reportForm.frequency} onValueChange={v => setReportForm(p => ({...p, frequency: v}))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Daily">Daily</SelectItem><SelectItem value="Weekly">Weekly</SelectItem><SelectItem value="Monthly">Monthly</SelectItem><SelectItem value="Quarterly">Quarterly</SelectItem></SelectContent></Select></div>
+          </div>
+          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setIsCreateReportOpen(false)}>Cancel</Button><Button onClick={handleCreateReport}>Create</Button></div>
+        </div>
+      </DialogContent></Dialog>
+
+      <Dialog open={isCreateDashOpen} onOpenChange={setIsCreateDashOpen}><DialogContent><DialogHeader><DialogTitle>Create Dashboard</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div><Label>Name *</Label><Input value={dashForm.name} onChange={e => setDashForm(p => ({...p, name: e.target.value}))} /></div>
+          <div><Label>Description</Label><Textarea value={dashForm.description} onChange={e => setDashForm(p => ({...p, description: e.target.value}))} /></div>
+          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setIsCreateDashOpen(false)}>Cancel</Button><Button onClick={handleCreateDashboard}>Create</Button></div>
+        </div>
+      </DialogContent></Dialog>
     </div>
   );
 }

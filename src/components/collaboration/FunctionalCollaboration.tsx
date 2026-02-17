@@ -6,71 +6,35 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useVoice } from '@/contexts/VoiceContext';
-import { 
-  MessageSquare, Users, Send, Video, Phone, Share, CheckCircle, AlertCircle, ThumbsUp
-} from 'lucide-react';
-
-interface Comment {
-  id: string;
-  author: string;
-  content: string;
-  timestamp: string;
-  status: 'open' | 'resolved';
-  likes: number;
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  status: 'online' | 'offline' | 'busy';
-  lastActive: string;
-}
-
-interface ProcessApproval {
-  id: string;
-  processName: string;
-  requester: string;
-  status: 'pending' | 'approved' | 'rejected';
-  requestDate: string;
-  description: string;
-}
+import { useIndustry } from '@/contexts/IndustryContext';
+import { getIndustryData } from '@/data/industryDemoData';
+import { MessageSquare, Users, Send, Video, Phone, Share, CheckCircle, AlertCircle, ThumbsUp } from 'lucide-react';
 
 export const FunctionalCollaboration: React.FC = () => {
-  const [comments, setComments] = useState<Comment[]>([
-    { id: '1', author: 'Sarah Johnson', content: 'The customer onboarding process needs review at the identity verification step.', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'open', likes: 3 },
-    { id: '2', author: 'Michael Chen', content: 'Agreed. We should also consider automating the document upload step.', timestamp: new Date(Date.now() - 1800000).toISOString(), status: 'open', likes: 1 },
-    { id: '3', author: 'Emma Williams', content: 'The financial close process documentation is ready for review.', timestamp: new Date(Date.now() - 7200000).toISOString(), status: 'open', likes: 5 },
-    { id: '4', author: 'David Kim', content: 'Supply chain risk model has been updated with new vendor data.', timestamp: new Date(Date.now() - 10800000).toISOString(), status: 'resolved', likes: 2 },
-  ]);
+  const { currentIndustry } = useIndustry();
+  const industryData = getIndustryData(currentIndustry);
 
-  const [teamMembers] = useState<TeamMember[]>([
-    { id: '1', name: 'Sarah Johnson', role: 'Chief Process Officer', status: 'online', lastActive: 'now' },
-    { id: '2', name: 'Michael Chen', role: 'Senior Process Analyst', status: 'online', lastActive: '2 min ago' },
-    { id: '3', name: 'Emma Williams', role: 'Financial Analyst', status: 'busy', lastActive: '5 min ago' },
-    { id: '4', name: 'David Kim', role: 'Supply Chain Lead', status: 'online', lastActive: '1 min ago' },
-    { id: '5', name: 'Lisa Anderson', role: 'HR Process Specialist', status: 'offline', lastActive: '1 hour ago' },
-    { id: '6', name: 'Robert Martinez', role: 'Customer Experience Mgr', status: 'online', lastActive: 'now' },
-  ]);
-
-  const [approvals, setApprovals] = useState<ProcessApproval[]>([
-    { id: '1', processName: 'Customer Onboarding v3.2', requester: 'Sarah Johnson', status: 'pending', requestDate: new Date().toISOString(), description: 'Updated process with automated identity verification' },
-    { id: '2', processName: 'Purchase-to-Pay v2.8', requester: 'Emma Williams', status: 'approved', requestDate: new Date(Date.now() - 86400000).toISOString(), description: 'Added RPA for invoice data extraction' },
-    { id: '3', processName: 'Vendor Risk Assessment v2.3', requester: 'Jennifer Taylor', status: 'pending', requestDate: new Date(Date.now() - 43200000).toISOString(), description: 'New compliance scoring matrix added' },
-  ]);
-
+  const [comments, setComments] = useState(industryData.comments);
+  const [teamMembers] = useState(industryData.teamMembers);
+  const [approvals, setApprovals] = useState(industryData.approvals);
   const [newComment, setNewComment] = useState('');
   const { toast } = useToast();
   const { speakText } = useVoice();
 
+  // Reset data when industry changes
+  React.useEffect(() => {
+    const data = getIndustryData(currentIndustry);
+    setComments(data.comments);
+    setApprovals(data.approvals);
+  }, [currentIndustry]);
+
   const handleAddComment = useCallback(() => {
     if (!newComment.trim()) return;
-    const comment: Comment = { id: Date.now().toString(), author: 'Current User', content: newComment, timestamp: new Date().toISOString(), status: 'open', likes: 0 };
+    const comment = { id: Date.now().toString(), author: 'Current User', content: newComment, timestamp: new Date().toISOString(), status: 'open' as const, likes: 0 };
     setComments(prev => [comment, ...prev]);
     setNewComment('');
     toast({ title: "Comment Added", description: "Your comment has been posted" });
-    speakText("Comment added to the discussion");
-  }, [newComment, toast, speakText]);
+  }, [newComment, toast]);
 
   const handleLikeComment = useCallback((commentId: string) => {
     setComments(prev => prev.map(c => c.id === commentId ? { ...c, likes: c.likes + 1 } : c));
@@ -85,19 +49,16 @@ export const FunctionalCollaboration: React.FC = () => {
     setApprovals(prev => prev.map(a => a.id === approvalId ? { ...a, status: decision } : a));
     const approval = approvals.find(a => a.id === approvalId);
     toast({ title: `Process ${decision}`, description: `${approval?.processName} has been ${decision}` });
-    speakText(`Process ${approval?.processName} has been ${decision}`);
-  }, [approvals, toast, speakText]);
+  }, [approvals, toast]);
 
   const handleStartMeeting = useCallback((type: 'video' | 'audio') => {
     const onlineCount = teamMembers.filter(m => m.status === 'online').length;
     toast({ title: "Meeting Started", description: `${type === 'video' ? 'Video' : 'Audio'} meeting initiated with ${onlineCount} available participants` });
-    speakText(`${type === 'video' ? 'Video' : 'Audio'} meeting started with team members`);
-  }, [teamMembers, toast, speakText]);
+  }, [teamMembers, toast]);
 
   const handleShareProcess = useCallback(() => {
     toast({ title: "Process Shared", description: `Process shared with ${teamMembers.length} team members` });
-    speakText("Process shared with all team members for collaboration");
-  }, [teamMembers, toast, speakText]);
+  }, [teamMembers, toast]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -117,7 +78,7 @@ export const FunctionalCollaboration: React.FC = () => {
         <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{teamMembers.filter(m => m.status === 'online').length}</div><div className="text-sm text-muted-foreground">Online Members</div></CardContent></Card>
         <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{comments.filter(c => c.status === 'open').length}</div><div className="text-sm text-muted-foreground">Active Discussions</div></CardContent></Card>
         <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{approvals.filter(a => a.status === 'pending').length}</div><div className="text-sm text-muted-foreground">Pending Approvals</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{approvals.filter(a => a.status === 'approved').length}</div><div className="text-sm text-muted-foreground">Approved Today</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{approvals.filter(a => a.status === 'approved').length}</div><div className="text-sm text-muted-foreground">Approved</div></CardContent></Card>
       </div>
 
       <div className="flex flex-wrap gap-2 lg:gap-4">
