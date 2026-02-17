@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { IndustrySelector } from './IndustrySelector';
 import {
   Home,
   Workflow,
@@ -77,6 +78,11 @@ export const Sidebar = () => {
             <X className="h-5 w-5" />
           </Button>
         )}
+      </div>
+
+      {/* Industry Selector */}
+      <div className="px-4 lg:px-6 py-2 border-b border-border">
+        <IndustrySelector />
       </div>
 
       {/* User Info */}

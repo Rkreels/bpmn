@@ -9,6 +9,7 @@ import { VoiceTrainerProvider } from "@/contexts/VoiceTrainerContext";
 import { VoiceTrainerToggle } from "@/components/voice/VoiceTrainerToggle";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { IndustryProvider } from "@/contexts/IndustryContext";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import Index from "./pages/Index";
 import ProcessManager from "./pages/ProcessManager";
@@ -32,6 +33,7 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <IndustryProvider>
         <VoiceProvider>
           <VoiceTrainerProvider>
             <TooltipProvider>
@@ -60,6 +62,7 @@ const App = () => (
           </TooltipProvider>
           </VoiceTrainerProvider>
         </VoiceProvider>
+        </IndustryProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
