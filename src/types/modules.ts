@@ -145,7 +145,7 @@ export interface User extends BaseEntity {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'admin' | 'analyst' | 'viewer' | 'editor';
+  role: 'admin' | 'analyst' | 'viewer' | 'editor' | 'manager';
   department: string;
   permissions: string[];
   lastLogin?: string;
