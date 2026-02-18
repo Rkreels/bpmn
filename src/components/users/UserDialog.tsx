@@ -31,7 +31,7 @@ export const UserDialog: React.FC<UserDialogProps> = ({
     email: "",
     firstName: "",
     lastName: "",
-    role: "viewer" as "admin" | "analyst" | "viewer" | "editor",
+    role: "viewer" as "admin" | "analyst" | "viewer" | "editor" | "manager",
     department: "",
     bio: ""
   });
